@@ -1,37 +1,144 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Campus360</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
 
-  <body>
-    <header class="navbar">
-      <a href="#" class="logo">
-        <span class="logo-mark">
-          <img src="assets/campus360-orbit.PNG" alt="" />
-        </span>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus360</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
 
-        <span class="logo-text">Campus<span>360</span></span>
-      </a>
+<body>
 
-      <nav>
-        <a href="#">Home</a>
-        <a href="#">Features</a>
-        <a href="#">About</a>
-        <a href="#">Contact</a>
-      </nav>
+  <header class="navbar">
 
-      <div class="nav-actions">
-        <label class="theme-switch">
-          <input type="checkbox" id="theme-toggle" />
-          <span class="switch-slider"></span>
-        </label>
+    <a href="#home" class="logo">
+      <span class="logo-mark">
+        <img src="assets/campus360-orbit.png" alt="" />
+      </span>
 
-        <a href="#" class="login-btn">Login</a>
+      <span class="logo-text">
+        Campus<span>360</span>
+      </span>
+    </a>
+
+
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#features">Features</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+
+    <div class="nav-actions">
+
+      <label class="theme-switch">
+        <input type="checkbox" id="theme-toggle" />
+        <span class="switch-slider"></span>
+      </label>
+
+      <a href="#" class="login-btn">Login</a>
+
+    </div>
+
+  </header>
+
+
+  <main>
+
+    <section id="home" class="hero">
+
+      <div class="hero-content">
+
+        <h1>
+          Connect. Manage.
+          <span>Learn.</span>
+        </h1>
+
+        <p>
+          A centralized platform that brings your campus academic activities
+          together in one place.
+        </p>
+
+        <a href="#features" class="hero-btn">
+          Explore Campus360
+        </a>
+
       </div>
-    </header>
-  </body>
+
+
+      <div class="hero-visual">
+
+        <div class="dashboard-preview">
+
+          <div class="dashboard-header">
+
+            <div class="dashboard-brand">
+              <img src="assets/campus360-orbit.png" alt="Campus360" />
+              <span>Campus360</span>
+            </div>
+
+            <span class="status-dot"></span>
+
+          </div>
+
+
+          <div class="dashboard-body">
+
+            <h2>Welcome back</h2>
+
+            <p>
+              Here's your campus overview.
+            </p>
+
+
+            <div class="dashboard-stats">
+
+              <div class="stat-card">
+                <span>Attendance</span>
+                <strong>85%</strong>
+              </div>
+
+              <div class="stat-card">
+                <span>Assignments</span>
+                <strong>4</strong>
+              </div>
+
+              <div class="stat-card">
+                <span>Average Marks</span>
+                <strong>82%</strong>
+              </div>
+
+            </div>
+
+
+            <div class="schedule">
+
+              <h3>Today's Schedule</h3>
+
+              <div class="schedule-item">
+                <span>10:00 AM</span>
+                <strong>Data Structures</strong>
+              </div>
+
+              <div class="schedule-item">
+                <span>12:00 PM</span>
+                <strong>Artificial Intelligence</strong>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
 </html>
