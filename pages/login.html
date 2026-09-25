@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Campus360</title>
+
+  <!-- Google Fonts matching the main Campus360 design tokens -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Poppins:wght@500;600;700&family=Rubik:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Dedicated Authentication Stylesheet -->
+  <link rel="stylesheet" href="../css/auth.css" />
+</head>
+
+<body class="auth-body">
+
+  <!-- ==================== BACKGROUND ATMOSPHERE ====================
+       Soft glowing ambient radial gradients that anchor the login card
+       in the same visual world as the Campus360 landing page.
+  ============================================================= -->
+  <div class="auth-bg" aria-hidden="true">
+    <div class="auth-blob auth-blob-blue"></div>
+    <div class="auth-blob auth-blob-violet"></div>
+  </div>
+
+
+  <!-- ==================== TOP NAVIGATION ====================
+       A minimal header providing a clean exit route back to the
+       homepage so users are never trapped inside the authentication flow.
+  =========================================================== -->
+  <header class="auth-nav">
+    <a href="../index.html" class="auth-back-link">
+      <span class="auth-back-arrow" aria-hidden="true">←</span>
+      <span>Back to Homepage</span>
+    </a>
+  </header>
+
+
+  <!-- ==================== MAIN AUTH CONTAINER ====================
+       Centered viewport container that holds both the brand identity
+       and the interactive authentication card.
+  ============================================================== -->
+  <main class="auth-container">
+
+    <!-- ==================== BRAND IDENTITY ====================
+         Re-uses the signature Campus360 logo mark, wordmark typography,
+         and product tagline to establish immediate platform trust.
+    ========================================================== -->
+    <header class="auth-brand">
+      <a href="../index.html" class="logo" aria-label="Campus360 Home">
+        <span class="logo-mark">
+          <img src="../assets/campus360-orbit.png" alt="" />
+        </span>
+        <span class="logo-text">
+          Campus<span>360</span>
+        </span>
+      </a>
+      <p class="auth-tagline">Centralized Educational Management Ecosystem</p>
+    </header>
+
+
+
+    <!-- ==================== LOGIN CARD ====================
+         The core interaction surface: elevated container housing
+         the welcome copy, role selection tabs, and credential inputs.
+    ===================================================== -->
+    <section class="auth-card" aria-labelledby="login-title">
+
+      <!-- Card Header: welcoming headline and descriptive subtitle -->
+      <div class="auth-card-header">
+        <span class="auth-pill-badge">PORTAL ACCESS</span>
+        <h1 id="login-title">Sign in to your account</h1>
+        <p>Select your campus role and enter your credentials to continue.</p>
+      </div>
+
+
+      <!-- Role Context Selector:
+           Campus360 is role-based (Student, Faculty, Admin).
+           These segmented controls let the user clarify their role before signing in. -->
+      <div class="role-selector" role="radiogroup" aria-label="Select your campus role">
+
+        <label class="role-option">
+          <input type="radio" name="campus-role" value="student" checked />
+          <span class="role-pill">
+            <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+              <path d="M6 12v5c3 3 9 3 12 0v-5" />
+            </svg>
+            <span>Student</span>
+          </span>
+        </label>
+
+        <label class="role-option">
+          <input type="radio" name="campus-role" value="faculty" />
+          <span class="role-pill">
+            <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+            </svg>
+            <span>Faculty</span>
+          </span>
+        </label>
+
+        <label class="role-option">
+          <input type="radio" name="campus-role" value="admin" />
+          <span class="role-pill">
+            <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            <span>Admin</span>
+          </span>
+        </label>
+
+      </div>
+
+
+      <!-- Credential Form:
+           Contains user identification, password input, auxiliary options,
+           and primary action trigger. -->
+      <form class="auth-form" action="#" method="POST" novalidate>
+
+        <!-- Institutional ID or Email Field -->
+        <div class="form-group">
+          <label for="campus-id" class="form-label">Campus ID or Institutional Email</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <input
+              type="text"
+              id="campus-id"
+              name="campus-id"
+              class="form-input"
+              placeholder="e.g. ST-2026-8941 or user@campus.edu"
+              required
+              autocomplete="username"
+            />
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="form-input"
+              placeholder="Enter your security password"
+              required
+              autocomplete="current-password"
+            />
+          </div>
+        </div>
+
+        <!-- Auxiliary Actions: Remember Me checkbox & Forgot Password recovery link -->
+        <div class="form-extras">
+          <label class="checkbox-container">
+            <input type="checkbox" name="remember-me" id="remember-me" />
+            <span class="custom-checkbox" aria-hidden="true">
+              <svg viewBox="0 0 12 10" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="1.5 6 4.5 9 10.5 1" />
+              </svg>
+            </span>
+            <span class="checkbox-label">Remember my login</span>
+          </label>
+
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </div>
+
+        <!-- Submit Button: matches the hero & navbar primary gradient styles -->
+        <button type="submit" class="auth-submit-btn">
+          <span>Sign In to Dashboard</span>
+          <span class="btn-arrow" aria-hidden="true">→</span>
+        </button>
+
+      </form>
+
+      <!-- Card Footer: help desk and account assistance link -->
+      <footer class="auth-card-footer">
+        <p>Need access or having trouble signing in? <a href="../index.html#contact" class="auth-help-link">Contact Campus Support</a></p>
+      </footer>
+
+    </section>
+
+  </main>
+
+
+  <!-- ==================== MINIMAL FOOTER ====================
+       Subtle copyright marker that keeps the page visually grounded.
+  ========================================================== -->
+  <footer class="auth-page-footer">
+    <p>© 2026 Campus360. Centralized Educational Management Platform.</p>
+  </footer>
+
+  <!-- Dedicated Authentication Script Hook -->
+  <script src="../js/auth.js"></script>
+</body>
+
+</html>
