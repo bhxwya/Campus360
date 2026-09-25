@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Campus360</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 
 <body>
@@ -33,9 +33,60 @@
 
     <div class="nav-actions">
 
+      <!--
+        THEME SWITCH (Light Scheme / Dark Scheme pill)
+        Visual only for now: there is still no JavaScript, so clicking it does NOT
+        change the page theme. It only shows the two looks we will wire up later.
+
+        Structure:
+          .theme-switch          the <label>: the outer ring + the frame + the shadow
+            #theme-toggle        the real control (kept: it stays the future JS hook)
+            .switch-face--light  the white plate: sun icon + "Light Scheme"
+            .switch-face--dark   the dark plate: moon icon + "Dark Scheme"
+
+        The two faces are stacked in the SAME grid cell and cross-fade, so the pill is
+        always as wide as its longest label and swapping the state needs no JavaScript.
+        Only the visible face is announced, because the hidden one is
+        `visibility: hidden` (hidden content is dropped from the accessibility tree).
+      -->
       <label class="theme-switch">
+
+        <!-- 1. The real control: a native checkbox. Because it sits inside the
+             <label>, screen readers announce it as a labelled on/off control and it
+             stays keyboard operable (Tab to focus, Space to toggle).
+             The id is unchanged so the next step can attach JavaScript to it.
+             A native checkbox needs no extra ARIA state; if we ever change it to
+             role="switch", aria-checked would have to be kept in sync by script. -->
         <input type="checkbox" id="theme-toggle" />
-        <span class="switch-slider"></span>
+
+        <!-- 2. LIGHT SCHEME face: the plate shown while the switch is OFF.
+             aria-hidden sits on the <svg> only, because the icon is decoration - the
+             text next to it is what becomes the switch's accessible name. -->
+        <span class="switch-face switch-face--light">
+
+          <!-- Sun icon: same line-art glyph as before, now 17px and drawn with the
+               plate's colour (stroke: currentColor in the stylesheet). -->
+          <svg class="switch-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.5" />
+            <path d="M12 2.5 L12 5 M12 19 L12 21.5 M4.5 12 L7 12 M17 12 L19.5 12 M5.6 5.6 L7.4 7.4 M16.6 16.6 L18.4 18.4 M5.6 18.4 L7.4 16.6 M16.6 7.4 L18.4 5.6" />
+          </svg>
+
+          <span class="switch-text">Light Scheme</span>
+
+        </span>
+
+        <!-- 3. DARK SCHEME face: the plate shown while the switch is ON. -->
+        <span class="switch-face switch-face--dark">
+
+          <!-- Moon icon: crescent line art (a single path, so it scales cleanly). -->
+          <svg class="switch-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12.79 A9 9 0 1 1 11.21 3 A7 7 0 0 0 21 12.79 Z" />
+          </svg>
+
+          <span class="switch-text">Dark Scheme</span>
+
+        </span>
+
       </label>
 
       <a href="#" class="login-btn">Login</a>
@@ -47,8 +98,19 @@
 
   <main>
 
+    <!-- HERO -->
+
     <section id="home" class="hero">
 
+      <!-- HERO BACKGROUND ARTWORK -->
+      <img
+        src="assets/campus360-hero-bg.png"
+        alt=""
+        class="hero-bg-art"
+        aria-hidden="true"
+      />
+
+      <!-- HERO CONTENT -->
       <div class="hero-content">
 
         <h1>
@@ -63,70 +125,92 @@
 
         <a href="#features" class="hero-btn">
           Explore Campus360
+          <span>→</span>
         </a>
 
       </div>
 
 
+      <!-- HERO INTERACTIVE VISUAL -->
       <div class="hero-visual">
 
-        <div class="dashboard-preview">
+        <div class="hero-orbit">
 
-          <div class="dashboard-header">
+          <!-- CENTRAL CAMPUS360 BRAND -->
+          <div class="hero-orbit-brand">
 
-            <div class="dashboard-brand">
-              <img src="assets/campus360-orbit.png" alt="Campus360" />
-              <span>Campus360</span>
+            <img
+              src="assets/campus360-orbit.png"
+              alt="Campus360"
+              class="hero-brand-logo"
+            />
+
+            <div class="hero-brand-name">
+              Campus<span>360</span>
             </div>
 
-            <span class="status-dot"></span>
+            <div class="hero-brand-label">
+              CONNECTED ACADEMIC ECOSYSTEM
+            </div>
 
           </div>
 
 
-          <div class="dashboard-body">
+          <!-- TIMETABLE -->
+          <div class="hero-module hero-module-timetable">
 
-            <h2>Welcome back</h2>
-
-            <p>
-              Here's your campus overview.
-            </p>
-
-
-            <div class="dashboard-stats">
-
-              <div class="stat-card">
-                <span>Attendance</span>
-                <strong>85%</strong>
-              </div>
-
-              <div class="stat-card">
-                <span>Assignments</span>
-                <strong>4</strong>
-              </div>
-
-              <div class="stat-card">
-                <span>Average Marks</span>
-                <strong>82%</strong>
-              </div>
-
+            <div class="hero-module-icon">
+              ▣
             </div>
 
+            <div class="hero-module-content">
+              <strong>Timetable</strong>
+              <span>Classes &amp; Schedule</span>
+            </div>
 
-            <div class="schedule">
+          </div>
 
-              <h3>Today's Schedule</h3>
 
-              <div class="schedule-item">
-                <span>10:00 AM</span>
-                <strong>Data Structures</strong>
-              </div>
+          <!-- ATTENDANCE -->
+          <div class="hero-module hero-module-attendance">
 
-              <div class="schedule-item">
-                <span>12:00 PM</span>
-                <strong>Artificial Intelligence</strong>
-              </div>
+            <div class="hero-module-icon">
+              ●
+            </div>
 
+            <div class="hero-module-content">
+              <strong>Attendance</strong>
+              <span>Track &amp; Monitor</span>
+            </div>
+
+          </div>
+
+
+          <!-- ASSIGNMENTS -->
+          <div class="hero-module hero-module-assignments">
+
+            <div class="hero-module-icon">
+              □
+            </div>
+
+            <div class="hero-module-content">
+              <strong>Assignments</strong>
+              <span>Submit &amp; Manage</span>
+            </div>
+
+          </div>
+
+
+          <!-- RESULTS -->
+          <div class="hero-module hero-module-results">
+
+            <div class="hero-module-icon">
+              ▥
+            </div>
+
+            <div class="hero-module-content">
+              <strong>Results</strong>
+              <span>View &amp; Analyse</span>
             </div>
 
           </div>
@@ -137,7 +221,866 @@
 
     </section>
 
+     <!-- FEATURES -->
+
+    <section id="features" class="features">
+
+      <div class="section-heading">
+
+        <h2>Everything your campus needs.</h2>
+
+        <p>
+          One connected platform designed around the people
+          who manage and use academic information every day.
+        </p>
+
+      </div>
+
+
+      <div class="feature-grid">
+
+        <div class="feature-card">
+
+          <div class="feature-icon">
+            A
+          </div>
+
+          <span class="feature-label">
+            MANAGEMENT
+          </span>
+
+          <h3>Admin</h3>
+
+          <p>
+            Manage students, faculty, courses, notices,
+            and academic reports from one centralized platform.
+          </p>
+
+          <a href="#platform-preview" class="feature-link">
+            Explore dashboard →
+          </a>
+
+        </div>
+
+
+        <div class="feature-card">
+
+          <div class="feature-icon">
+            F
+          </div>
+
+          <span class="feature-label">
+            ACADEMICS
+          </span>
+
+          <h3>Faculty</h3>
+
+          <p>
+            Manage attendance, assignments, marks,
+            and academic notices efficiently.
+          </p>
+
+          <a href="#platform-preview" class="feature-link">
+            Explore dashboard →
+          </a>
+
+        </div>
+
+
+        <div class="feature-card">
+
+          <div class="feature-icon">
+            S
+          </div>
+
+          <span class="feature-label">
+            STUDENT
+          </span>
+
+          <h3>Student</h3>
+
+          <p>
+            Access your timetable, attendance, assignments,
+            marks, and academic results in one place.
+          </p>
+
+          <a href="#platform-preview" class="feature-link">
+            Explore dashboard →
+          </a>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <section id="core-features" class="core-features">
+
+      <div class="section-heading">
+
+        <h2>Everything in one place.</h2>
+
+        <p>
+          Access the academic tools and information you need
+          through one connected platform.
+        </p>
+
+      </div>
+
+
+      <div class="core-feature-grid">
+
+        <div class="core-feature-card">
+          <h3>Attendance</h3>
+          <p>
+            Track and manage attendance records with ease.
+          </p>
+        </div>
+
+
+        <div class="core-feature-card">
+          <h3>Timetable</h3>
+          <p>
+            Stay updated with your daily academic schedule.
+          </p>
+        </div>
+
+
+        <div class="core-feature-card">
+          <h3>Assignments</h3>
+          <p>
+            Keep assignments organized and accessible.
+          </p>
+        </div>
+
+
+        <div class="core-feature-card">
+          <h3>Marks & Results</h3>
+          <p>
+            View academic performance and results in one place.
+          </p>
+        </div>
+
+
+        <div class="core-feature-card">
+          <h3>Announcements</h3>
+          <p>
+            Stay informed about important campus updates.
+          </p>
+        </div>
+
+
+        <div class="core-feature-card">
+          <h3>Academic Records</h3>
+          <p>
+            Keep essential academic information centralized.
+          </p>
+        </div>
+
+      </div>
+
+    </section>
+    <!-- PLATFORM PREVIEW -->
+
+    <section id="platform-preview" class="platform-preview">
+
+      <div class="section-heading">
+
+        <h2>Your campus at a glance.</h2>
+
+        <p>
+          A glimpse of the connected workspace students use to manage
+          their everyday academic activities.
+        </p>
+
+      </div>
+
+
+      <div class="platform-window">
+
+        <!-- APPLICATION SIDEBAR -->
+
+        <aside class="platform-sidebar">
+
+          <div class="platform-sidebar-brand">
+
+            <img src="assets/campus360-orbit.png" alt="" />
+
+            <span>
+              Campus<span>360</span>
+            </span>
+
+          </div>
+          
+          
+          <nav class="platform-nav">
+
+            <button type="button" class="platform-nav-item active">
+              <span class="platform-nav-icon">⌂</span>
+              <span>Dashboard</span>
+            </button>
+
+            <button type="button" class="platform-nav-item">
+              <span class="platform-nav-icon">◷</span>
+              <span>Attendance</span>
+            </button>
+
+            <button type="button" class="platform-nav-item">
+              <span class="platform-nav-icon">▦</span>
+              <span>Timetable</span>
+            </button>
+
+            <button type="button" class="platform-nav-item">
+              <span class="platform-nav-icon">□</span>
+              <span>Assignments</span>
+            </button>
+
+            <button type="button" class="platform-nav-item">
+              <span class="platform-nav-icon">◫</span>
+              <span>Marks & Results</span>
+            </button>
+
+            <button type="button" class="platform-nav-item">
+              <span class="platform-nav-icon">◉</span>
+              <span>Announcements</span>
+            </button>
+
+          </nav>
+
+
+          <div class="platform-sidebar-footer">
+
+            <div class="platform-user">
+
+              <div class="platform-avatar">
+                S
+              </div>
+
+              <div>
+                <strong>Student</strong>
+                <small>View profile</small>
+              </div>
+
+            </div>
+
+          </div>
+
+        </aside>
+
+
+        <!-- APPLICATION CONTENT -->
+
+        <div class="platform-main">
+
+          <div class="platform-topbar">
+
+            <div>
+
+              <span class="platform-page-label">
+                STUDENT DASHBOARD
+              </span>
+
+              <h3>Overview</h3>
+
+            </div>
+
+
+            <div class="platform-topbar-actions">
+
+              <button class="platform-icon-button" type="button">
+                ♧
+              </button>
+
+              <button class="platform-status" type="button">
+                Overview
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <div class="platform-content">
+
+            <div class="platform-welcome">
+
+              <div>
+
+                <h3>Good morning, Student.</h3>
+
+                <p>
+                  Here's what's happening with your academics today.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <!-- STATISTICS -->
+
+            <div class="platform-stats">
+
+              <div class="platform-stat">
+
+                <div class="platform-stat-heading">
+
+                  <span>Attendance</span>
+
+                  <span class="platform-stat-icon">
+                    %
+                  </span>
+
+                </div>
+
+                <strong>85%</strong>
+
+                <small>Overall attendance</small>
+
+              </div>
+
+
+              <div class="platform-stat">
+
+                <div class="platform-stat-heading">
+
+                  <span>Assignments</span>
+
+                  <span class="platform-stat-icon">
+                    +
+                  </span>
+
+                </div>
+
+                <strong>04</strong>
+
+                <small>Pending submissions</small>
+
+              </div>
+
+
+              <div class="platform-stat">
+
+                <div class="platform-stat-heading">
+
+                  <span>Average Marks</span>
+
+                  <span class="platform-stat-icon">
+                    ↑
+                  </span>
+
+                </div>
+
+                <strong>82%</strong>
+
+                <small>Current academic average</small>
+
+              </div>
+
+            </div>
+
+
+            <!-- LOWER DASHBOARD -->
+
+            <div class="platform-dashboard-grid">
+
+
+              <!-- SCHEDULE -->
+
+              <div class="platform-panel">
+
+                <div class="platform-panel-header">
+
+                  <div>
+
+                    <span>ACADEMIC SCHEDULE</span>
+
+                    <h4>Today's Classes</h4>
+
+                  </div>
+
+                  <button type="button">
+                    View all
+                  </button>
+
+                </div>
+
+
+                <div class="platform-schedule-item">
+
+                  <div class="platform-time">
+                    <strong>10:00</strong>
+                    <small>AM</small>
+                  </div>
+
+                  <div class="platform-class">
+
+                    <strong>Data Structures</strong>
+
+                    <span>
+                      Room 204 · Lecture
+                    </span>
+
+                  </div>
+
+                  <span class="platform-class-status">
+                    Ongoing
+                  </span>
+
+                </div>
+
+
+                <div class="platform-schedule-item">
+
+                  <div class="platform-time">
+                    <strong>12:00</strong>
+                    <small>PM</small>
+                  </div>
+
+                  <div class="platform-class">
+
+                    <strong>Artificial Intelligence</strong>
+
+                    <span>
+                      Lab 3 · Practical
+                    </span>
+
+                  </div>
+
+                  <span class="platform-class-status upcoming">
+                    Upcoming
+                  </span>
+
+                </div>
+
+
+                <div class="platform-schedule-item">
+
+                  <div class="platform-time">
+                    <strong>02:00</strong>
+                    <small>PM</small>
+                  </div>
+
+                  <div class="platform-class">
+
+                    <strong>Database Systems</strong>
+
+                    <span>
+                      Room 108 · Lecture
+                    </span>
+
+                  </div>
+
+                  <span class="platform-class-status upcoming">
+                    Upcoming
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <!-- RECENT ACTIVITY -->
+
+              <div class="platform-panel">
+
+                <div class="platform-panel-header">
+
+                  <div>
+
+                    <span>RECENT ACTIVITY</span>
+
+                    <h4>Updates</h4>
+
+                  </div>
+
+                  <button type="button">
+                    View all
+                  </button>
+
+                </div>
+
+
+                <div class="platform-activity">
+
+                  <div class="activity-icon">
+                    A
+                  </div>
+
+                  <div>
+
+                    <strong>Assignment submitted</strong>
+
+                    <span>
+                      Data Structures · 20 min ago
+                    </span>
+
+                  </div>
+
+                </div>
+
+
+                <div class="platform-activity">
+
+                  <div class="activity-icon">
+                    M
+                  </div>
+
+                  <div>
+
+                    <strong>Marks updated</strong>
+
+                    <span>
+                      Artificial Intelligence · 1 hr ago
+                    </span>
+
+                  </div>
+
+                </div>
+
+
+                <div class="platform-activity">
+
+                  <div class="activity-icon">
+                    N
+                  </div>
+
+                  <div>
+
+                    <strong>New announcement</strong>
+
+                    <span>
+                      Department notice · 2 hrs ago
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+<!-- HOW IT WORKS -->
+
+    <section id="how-it-works" class="how-it-works">
+
+      <div class="section-heading">
+
+        <h2>From activity to information.</h2>
+
+        <p>
+          Campus360 brings everyday academic activities together
+          and makes the right information available to each role.
+        </p>
+
+      </div>
+
+
+      <div class="system-flow">
+
+        <div class="flow-item">
+
+          <span class="flow-number">01</span>
+
+          <h3>Academic Activity</h3>
+
+          <p>
+            Attendance, assignments, marks, timetables,
+            and campus updates are managed through the system.
+          </p>
+
+        </div>
+
+
+        <div class="flow-connector"></div>
+
+
+        <div class="flow-item flow-highlight">
+
+          <span class="flow-number">02</span>
+
+          <h3>Campus360</h3>
+
+          <p>
+            Information is organized through one
+            centralized educational management platform.
+          </p>
+
+        </div>
+
+
+        <div class="flow-connector"></div>
+
+
+        <div class="flow-item">
+
+          <span class="flow-number">03</span>
+
+          <h3>Role-Based Access</h3>
+
+          <p>
+            Students, faculty, and administrators access
+            the information relevant to their responsibilities.
+          </p>
+
+        </div>
+
+
+        <div class="flow-connector"></div>
+
+
+        <div class="flow-item">
+
+          <span class="flow-number">04</span>
+
+          <h3>Connected Campus</h3>
+
+          <p>
+            Academic information becomes easier to access,
+            manage, and organize in one place.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <section id="why-campus360" class="why-campus360">
+
+      <div class="section-heading">
+
+        <h2>Built for a connected campus.</h2>
+
+        <p>
+          A centralized approach to managing everyday academic activities.
+        </p>
+
+      </div>
+
+
+      <div class="why-grid">
+
+        <div class="why-item">
+
+          <h3>Centralized</h3>
+
+          <p>
+            Keep important academic activities and information
+            organized in one place.
+          </p>
+
+        </div>
+
+
+        <div class="why-item">
+
+          <h3>Role-Based</h3>
+
+          <p>
+            Give students, faculty, and administrators access
+            to the tools relevant to their roles.
+          </p>
+
+        </div>
+
+
+        <div class="why-item">
+
+          <h3>Accessible</h3>
+
+          <p>
+            Make academic information easier to access
+            through a single web-based platform.
+          </p>
+
+        </div>
+
+
+        <div class="why-item">
+
+          <h3>Organized</h3>
+
+          <p>
+            Bring attendance, assignments, marks, timetables,
+            and notices into a structured system.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ABOUT -->
+
+    <section id="about" class="about">
+
+      <div class="about-heading">
+
+        <h2>Why Campus360?</h2>
+
+        <p>
+          Built to bring scattered academic activities
+          into one structured system.
+        </p>
+
+      </div>
+
+
+      <div class="about-story">
+
+        <div class="story-item">
+
+          <span>01</span>
+
+          <div>
+
+            <h3>The Challenge</h3>
+
+            <p>
+              Academic information can become scattered across
+              different platforms and manual processes.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="story-item">
+
+          <span>02</span>
+
+          <div>
+
+            <h3>The Approach</h3>
+
+            <p>
+              Campus360 brings key academic activities together
+              through one centralized educational management platform.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="story-item">
+
+          <span>03</span>
+
+          <div>
+
+            <h3>The Goal</h3>
+
+            <p>
+              Make academic information easier to manage and access
+              for students, faculty, and administrators.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- CONTACT -->
+
+    <section id="contact" class="contact">
+
+      <div class="contact-content">
+
+        <div class="contact-text">
+
+          <span class="contact-label">
+            CAMPUS360
+          </span>
+
+          <h2>Explore a more connected campus.</h2>
+
+          <p>
+            A centralized educational management system designed
+            to bring academic activities together in one place.
+          </p>
+
+        </div>
+
+
+        <div class="contact-actions">
+
+          <a href="#platform-preview" class="contact-btn">
+            Explore the Platform
+          </a>
+
+          <a href="#about" class="contact-link">
+            Learn About the Project
+          </a>
+
+        </div>
+
+      </div>
+
+    </section>
   </main>
+
+  <footer class="footer">
+
+    <div class="footer-content">
+
+      <div class="footer-brand">
+
+        <a href="#home" class="logo">
+
+          <span class="logo-mark">
+            <img src="assets/campus360-orbit.png" alt="" />
+          </span>
+
+          <span class="logo-text">
+            Campus<span>360</span>
+          </span>
+
+        </a>
+
+        <p>
+          Connect. Manage. Learn.
+        </p>
+
+      </div>
+
+
+      <div class="footer-links">
+
+        <a href="#home">Home</a>
+        <a href="#features">Features</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+
+      </div>
+
+    </div>
+
+
+    <div class="footer-bottom">
+
+      <span>© 2026 Campus360. All rights reserved.</span>
+
+    </div>
+
+  </footer>
+
+  <script src="js/script.js"></script>
 
 </body>
 

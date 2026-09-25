@@ -1,0 +1,2633 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Poppins:wght@500;600;700&family=Rubik:wght@500;600;700&display=swap");
+
+/* =========================
+   RESET
+========================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =========================
+   BASE
+========================= */
+
+html {
+  scroll-behavior: smooth;
+
+  /* 88px matches the compact 80px navbar that appears once the page is
+     scrolled, so in-page anchors always land clear of the bar */
+  scroll-padding-top: 88px;
+}
+
+body {
+  font-family: "Manrope", sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+
+  /* crisper type rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* =========================
+   DESIGN TOKENS
+========================= */
+
+/* The values that repeat all over the page are named once here, so every
+   section can share the same radii, elevation and vertical rhythm instead of
+   inventing its own. Colours are the existing Campus360 palette. */
+:root {
+  /* brand palette */
+  --blue: #2563eb;
+  --indigo: #4f46e5;
+  --violet: #7c3aed;
+  --cyan: #38bdf8;
+
+  /* text and surfaces */
+  --ink: #0f172a;
+  --ink-soft: #1e293b;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --surface: #ffffff;
+
+  /* radius scale: 12px controls, 18px cards, 24px large surfaces */
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-pill: 999px;
+
+  /* elevation: one resting shadow for cards, one lifted version for hover */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px rgba(15, 23, 42, 0.05);
+  --shadow-lift: 0 2px 4px rgba(15, 23, 42, 0.05), 0 20px 44px rgba(15, 23, 42, 0.09);
+  --shadow-brand: 0 10px 24px rgba(37, 99, 235, 0.22);
+
+  /* the vertical rhythm shared by every section below the hero */
+  --section-y: 100px;
+}
+
+/* Brand-coloured text selection */
+::selection {
+  background: rgba(37, 99, 235, 0.16);
+  color: var(--ink);
+}
+
+/* One keyboard focus ring for the whole page, so every link and button behaves
+   the same way. `:focus-visible` keeps it away from mouse users. */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 3px;
+}
+
+/* Respect the system "reduce motion" preference. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+main {
+  background:
+    radial-gradient(
+      circle at 18% 18%,
+      rgba(37, 99, 235, 0.09),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 82% 24%,
+      rgba(124, 58, 237, 0.09),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 28% 62%,
+      rgba(37, 99, 235, 0.055),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 75% 72%,
+      rgba(124, 58, 237, 0.055),
+      transparent 28%
+    ),
+    #f8fafc;
+}
+
+/* =========================
+   NAVBAR
+========================= */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  z-index: 100;
+
+  height: 96px; /* compacts to 80px once the page is scrolled */
+  padding: 0 62px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: transparent;
+
+  /* the bottom hairline is always there, just transparent while at the top,
+     so its colour can fade in smoothly with the rest of the scroll state */
+  border-bottom: 1px solid transparent;
+  box-shadow: none;
+
+  transition:
+    height 0.28s ease,
+    background 0.28s ease,
+    border-color 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.navbar.scrolled {
+  height: 80px;
+
+  background: rgba(248, 250, 252, 0.86);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  border-bottom-color: rgba(226, 232, 240, 0.9);
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 10px 30px rgba(15, 23, 42, 0.07);
+}
+
+.navbar.scrolled nav a {
+  color: #1e293b;
+}
+
+/* Logo */
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  color: #0f172a;
+  text-decoration: none;
+
+  flex-shrink: 0;
+}
+
+.logo-mark {
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 40px;
+  height: 40px;
+
+  display: block;
+  object-fit: contain;
+
+  transition:
+    transform 0.25s ease,
+    filter 0.25s ease;
+}
+
+.logo:hover .logo-mark img {
+  transform: scale(1.02);
+  filter: hue-rotate(18deg) saturate(1.2) brightness(1);
+}
+
+.logo-text {
+  font-family: "Poppins", sans-serif;
+
+  font-size: 20px;
+  font-weight: 600;
+
+  color: #0f172a;
+}
+
+.logo:hover .logo-text {
+  filter: brightness(1.15);
+}
+
+.logo-text span {
+  font-family: "Rubik", sans-serif;
+
+  font-weight: 700;
+
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Navigation */
+
+.navbar nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+
+  gap: 52px;
+}
+
+.navbar nav a {
+  position: relative; /* anchor for the underline below */
+
+  color: #ffffff;
+
+  text-decoration: none;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  transition: color 0.2s ease;
+}
+
+/* Hover underline: a brand gradient bar that grows from the centre. It replaces
+   the old 1px jump, so the hover state stays calm on a fixed navbar. */
+.navbar nav a::after {
+  content: "";
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -7px;
+
+  height: 2px;
+
+  background: linear-gradient(90deg, var(--blue), var(--violet));
+
+  border-radius: var(--r-pill);
+
+  transform: scaleX(0);
+  transform-origin: center;
+
+  transition: transform 0.24s ease;
+}
+
+.navbar nav a:hover {
+  color: #2563eb;
+}
+
+.navbar nav a:hover::after {
+  transform: scaleX(1);
+}
+
+/* Navbar actions */
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Login */
+
+.login-btn {
+  color: white;
+
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+
+  padding: 12px 24px;
+
+  border-radius: var(--r-sm);
+
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    filter 0.25s ease;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+
+  filter: brightness(1.06);
+
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.3);
+}
+
+/* Theme switch (Light Scheme / Dark Scheme pill) */
+
+/* Toggle container = the <label>.
+   It draws the pill's OUTER ring, the frame and the drop shadow.
+   From the outside in, the pill is layered like this:
+     1. ring     -> border
+     2. frame    -> background + the 3px padding (the gap around the plate)
+     3. plate    -> .switch-face (the white or dark area)
+     4. hairline -> inset box-shadow on the plate
+     5. icon + text
+   The class name and the checkbox id stay exactly as they were. */
+.theme-switch {
+  position: relative;
+
+  display: inline-grid; /* ONE cell: both faces are stacked in it, see .switch-face */
+
+  padding: 3px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+
+  background: #f1f5f9;
+
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+
+  cursor: pointer;
+
+  flex-shrink: 0;
+
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+/* The checkbox keeps the switch state and stays focusable (Tab + Space) but is
+   invisible: 1x1 and fully transparent. `display: none` would remove it from the
+   keyboard tab order, which would make the switch mouse-only. */
+.theme-switch input {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+
+  margin: 0;
+
+  opacity: 0;
+
+  pointer-events: none;
+}
+
+/* A "face" is one plate: an icon plus a name.
+   `grid-area: 1 / 1` puts BOTH faces into the same cell, so they sit on top of each
+   other and the pill is exactly as wide as the widest label. The inactive face is
+   faded out and `visibility: hidden`, which also removes its text from the
+   accessibility tree - that is why the switch is announced as "Light Scheme" while
+   it is off and as "Dark Scheme" while it is on. */
+.switch-face {
+  grid-area: 1 / 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  height: 34px;
+  padding: 0 16px;
+
+  border-radius: 999px;
+
+  font-family: "Manrope", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+
+  opacity: 0; /* hidden by default; the light face is switched back on below */
+  visibility: hidden;
+
+  transition:
+    opacity 0.28s ease,
+    visibility 0.28s ease,
+    background 0.3s ease,
+    box-shadow 0.3s ease,
+    color 0.3s ease;
+}
+
+/* SWITCH-PLATES */
+
+/* LIGHT SCHEME plate: clean white with a thin inner hairline (layer 4 above).
+   It sits after `.switch-face`, so its opacity/visibility win - this is the plate
+   that is visible while the switch is OFF. */
+.switch-face--light {
+  background: #ffffff;
+
+  color: #1e293b;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(100, 116, 139, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  opacity: 1;
+  visibility: visible;
+}
+
+/* DARK SCHEME plate: deep slate with light text, built from the same layers. */
+.switch-face--dark {
+  background: #0f172a;
+
+  color: #f1f5f9;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(148, 163, 184, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Icons: line art that inherits its colour from the plate (stroke: currentColor). */
+.switch-icon {
+  width: 17px;
+  height: 17px;
+
+  flex-shrink: 0;
+
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The sun keeps the blue side of the Campus360 palette ... */
+.switch-face--light .switch-icon {
+  color: #2563eb;
+}
+
+/* ... and the moon takes the violet side in the dark scheme. */
+.switch-face--dark .switch-icon {
+  color: #c4b5fd;
+}
+
+/* The scheme name: one line, vertically centred inside the plate. */
+.switch-text {
+  line-height: 1;
+}
+
+/* --------------------------------------------------------------------------
+   ON = "Dark Scheme" is the selected scheme
+   `:has()` lets the <label> react to the checkbox inside it - there is no
+   sibling/child path from the input up to its own parent without it.
+   If a browser does not support `:has()`, the dark plate still appears; only the
+   outer frame and the halo would keep their light colours.
+   -------------------------------------------------------------------------- */
+
+/* cross-fade the plates: the light one fades out ... */
+.theme-switch input:checked ~ .switch-face--light {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* ... while the dark one fades in. `visibility` is transitioned as well: it stays
+   `visible` for the whole fade and only flips to `hidden` at the end of it. */
+.theme-switch input:checked ~ .switch-face--dark {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* The frame around the plate turns dark, and the violet halo makes the selected
+   scheme read as "active" - the one brand-coloured cue in this control. */
+.theme-switch:has(input:checked) {
+  background: #1e293b;
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.35),
+    0 0 0 4px rgba(124, 58, 237, 0.14);
+}
+
+/* Hover: lift the pill and add a soft brand glow, the same idea as .login-btn:hover. */
+.theme-switch:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 6px 16px rgba(15, 23, 42, 0.16),
+    0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+/* The checked rule above is more specific than this plain hover rule, so the dark
+   state needs its own hover to get the same feedback. */
+.theme-switch:hover:has(input:checked) {
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.4),
+    0 0 0 5px rgba(124, 58, 237, 0.2);
+}
+
+/* Keyboard focus: drawn on the plate, and the 3px offset places the ring in the
+   frame gap. `:focus-visible` means a mouse click leaves no ring behind, and the
+   checkbox itself stays invisible. */
+.theme-switch input:focus-visible ~ .switch-face {
+  outline: 2px solid #7c3aed;
+  outline-offset: 3px;
+}
+
+/* Pressed: the pill settles a little (this rule comes after the hover rule, so it
+   wins for `transform` while the mouse button is down). */
+.theme-switch:active {
+  transform: scale(0.985);
+}
+
+/* =========================
+   HERO
+========================= */
+
+.hero {
+  position: relative;
+
+  width: 100%;
+  min-height: 760px;
+
+  overflow: hidden;
+  isolation: isolate;
+
+  background: transparent;
+}
+
+/* =========================
+   HERO BACKGROUND ARTWORK
+========================= */
+
+.hero-bg-art {
+  position: absolute;
+
+  top: -3%;
+  left: 6%;
+
+  width: 108%;
+  height: 108%;
+
+  object-fit: cover;
+  object-position: center;
+
+  z-index: 1;
+
+  pointer-events: none;
+  user-select: none;
+
+  filter: saturate(1.03) contrast(1.01);
+
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 68%,
+    rgba(0, 0, 0, 0.75) 82%,
+    rgba(0, 0, 0, 0.35) 92%,
+    transparent 100%
+  );
+
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 68%,
+    rgba(0, 0, 0, 0.75) 82%,
+    rgba(0, 0, 0, 0.35) 92%,
+    transparent 100%
+  );
+}
+
+/* =========================
+   LEFT SIDE ATMOSPHERE
+========================= */
+
+.hero::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 2;
+
+  pointer-events: none;
+
+  background: linear-gradient(
+    90deg,
+    rgba(248, 250, 252, 0.98) 0%,
+    rgba(248, 250, 252, 0.93) 16%,
+    rgba(248, 250, 252, 0.76) 27%,
+    rgba(248, 250, 252, 0.46) 37%,
+    rgba(248, 250, 252, 0.16) 47%,
+    transparent 59%
+  );
+}
+
+/* =========================
+   HERO BOTTOM FADE
+========================= */
+
+.hero::after {
+  display: none;
+}
+
+/* =========================
+   HERO CONTENT
+========================= */
+
+.hero-content {
+  position: relative;
+
+  z-index: 10;
+
+  width: min(560px, 42vw);
+
+  margin-left: 4.4vw;
+
+  padding-top: 265px;
+
+  align-self: initial;
+}
+
+.hero-content h1 {
+  margin-bottom: 24px;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: clamp(48px, 4.1vw, 64px);
+  font-weight: 800;
+
+  line-height: 1.03;
+
+  letter-spacing: -2.8px;
+
+  color: #0f172a;
+}
+
+.hero-content h1 span {
+  display: block;
+
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 52%, #7c3aed 100%);
+
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-content p {
+  max-width: 510px;
+
+  margin-bottom: 34px;
+
+  color: #64748b;
+
+  font-size: 16px;
+  font-weight: 500;
+
+  line-height: 1.75;
+}
+
+/* =========================
+   HERO BUTTON
+========================= */
+
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+
+  color: white;
+
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+
+  padding: 14px 24px;
+
+  border-radius: var(--r-sm);
+
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  box-shadow: var(--shadow-brand);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    filter 0.25s ease;
+}
+
+.hero-btn span {
+  font-size: 18px;
+  line-height: 1;
+
+  transition: transform 0.25s ease;
+}
+
+.hero-btn:hover {
+  transform: translateY(-3px);
+
+  filter: brightness(1.07);
+
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.32);
+}
+
+.hero-btn:hover span {
+  transform: translateX(4px);
+}
+
+/* =========================
+   HERO VISUAL LAYER
+========================= */
+
+.hero-visual {
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  z-index: 5;
+
+  pointer-events: none;
+}
+
+.hero-orbit {
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+}
+
+/* =========================
+   CAMPUS360 CENTRAL BRAND
+========================= */
+
+.hero-orbit-brand {
+  position: absolute;
+
+  left: 70.5%;
+  top: 53%;
+
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+
+  z-index: 8;
+
+  pointer-events: none;
+}
+
+.hero-orbit-brand img {
+  width: 142px;
+  height: 142px;
+
+  object-fit: contain;
+
+  filter: drop-shadow(0 0 18px rgba(37, 99, 235, 0.42))
+    drop-shadow(0 0 38px rgba(124, 58, 237, 0.24));
+}
+
+.hero-brand-name {
+  margin-top: 2px;
+
+  color: #ffffff;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 31px;
+  font-weight: 800;
+
+  letter-spacing: -1px;
+
+  text-shadow: 0 3px 12px rgba(2, 6, 23, 0.35);
+}
+
+.hero-brand-name span {
+  background: linear-gradient(135deg, #38bdf8, #2563eb, #8b5cf6);
+
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-brand-label {
+  margin-top: 7px;
+
+  color: rgba(219, 234, 254, 0.88);
+
+  font-family: "Rubik", sans-serif;
+
+  font-size: 7px;
+  font-weight: 600;
+
+  letter-spacing: 3px;
+
+  white-space: nowrap;
+
+  text-shadow: 0 2px 8px rgba(2, 6, 23, 0.4);
+}
+
+/* =========================
+   HERO MODULE CARDS
+========================= */
+
+.hero-module {
+  position: absolute;
+
+  z-index: 10;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  width: 218px;
+  min-height: 72px;
+
+  padding: 11px 14px;
+
+  color: #ffffff;
+
+  background: linear-gradient(
+    135deg,
+    rgba(30, 58, 138, 0.78),
+    rgba(30, 41, 59, 0.62)
+  );
+
+  border: 1px solid rgba(147, 197, 253, 0.36);
+
+  border-radius: var(--r-md); /* the same card radius the light sections use */
+
+  box-shadow:
+    0 18px 38px rgba(2, 6, 23, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+
+  backdrop-filter: blur(13px);
+  -webkit-backdrop-filter: blur(13px);
+
+  cursor: pointer;
+
+  pointer-events: auto;
+
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.hero-module:hover {
+  transform: translateY(-5px);
+
+  border-color: rgba(125, 211, 252, 0.72);
+
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.84),
+    rgba(79, 70, 229, 0.72)
+  );
+
+  box-shadow:
+    0 20px 42px rgba(37, 99, 235, 0.3),
+    0 0 24px rgba(59, 130, 246, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* Card icon */
+
+.hero-module-icon {
+  width: 39px;
+  height: 39px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  color: white;
+
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+
+  border-radius: var(--r-sm);
+
+  font-size: 15px;
+  font-weight: 700;
+
+  box-shadow: 0 7px 18px rgba(37, 99, 235, 0.3);
+
+  transition: transform 0.25s ease;
+}
+
+.hero-module:hover .hero-module-icon {
+  transform: scale(1.08);
+}
+
+/* Card text */
+
+.hero-module-content {
+  min-width: 0;
+}
+
+.hero-module strong {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #ffffff;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  line-height: 1.2;
+}
+
+.hero-module span {
+  display: block;
+
+  color: rgba(219, 234, 254, 0.78);
+
+  font-size: 9px;
+  font-weight: 500;
+
+  line-height: 1.3;
+}
+
+/* =========================
+   MODULE POSITIONS
+========================= */
+
+.hero-module-timetable {
+  top: 32%;
+  left: 47.3%;
+}
+
+.hero-module-attendance {
+  top: 35%;
+  right: 3.2%;
+}
+
+.hero-module-assignments {
+  bottom: 20%;
+  left: 47.5%;
+}
+
+.hero-module-results {
+  right: 4.5%;
+  bottom: 19%;
+}
+
+/* =========================
+   SECTION HEADING
+========================= */
+
+.section-heading {
+  max-width: 660px;
+
+  margin: 0 auto 56px; /* more air between the heading and its content */
+
+  text-align: center;
+}
+
+.section-heading h2 {
+  margin-bottom: 16px;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: clamp(30px, 2.8vw, 40px); /* fluid, but never shouty */
+  font-weight: 800;
+
+  line-height: 1.14;
+
+  letter-spacing: -1.2px;
+
+  color: var(--ink);
+
+  text-wrap: balance; /* keeps multi-line headings visually even */
+}
+
+.section-heading p {
+  color: var(--muted);
+
+  font-size: 16px;
+
+  line-height: 1.75;
+
+  text-wrap: pretty;
+}
+
+/* =========================
+   ROLES
+========================= */
+
+.features {
+  /* tight at the top so the hero flows into the cards, then the shared rhythm */
+  padding: 30px 60px var(--section-y);
+
+  background:
+    linear-gradient(
+      to bottom,
+      #f8fafc 0%,
+      rgba(248, 250, 252, 0) 16%
+    );
+}
+
+.feature-grid {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 24px; /* the grid gap every other section uses too */
+
+  max-width: 1200px; /* one content width for the whole page */
+
+  margin: 0 auto;
+}
+
+.feature-card {
+  position: relative;
+
+  display: flex;
+  flex-direction: column; /* so the link can sit at the bottom of every card */
+
+  padding: 32px;
+
+  /* solid white instead of translucent: the light sections stay crisp, and the
+     glass treatment stays where it belongs, on the dark hero cards */
+  background: var(--surface);
+
+  border: 1px solid rgba(226, 232, 240, 0.9);
+
+  border-radius: var(--r-md);
+
+  box-shadow: var(--shadow-card);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px); /* the same lift as every other card */
+
+  border-color: rgba(37, 99, 235, 0.24);
+
+  box-shadow: var(--shadow-lift);
+}
+
+/* Feature icon */
+
+.feature-icon {
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 20px;
+
+  color: white;
+
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+
+  border-radius: var(--r-sm);
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  /* inner top highlight: the same "lit from above" feel as the navbar button */
+  box-shadow:
+    0 8px 18px rgba(37, 99, 235, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* the icon answers the card hover instead of moving on its own */
+.feature-card:hover .feature-icon {
+  transform: scale(1.05);
+
+  box-shadow:
+    0 10px 22px rgba(37, 99, 235, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Feature label */
+
+.feature-label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: var(--blue);
+
+  font-size: 10px;
+  font-weight: 700;
+
+  letter-spacing: 1.2px;
+}
+
+/* Feature heading */
+
+.feature-card h3 {
+  margin-bottom: 10px;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 21px;
+  font-weight: 700;
+
+  letter-spacing: -0.3px;
+
+  color: var(--ink);
+}
+
+/* Feature description */
+
+.feature-card p {
+  margin-bottom: 22px;
+
+  color: var(--muted);
+
+  font-size: 14px;
+
+  line-height: 1.72;
+}
+
+/* Feature link */
+
+.feature-link {
+  display: inline-block; /* the transform below is ignored on inline elements */
+  align-self: flex-start;
+  margin-top: auto; /* keeps the link on one line across all three cards */
+
+  color: var(--ink-soft);
+
+  text-decoration: none;
+
+  font-size: 12.5px;
+  font-weight: 700;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.feature-link:hover,
+.feature-card:hover .feature-link {
+  color: var(--blue);
+
+  transform: translateX(2px);
+}
+
+/* =========================
+   CORE FEATURES
+========================= */
+
+.core-features {
+  padding: var(--section-y) 60px;
+
+  /* a very light pool of brand colour at the top, so the section reads as its
+     own band without a hard edge */
+  background:
+    radial-gradient(
+      ellipse 55% 60% at 50% 0%,
+      rgba(37, 99, 235, 0.05),
+      transparent 70%
+    );
+}
+
+.core-feature-grid {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 24px;
+
+  max-width: 1200px;
+
+  margin: 0 auto;
+}
+
+.core-feature-card {
+  padding: 28px;
+
+  background: var(--surface);
+
+  border: 1px solid rgba(226, 232, 240, 0.9);
+
+  border-radius: var(--r-md);
+
+  box-shadow: var(--shadow-card);
+
+  transition:
+    transform 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+}
+
+/* A short gradient accent above the title. These cards carry no icon in the
+   markup, so this gives them the same "icon treatment" as the role cards
+   without inventing new content. */
+.core-feature-card::before {
+  content: "";
+
+  display: block;
+
+  width: 28px;
+  height: 4px;
+
+  margin-bottom: 18px;
+
+  background: linear-gradient(90deg, var(--blue), var(--violet));
+
+  border-radius: var(--r-pill);
+
+  opacity: 0.85;
+
+  transition:
+    width 0.24s ease,
+    opacity 0.24s ease;
+}
+
+.core-feature-card:hover {
+  transform: translateY(-4px);
+
+  border-color: rgba(37, 99, 235, 0.24);
+
+  box-shadow: var(--shadow-lift);
+}
+
+.core-feature-card:hover::before {
+  width: 44px;
+
+  opacity: 1;
+}
+
+.core-feature-card h3 {
+  margin-bottom: 8px;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 17px;
+  font-weight: 700;
+
+  letter-spacing: -0.2px;
+
+  color: var(--ink);
+}
+
+.core-feature-card p {
+  color: var(--muted);
+
+  font-size: 13.5px;
+
+  line-height: 1.7;
+}
+
+/* =========================
+   PLATFORM PREVIEW
+========================= */
+
+.platform-preview {
+  padding: var(--section-y) 60px;
+
+  /* the window floats on its own pool of light, which gives the section depth
+     without adding another box */
+  background:
+    radial-gradient(
+      ellipse 58% 55% at 50% 45%,
+      rgba(37, 99, 235, 0.07),
+      transparent 72%
+    );
+}
+
+.platform-window {
+  max-width: 1200px;
+  min-height: 570px;
+  margin: 0 auto;
+
+  display: flex;
+
+  /* A 1px brand-gradient frame instead of a flat grey line: `padding-box` paints
+     the white surface underneath, `border-box` paints the border itself. */
+  border: 1px solid transparent;
+
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(
+        135deg,
+        rgba(37, 99, 235, 0.34),
+        rgba(124, 58, 237, 0.26),
+        rgba(56, 189, 248, 0.3)
+      )
+      border-box;
+
+  border-radius: var(--r-lg);
+
+  overflow: hidden;
+
+  box-shadow:
+    0 40px 90px rgba(15, 23, 42, 0.14),
+    0 16px 40px rgba(37, 99, 235, 0.08);
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.platform-sidebar {
+  width: 210px;
+
+  display: flex;
+  flex-direction: column;
+
+  flex-shrink: 0;
+
+  /* a touch of depth: barely darker towards the bottom */
+  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+
+  border-right: 1px solid var(--line);
+}
+
+/* Sidebar brand */
+
+.platform-sidebar-brand {
+  height: 72px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 0 20px;
+
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.platform-sidebar-brand img {
+  width: 27px;
+  height: 27px;
+
+  object-fit: contain;
+}
+
+.platform-sidebar-brand > span {
+  color: #1e293b;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.platform-sidebar-brand > span > span {
+  color: #2563eb;
+}
+
+/* Sidebar navigation */
+
+.platform-nav {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  padding: 20px 12px;
+}
+
+.platform-nav-item {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  padding: 10px 12px;
+
+  color: #64748b;
+
+  background: transparent;
+
+  border: none;
+  border-radius: 10px; /* the inner dashboard keeps its own smaller scale */
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.platform-nav-item:hover {
+  color: #2563eb;
+
+  background: rgba(37, 99, 235, 0.06);
+
+  transform: translateX(2px);
+}
+
+.platform-nav-item.active {
+  color: #2563eb;
+
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.1),
+    rgba(124, 58, 237, 0.07)
+  );
+}
+
+.platform-nav-icon {
+  width: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 13px;
+}
+
+/* Sidebar footer */
+
+.platform-sidebar-footer {
+  margin-top: auto;
+
+  padding: 16px 12px;
+
+  border-top: 1px solid #e2e8f0;
+}
+
+.platform-user {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 9px;
+}
+
+.platform-avatar {
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  color: #ffffff;
+
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+
+  border-radius: 8px;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.platform-user strong,
+.platform-user small {
+  display: block;
+}
+
+.platform-user strong {
+  color: #1e293b;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.platform-user small {
+  margin-top: 2px;
+
+  color: #94a3b8;
+
+  font-size: 9px;
+}
+
+/* =========================
+   MAIN AREA
+========================= */
+
+.platform-main {
+  flex: 1;
+
+  min-width: 0;
+
+  background: #ffffff;
+}
+
+/* =========================
+   TOP BAR
+========================= */
+
+.platform-topbar {
+  height: 72px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 28px; /* lines up with .platform-content below it */
+
+  border-bottom: 1px solid var(--line);
+}
+
+.platform-page-label {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #94a3b8;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+}
+
+.platform-topbar h3 {
+  margin: 0;
+
+  color: #1e293b;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.platform-topbar-actions {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+/* Notification / icon button */
+
+.platform-icon-button {
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #64748b;
+
+  background: #ffffff;
+
+  border: 1px solid var(--line);
+  border-radius: 10px;
+
+  font-size: 12px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.platform-icon-button:hover {
+  color: #2563eb;
+
+  background: rgba(37, 99, 235, 0.06);
+
+  border-color: rgba(37, 99, 235, 0.18);
+
+  transform: translateY(-1px);
+}
+
+/* Overview button */
+
+.platform-status {
+  padding: 7px 12px;
+
+  color: #2563eb;
+
+  background: rgba(37, 99, 235, 0.07);
+
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 7px;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.platform-status:hover {
+  color: #ffffff;
+
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+
+  border-color: transparent;
+
+  transform: translateY(-1px);
+}
+
+/* =========================
+   CONTENT
+========================= */
+
+.platform-content {
+  padding: 28px;
+}
+
+.platform-welcome {
+  margin-bottom: 20px;
+}
+
+.platform-welcome h3 {
+  margin-bottom: 5px;
+
+  color: #1e293b;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.platform-welcome p {
+  color: #64748b;
+
+  font-size: 11px;
+}
+
+/* =========================
+   STATISTICS
+========================= */
+
+.platform-stats {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 16px; /* same rhythm as the dashboard grid below */
+
+  margin-bottom: 20px;
+}
+
+.platform-stat {
+  padding: 16px;
+
+  background: #ffffff;
+
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+
+  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.035);
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.platform-stat:hover {
+  transform: translateY(-3px);
+
+  border-color: rgba(37, 99, 235, 0.22);
+
+  box-shadow:
+    0 12px 24px rgba(15, 23, 42, 0.07),
+    0 4px 12px rgba(37, 99, 235, 0.05);
+}
+
+.platform-stat-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 10px;
+
+  color: #64748b;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.platform-stat-icon {
+  width: 23px;
+  height: 23px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #2563eb;
+
+  background: rgba(37, 99, 235, 0.08);
+
+  border-radius: 6px;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.platform-stat strong {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #1e293b;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.platform-stat small {
+  color: #94a3b8;
+
+  font-size: 9px;
+}
+
+/* =========================
+   LOWER DASHBOARD
+========================= */
+
+.platform-dashboard-grid {
+  display: grid;
+
+  grid-template-columns: 1.35fr 1fr;
+
+  gap: 16px;
+}
+
+.platform-panel {
+  padding: 18px;
+
+  background: #ffffff;
+
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm); /* matches the stat cards above it */
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.platform-panel:hover {
+  border-color: rgba(37, 99, 235, 0.16);
+
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.platform-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  margin-bottom: 13px;
+}
+
+.platform-panel-header span {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #94a3b8;
+
+  font-size: 7px;
+  font-weight: 800;
+
+  letter-spacing: 0.1em;
+}
+
+.platform-panel-header h4 {
+  color: #1e293b;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.platform-panel-header button {
+  padding: 0;
+
+  color: #2563eb;
+
+  background: transparent;
+
+  border: none;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.platform-panel-header button:hover {
+  color: #7c3aed;
+
+  transform: translateX(2px);
+}
+
+/* =========================
+   SCHEDULE
+========================= */
+
+.platform-schedule-item {
+  display: grid;
+
+  grid-template-columns: 45px 1fr auto;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 11px 0;
+
+  border-top: 1px solid #f1f5f9;
+
+  transition:
+    background 0.2s ease,
+    padding-left 0.2s ease;
+}
+
+.platform-schedule-item:hover {
+  padding-left: 6px;
+
+  background: rgba(37, 99, 235, 0.025);
+}
+
+.platform-time {
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-time strong {
+  color: #1e293b;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.platform-time small {
+  color: #94a3b8;
+
+  font-size: 8px;
+}
+
+.platform-class {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.platform-class strong {
+  color: #1e293b;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.platform-class span {
+  color: #94a3b8;
+
+  font-size: 8px;
+}
+
+.platform-class-status {
+  padding: 4px 6px;
+
+  color: #16a34a;
+
+  background: rgba(22, 163, 74, 0.08);
+
+  border-radius: 5px;
+
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.platform-class-status.upcoming {
+  color: #64748b;
+
+  background: #f1f5f9;
+}
+
+/* =========================
+   RECENT ACTIVITY
+========================= */
+
+.platform-activity {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 11px 0;
+
+  border-top: 1px solid #f1f5f9;
+
+  transition:
+    background 0.2s ease,
+    padding-left 0.2s ease;
+}
+
+.platform-activity:hover {
+  padding-left: 5px;
+
+  background: rgba(37, 99, 235, 0.025);
+}
+
+.activity-icon {
+  width: 27px;
+  height: 27px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  color: #2563eb;
+
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.09),
+    rgba(124, 58, 237, 0.09)
+  );
+
+  border-radius: 7px;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.platform-activity strong,
+.platform-activity span {
+  display: block;
+}
+
+.platform-activity strong {
+  margin-bottom: 3px;
+
+  color: #1e293b;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.platform-activity span {
+  color: #94a3b8;
+
+  font-size: 8px;
+}
+
+/* =========================
+   HOW IT WORKS
+========================= */
+
+.how-it-works {
+  padding: var(--section-y) 60px;
+
+  /* the one full-width tinted band on the page: it separates the dashboard
+     preview from the sections below without drawing a hard line */
+  background: linear-gradient(
+    180deg,
+    rgba(37, 99, 235, 0.035),
+    rgba(124, 58, 237, 0.035)
+  );
+}
+
+/* System flow */
+
+.system-flow {
+  max-width: 1200px;
+
+  margin: 0 auto;
+
+  display: flex;
+
+  align-items: stretch;
+
+  justify-content: center;
+
+  gap: 18px;
+}
+
+.flow-item {
+  flex: 1;
+
+  padding: 30px 24px;
+
+  background: var(--surface);
+
+  border: 1px solid rgba(226, 232, 240, 0.9);
+
+  border-radius: var(--r-md);
+
+  box-shadow: var(--shadow-card);
+
+  text-align: center;
+
+  transition:
+    transform 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+}
+
+.flow-item:hover {
+  transform: translateY(-4px);
+
+  border-color: rgba(37, 99, 235, 0.24);
+
+  box-shadow: var(--shadow-lift);
+}
+
+/* the step number reads as a small chip instead of a bare number */
+.flow-number {
+  width: 34px;
+  height: 34px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 16px;
+
+  color: var(--blue);
+
+  background: rgba(37, 99, 235, 0.08);
+
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  border-radius: var(--r-pill);
+
+  font-family: "Rubik", sans-serif;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.flow-item h3 {
+  margin-bottom: 10px;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 16.5px;
+  font-weight: 700;
+
+  letter-spacing: -0.2px;
+
+  color: var(--ink);
+}
+
+.flow-item p {
+  color: var(--muted);
+
+  font-size: 13px;
+
+  line-height: 1.68;
+}
+
+/* Highlight central system */
+
+/* the central Campus360 step is the focal point of the flow */
+.flow-highlight {
+  background: linear-gradient(
+    145deg,
+    rgba(37, 99, 235, 0.07),
+    rgba(124, 58, 237, 0.09)
+  );
+
+  border-color: rgba(99, 102, 241, 0.24);
+
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.09);
+}
+
+/* Connectors */
+
+.flow-connector {
+  width: 34px;
+
+  align-self: center;
+
+  height: 2px;
+
+  flex-shrink: 0;
+
+  border-radius: var(--r-pill);
+
+  background: linear-gradient(
+    90deg,
+    rgba(37, 99, 235, 0.22),
+    rgba(124, 58, 237, 0.34)
+  );
+}
+
+/* =========================
+   WHY CAMPUS360
+========================= */
+
+.why-campus360 {
+  padding: var(--section-y) 60px;
+
+  background: transparent;
+}
+
+.why-grid {
+  max-width: 1200px;
+
+  margin: 0 auto;
+
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 24px;
+}
+
+.why-item {
+  padding: 30px;
+
+  background: var(--surface);
+
+  border: 1px solid rgba(226, 232, 240, 0.9);
+
+  border-radius: var(--r-md);
+
+  box-shadow: var(--shadow-card);
+
+  transition:
+    transform 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+}
+
+.why-item:hover {
+  transform: translateY(-4px);
+
+  border-color: rgba(124, 58, 237, 0.24);
+
+  box-shadow: var(--shadow-lift);
+}
+
+.why-item h3 {
+  margin-bottom: 10px;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 17.5px;
+  font-weight: 700;
+
+  letter-spacing: -0.3px;
+
+  color: var(--ink);
+}
+
+.why-item p {
+  color: var(--muted);
+
+  font-size: 13.5px;
+
+  line-height: 1.7;
+}
+
+/* =========================
+   ABOUT STORY
+========================= */
+
+.about {
+  padding: var(--section-y) 60px;
+
+  /* a soft violet pool at the bottom of the section, echoing the hero
+     atmosphere without repeating it */
+  background:
+    radial-gradient(
+      ellipse 60% 70% at 50% 100%,
+      rgba(124, 58, 237, 0.045),
+      transparent 70%
+    );
+}
+
+.about-heading {
+  max-width: 660px;
+
+  margin: 0 auto 56px; /* the same heading rhythm as .section-heading */
+
+  text-align: center;
+}
+
+.about-heading h2 {
+  margin-bottom: 16px;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: clamp(30px, 2.8vw, 40px);
+  font-weight: 800;
+
+  line-height: 1.14;
+
+  letter-spacing: -1.2px;
+
+  color: var(--ink);
+
+  text-wrap: balance;
+}
+
+.about-heading p {
+  color: var(--muted);
+
+  font-size: 16px;
+
+  line-height: 1.75;
+
+  text-wrap: pretty;
+}
+
+/* Story */
+
+.about-story {
+  max-width: 1200px;
+
+  margin: 0 auto;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 24px;
+}
+
+.story-item {
+  padding: 30px;
+
+  background: var(--surface);
+
+  border: 1px solid rgba(226, 232, 240, 0.9);
+
+  border-radius: var(--r-md);
+
+  box-shadow: var(--shadow-card);
+
+  transition:
+    transform 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+}
+
+.story-item:hover {
+  transform: translateY(-4px);
+
+  border-color: rgba(37, 99, 235, 0.24);
+
+  box-shadow: var(--shadow-lift);
+}
+
+/* the 01 / 02 / 03 markers use the same chip as the flow steps */
+.story-item > span {
+  width: 34px;
+  height: 34px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 18px;
+
+  color: var(--blue);
+
+  background: rgba(37, 99, 235, 0.08);
+
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  border-radius: var(--r-pill);
+
+  font-family: "Rubik", sans-serif;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.story-item h3 {
+  margin-bottom: 10px;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: 17.5px;
+  font-weight: 700;
+
+  letter-spacing: -0.3px;
+
+  color: var(--ink);
+}
+
+.story-item p {
+  color: var(--muted);
+
+  font-size: 13.5px;
+
+  line-height: 1.72;
+}
+
+/* =========================
+   FINAL CTA
+========================= */
+
+.contact {
+  padding: var(--section-y) 60px;
+
+  background: transparent;
+}
+
+.contact-content {
+  max-width: 1200px;
+
+  margin: 0 auto;
+
+  display: grid;
+
+  grid-template-columns: 1fr auto;
+
+  align-items: center;
+
+  gap: 64px;
+
+  padding: 56px 60px;
+
+  /* the closing panel: a faint brand wash with one soft light source in the
+     corner, plus a top highlight so the surface reads as a real object */
+  background:
+    radial-gradient(
+      circle at 12% 15%,
+      rgba(37, 99, 235, 0.07),
+      transparent 45%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.06),
+      rgba(124, 58, 237, 0.07)
+    );
+
+  border: 1px solid rgba(99, 102, 241, 0.16);
+
+  border-radius: var(--r-lg);
+
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.contact-label {
+  display: block;
+
+  margin-bottom: 14px;
+
+  color: var(--blue);
+
+  font-size: 10px;
+  font-weight: 700;
+
+  letter-spacing: 1.6px;
+}
+
+.contact-text h2 {
+  margin-bottom: 14px;
+
+  font-family: "Manrope", sans-serif;
+
+  font-size: clamp(28px, 2.4vw, 36px); /* a step below the section headings */
+  font-weight: 800;
+
+  line-height: 1.15;
+
+  letter-spacing: -1px;
+
+  color: var(--ink);
+
+  text-wrap: balance;
+}
+
+.contact-text p {
+  max-width: 560px;
+
+  color: var(--muted);
+
+  font-size: 15px;
+
+  line-height: 1.72;
+}
+
+/* Contact actions */
+
+.contact-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+
+  white-space: nowrap;
+}
+
+.contact-btn {
+  color: white;
+
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+
+  padding: 14px 26px;
+
+  border-radius: var(--r-sm); /* the same button shape as the hero and navbar */
+
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  box-shadow: var(--shadow-brand);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    filter 0.25s ease;
+}
+
+.contact-btn:hover {
+  transform: translateY(-2px);
+
+  filter: brightness(1.06);
+
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.3);
+}
+
+.contact-link {
+  display: inline-block; /* so the hover transform is not ignored */
+
+  color: var(--ink-soft);
+
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.contact-link:hover {
+  color: #2563eb;
+
+  transform: translateX(2px);
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+.footer {
+  padding: 56px 60px 28px;
+
+  /* seamless visual transition from the sections above into the footer */
+  background: linear-gradient(
+    180deg,
+    rgba(37, 99, 235, 0.02),
+    rgba(248, 250, 252, 0.8) 40%
+  );
+
+  backdrop-filter: blur(8px);
+}
+
+.footer-content {
+  max-width: 1200px;
+
+  margin: 0 auto;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+}
+
+.footer-brand .logo {
+  width: fit-content;
+}
+
+.footer-brand p {
+  margin-top: 10px;
+
+  margin-left: 49px; /* lines the tagline up with the Campus360 wordmark */
+
+  color: var(--muted);
+
+  font-size: 13px;
+}
+
+.footer-links {
+  display: flex;
+
+  gap: 32px;
+}
+
+.footer-links a {
+  position: relative; /* anchor for the underline below */
+
+  color: var(--muted);
+
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  transition: color 0.2s ease;
+}
+
+/* the same underline reveal as the navbar links, so both nav areas match */
+.footer-links a::after {
+  content: "";
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px;
+
+  height: 2px;
+
+  background: linear-gradient(90deg, var(--blue), var(--violet));
+
+  border-radius: var(--r-pill);
+
+  transform: scaleX(0);
+  transform-origin: center;
+
+  transition: transform 0.24s ease;
+}
+
+.footer-links a:hover {
+  color: var(--blue);
+}
+
+.footer-links a:hover::after {
+  transform: scaleX(1);
+}
+
+.footer-bottom {
+  max-width: 1200px;
+
+  margin: 34px auto 0;
+
+  padding-top: 22px;
+
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+
+  color: #94a3b8;
+
+  font-size: 12px;
+
+  text-align: center;
+}
