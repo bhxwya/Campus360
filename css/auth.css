@@ -38,9 +38,10 @@
   --r-lg: 24px;
   --r-pill: 999px;
 
-  /* Elevation tokens */
+  /* Elevation tokens - identical to the landing page so the login card and
+     the marketing cards feel like the same object */
   --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px rgba(15, 23, 42, 0.05);
-  --shadow-lift: 0 4px 12px rgba(15, 23, 42, 0.05), 0 24px 48px rgba(15, 23, 42, 0.08);
+  --shadow-lift: 0 2px 4px rgba(15, 23, 42, 0.05), 0 20px 44px rgba(15, 23, 42, 0.09);
   --shadow-brand: 0 10px 24px rgba(37, 99, 235, 0.22);
 }
 
@@ -162,40 +163,60 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 30px;
   text-align: center;
 }
+
+/* ==========================================================================
+   CAMPUS360 BRAND MARK
+   --------------------------------------------------------------------------
+   Sizing aligned with the landing-page master reference (index.html).
+
+   index.html / style.css is the single source of truth for the Campus360
+   lockup, and the login page reproduces those rendered dimensions exactly:
+
+     mark        40 x 40   (.logo-mark / .logo-mark img)
+     gap         10px      (.logo gap, align-items: center)
+     wordmark    20px      Poppins, weight 600, #0f172a
+     "360"       Rubik, weight 700, blue -> violet gradient
+     BRAND H     40px      (the mark sets the height of the whole lockup)
+
+   These are the same numbers, not a "login variant" of them - the brand must
+   not change size between the marketing site and the sign-in screen. The
+   responsive tiers at the bottom of this file mirror style.css exactly.
+   ========================================================================== */
 
 /* Exact logo styling aligned with Campus360 navbar standards */
 .logo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-decoration: none;
   transition: transform 0.25s ease, filter 0.25s ease;
 }
 
 .logo-mark {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .logo-mark img {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
+  display: block;
   transition: transform 0.25s ease;
 }
 
 .logo-text {
   font-family: "Poppins", sans-serif;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   color: var(--ink);
-  letter-spacing: -0.5px;
 }
 
 .logo-text span {
@@ -278,10 +299,11 @@
 .role-selector {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 6px;
   background: #f1f5f9;
   padding: 5px;
   border-radius: var(--r-md);
+  border: 1px solid var(--line);
   margin-bottom: 28px;
 }
 
@@ -311,7 +333,7 @@
   color: var(--muted);
   font-size: 12px;
   font-weight: 600;
-  transition: all 0.22s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   user-select: none;
 }
 
@@ -321,10 +343,13 @@
   transition: transform 0.22s ease, stroke 0.22s ease;
 }
 
-/* Active selected role pill */
+/* Active selected role pill. The selected role is the strongest signal on the
+   card, so it also carries the heavier weight - colour alone is not the only
+   cue. */
 .role-option input:checked ~ .role-pill {
   background: var(--surface);
   color: var(--blue);
+  font-weight: 700;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
 
@@ -352,7 +377,7 @@
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 .form-group {
@@ -406,6 +431,25 @@
   border-color: var(--blue);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   background: #fafcff;
+}
+
+/* Inline validation message (js/auth.js writes into it on submit and clears
+   it again as soon as the user types). Hidden by default via [hidden]. */
+.field-error {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #ef4444;
+  margin-top: -4px;
+}
+
+/* Error state applied to the whole field group by js/auth.js */
+.form-group.has-error .form-input {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.form-group.has-error .input-icon {
+  color: #ef4444;
 }
 
 .form-input:focus + .input-icon,
@@ -589,10 +633,42 @@
   color: #94a3b8;
 }
 
+
 /* ==========================================================================
    RESPONSIVE DESIGN
    Adapts padding, layout density, and card sizing for tablets and mobile phones.
 ========================================================================== */
+
+/* Two tiers, matching the rest of the product:
+     768px  tablet - the card stops competing with the page gutters
+     540px  phone  - the role selector and the remember-me row stack
+   380px  phone  - the three role pills stop sharing one line
+   The card keeps its desktop proportions above these widths, so the login
+   page still reads as the same object as the desktop design. */
+
+/* Tablet: pull the card in from the viewport edges and ease the vertical
+   padding so the whole form still fits on one screen. */
+@media (max-width: 768px) {
+  .auth-container {
+    padding: 24px 24px 32px;
+  }
+
+  .auth-nav {
+    padding: 24px 32px 0;
+  }
+
+  .auth-card {
+    padding: 32px 28px;
+  }
+
+  .auth-brand {
+    margin-bottom: 22px;
+  }
+
+  /* No logo size step here: the lockup keeps its canonical 40px mark and
+     20px wordmark at every width, exactly as on the landing page. */
+}
+
 
 @media (max-width: 540px) {
   .auth-nav {
@@ -624,3 +700,30 @@
   }
 }
 
+/* Small phones: the three role pills stop sharing one line and the sign-in
+   button goes full width, so it stays an easy thumb target. */
+@media (max-width: 380px) {
+  .auth-nav {
+    padding: 16px 16px 0;
+  }
+
+  .auth-card {
+    padding: 24px 16px;
+  }
+
+  .role-selector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .role-option,
+  .role-pill {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .auth-submit-btn {
+    width: 100%;
+    padding: 13px 18px;
+  }
+}

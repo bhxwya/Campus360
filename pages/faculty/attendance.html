@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Faculty Attendance - Campus360</title>
+  <link rel="icon" type="image/png" href="../../assets/campus360-orbit.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Poppins:wght@500;600;700&family=Rubik:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+  <link rel="stylesheet" href="../../css/faculty.css" />
+  <!-- Shared behaviour + demo auth load from <head>; the DOM-dependent
+       wiring inside both files waits for DOMContentLoaded. -->
+
+  <!-- ============================================================
+       BACKEND-BOUND CONTROLS
+       The action buttons and filter selects on this page are part of the
+       designed Campus360 UI, but their behaviour needs the FastAPI backend
+       (create / edit / delete / export / save / filter). Until those
+       endpoints exist they carry the `disabled` attribute, so the current
+       state is honest: a visitor sees the intended control, the muted
+       styling and the not-allowed cursor show it is not live yet, and
+       keyboard and screen-reader users correctly skip it.
+
+       No JavaScript is attached to them and no fake behaviour is faked.
+       The handler arrives with the endpoint in the next phase.
+       ============================================================ -->
+  <script src="../../js/script.js"></script>
+  <script src="../../js/auth.js"></script>
+</head>
+
+<body data-demo-protected>
+
+  <div class="app-layout">
+
+    <!-- ============================================================
+         APPLICATION SIDEBAR
+         Shared shell: identical for Student, Faculty and Admin. Only the
+         navigation items inside it differ per role.
+         ============================================================ -->
+    <aside class="app-sidebar">
+      
+      <!-- Brand Logo & Identity -->
+      <a href="dashboard.html" class="sidebar-brand" aria-label="Campus360 Home">
+        <span class="brand-lockup"><span class="brand-icon">
+          <img src="../../assets/campus360-orbit.png" alt="Campus360 Logo" />
+        </span>
+        <span class="brand-title">Campus<span>360</span></span></span>
+        <span class="brand-badge faculty">Faculty</span>
+      </a>
+
+      <!-- Primary Sidebar Navigation Links -->
+      <nav class="sidebar-nav">
+        <span class="nav-section-title">Instructor Workspace</span>
+        
+        <a href="dashboard.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9.5 21v-6.5h5V21"/></svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="attendance.html" class="nav-link active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span>Attendance</span>
+        </a>
+
+        <a href="assignments.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
+          <span>Assignments</span>
+          <span class="nav-counter">18</span>
+        </a>
+
+        <a href="marks.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 20v-5M12 20V4M18 20v-9"/></svg>
+          <span>Marks</span>
+        </a>
+
+        <a href="announcements.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5L11 19z"/><path d="M16 8.5a4.5 4.5 0 0 1 0 7"/><path d="M18.8 6a8 8 0 0 1 0 12"/></svg>
+          <span>Announcements</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar User Profile & Sign Out Footer -->
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar faculty">F</div>
+          <div class="user-info">
+            <span class="user-name">Dr. Alan Turing</span>
+            <span class="user-role-label">Dept. of Computer Science</span>
+            <a href="dashboard.html" class="user-profile-link">View profile</a>
+          </div>
+        </div>
+
+        <a href="../login.html" class="logout-link">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><path d="M21 12H9"/></svg>
+          <span>Sign Out</span>
+        </a>
+      </div>
+
+    </aside>
+
+    <!-- ============================================================
+
+         APPLICATION MAIN CONTENT
+
+         Topbar + page content. Styled entirely by css/dashboard.css, so all
+
+         three roles share one shell and differ only in their content.
+
+         ============================================================ -->
+
+    <main class="app-main">
+
+      <!-- ============================================================
+
+           TOPBAR
+
+           Page heading, search, actions and the profile area.
+
+           ============================================================ -->
+
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <span class="topbar-subtitle">Student Records</span>
+          <h1 class="topbar-title">Class Attendance Register</h1>
+        </div>
+
+        <div class="topbar-actions">
+          <button type="button" class="btn btn-primary btn-sm" disabled>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Save Attendance Register</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content-wrapper">
+
+        <!-- Context & Class Selector Bar -->
+        <section class="course-selector-bar">
+          <div class="selector-controls">
+            <div class="form-group">
+              <label class="form-label">Course</label>
+              <select class="form-control" aria-label="Select course" disabled>
+                <option>CS-301: Advanced Data Structures (Sec A)</option>
+                <option>CS-504: Algorithms Problem Solving</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Session Date</label>
+              <input type="text" class="form-control" value="Sep 25, 2026 (09:30 AM)" readonly aria-label="Session Date" />
+            </div>
+          </div>
+
+          <div class="row-center-sm">
+            <button type="button" class="btn btn-outline btn-sm" disabled>Mark All Present</button>
+            <button type="button" class="btn btn-outline btn-sm" disabled>Export Sheet</button>
+          </div>
+        </section>
+
+        <!-- Attendance Stats Summary -->
+        <section class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Roster Strength</span>
+              <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            </div>
+            <div class="stat-value">64</div>
+            <div class="stat-meta"><span>Total registered students</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Present Count</span>
+              <span class="stat-icon emerald"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>
+            </div>
+            <div class="stat-value">59</div>
+            <div class="stat-meta"><span class="stat-trend-up">92.2% Attendance</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Absent Count</span>
+              <span class="stat-icon amber"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></span>
+            </div>
+            <div class="stat-value">05</div>
+            <div class="stat-meta"><span>Leaves or unexcused</span></div>
+          </div>
+        </section>
+
+        <!-- Student Attendance Marking Table -->
+        <section class="card">
+          <div class="card-header">
+            <div class="card-header-titles">
+              <span class="card-subtitle">Class Roster</span>
+              <h2 class="card-title">Student Attendance Entry Sheet</h2>
+            </div>
+            <span class="badge badge-primary">Lecture #24 &bull; Unit 3: Graph Traversal</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Roll / ID</th>
+                  <th>Student Name</th>
+                  <th>Cumulative Attendance</th>
+                  <th>Attendance Status</th>
+                  <th>Quick Action (Visual UI)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>2024-CS-0492</strong></td>
+                  <td>
+                    <span class="cell-title">Alex Johnson</span>
+                    <span class="cell-subtext">B.Tech CS &bull; Sem 5</span>
+                  </td>
+                  <td><strong>90.4%</strong> (38/42)</td>
+                  <td><span class="attendance-status-pill present"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Present</span></td>
+                  <td>
+                    <div class="row-tight">
+                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Absent</button>
+                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Late</button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><strong>2024-CS-0493</strong></td>
+                  <td>
+                    <span class="cell-title">Maya Patel</span>
+                    <span class="cell-subtext">B.Tech CS &bull; Sem 5</span>
+                  </td>
+                  <td><strong>95.2%</strong> (40/42)</td>
+                  <td><span class="attendance-status-pill present"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Present</span></td>
+                  <td>
+                    <div class="row-tight">
+                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Absent</button>
+                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Late</button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><strong>2024-CS-0494</strong></td>
+                  <td>
+                    <span class="cell-title">Liam O'Connor</span>
+                    <span class="cell-subtext">B.Tech CS &bull; Sem 5</span>
+                  </td>
+                  <td><strong>73.8%</strong> (31/42)</td>
+                  <td><span class="attendance-status-pill absent"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg> Absent</span></td>
+                  <td>
+                    <div class="row-tight">
+                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Present</button>
+                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Late</button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><strong>2024-CS-0495</strong></td>
+                  <td>
+                    <span class="cell-title">Sophia Zhang</span>
+                    <span class="cell-subtext">B.Tech CS &bull; Sem 5</span>
+                  </td>
+                  <td><strong>88.1%</strong> (37/42)</td>
+                  <td><span class="attendance-status-pill present"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Present</span></td>
+                  <td>
+                    <div class="row-tight">
+                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Absent</button>
+                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Late</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+
+</body>
+</html>

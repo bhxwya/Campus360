@@ -5,7 +5,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Campus360</title>
+  <link rel="icon" type="image/png" href="assets/campus360-orbit.png" />
   <link rel="stylesheet" href="css/style.css" />
+  <!-- Shared behaviour loads from <head>; the DOM-dependent wiring inside it
+       waits for DOMContentLoaded. -->
+  <script src="js/script.js"></script>
 </head>
 
 <body>
@@ -32,63 +36,6 @@
 
 
     <div class="nav-actions">
-
-      <!--
-        THEME SWITCH (Light Scheme / Dark Scheme pill)
-        Visual only for now: there is still no JavaScript, so clicking it does NOT
-        change the page theme. It only shows the two looks we will wire up later.
-
-        Structure:
-          .theme-switch          the <label>: the outer ring + the frame + the shadow
-            #theme-toggle        the real control (kept: it stays the future JS hook)
-            .switch-face--light  the white plate: sun icon + "Light Scheme"
-            .switch-face--dark   the dark plate: moon icon + "Dark Scheme"
-
-        The two faces are stacked in the SAME grid cell and cross-fade, so the pill is
-        always as wide as its longest label and swapping the state needs no JavaScript.
-        Only the visible face is announced, because the hidden one is
-        `visibility: hidden` (hidden content is dropped from the accessibility tree).
-      -->
-      <label class="theme-switch">
-
-        <!-- 1. The real control: a native checkbox. Because it sits inside the
-             <label>, screen readers announce it as a labelled on/off control and it
-             stays keyboard operable (Tab to focus, Space to toggle).
-             The id is unchanged so the next step can attach JavaScript to it.
-             A native checkbox needs no extra ARIA state; if we ever change it to
-             role="switch", aria-checked would have to be kept in sync by script. -->
-        <input type="checkbox" id="theme-toggle" />
-
-        <!-- 2. LIGHT SCHEME face: the plate shown while the switch is OFF.
-             aria-hidden sits on the <svg> only, because the icon is decoration - the
-             text next to it is what becomes the switch's accessible name. -->
-        <span class="switch-face switch-face--light">
-
-          <!-- Sun icon: same line-art glyph as before, now 17px and drawn with the
-               plate's colour (stroke: currentColor in the stylesheet). -->
-          <svg class="switch-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="4.5" />
-            <path d="M12 2.5 L12 5 M12 19 L12 21.5 M4.5 12 L7 12 M17 12 L19.5 12 M5.6 5.6 L7.4 7.4 M16.6 16.6 L18.4 18.4 M5.6 18.4 L7.4 16.6 M16.6 7.4 L18.4 5.6" />
-          </svg>
-
-          <span class="switch-text">Light Scheme</span>
-
-        </span>
-
-        <!-- 3. DARK SCHEME face: the plate shown while the switch is ON. -->
-        <span class="switch-face switch-face--dark">
-
-          <!-- Moon icon: crescent line art (a single path, so it scales cleanly). -->
-          <svg class="switch-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M21 12.79 A9 9 0 1 1 11.21 3 A7 7 0 0 0 21 12.79 Z" />
-          </svg>
-
-          <span class="switch-text">Dark Scheme</span>
-
-        </span>
-
-      </label>
-
       <a href="pages/login.html" class="login-btn">Login</a>
 
     </div>
@@ -123,7 +70,9 @@
           together in one place.
         </p>
 
-        <a href="#features" class="hero-btn">
+        <!-- Primary hero CTA: enters the app through the real login page
+             (frontend-flow phase - no separate demo page exists). -->
+        <a href="pages/login.html" class="hero-btn">
           Explore Campus360
           <span>→</span>
         </a>
@@ -1080,7 +1029,6 @@
 
   </footer>
 
-  <script src="js/script.js"></script>
 
 </body>
 

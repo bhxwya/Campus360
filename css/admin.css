@@ -1,0 +1,140 @@
+/* ==========================================================================
+   Campus360 - Admin Role Stylesheet (admin.css)
+   ==========================================================================
+   Provides admin-specific styling extensions for institution management,
+   faculty/student registry tables, analytics cards, course directory,
+   and visual report charts using pure HTML + CSS.
+   Inherits design tokens and structural layout from dashboard.css.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. STATS METRICS & KPI PROGRESS BLOCKS
+   --------------------------------------------------------------------------
+   The label / value row used inside the admin summary panels. It is
+   deliberately a plain row rather than a card: it sits directly in a card
+   body and must not read as another box stacked on the first.
+   ========================================================================== */
+
+.kpi-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.kpi-row:last-child {
+  border-bottom: none;
+}
+
+.kpi-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.kpi-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--blue);
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   2. REPORT CHART MATRICES
+   --------------------------------------------------------------------------
+   .chart-card is the shell around a single visual report (a bar chart, a
+   distribution, a KPI list). The report page currently builds its charts
+   straight from the shared .card, so this variant is not used yet - it is
+   kept as the dedicated container for chart-heavy reports once the backend
+   serves real datasets.
+   ========================================================================== */
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.legend-list {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legend-dot.primary {
+  background: var(--blue);
+}
+
+.legend-dot.secondary {
+  background: var(--violet);
+}
+
+.legend-dot.accent {
+  background: var(--cyan);
+}
+
+
+/* ==========================================================================
+   3. RESPONSIVE
+   --------------------------------------------------------------------------
+   admin.css had no breakpoints of its own until now. Everything structural
+   (sidebar, topbar, tables, grids) is already handled by the 1024 / 768 / 540
+   breakpoints in dashboard.css; the rules below only cover what is specific
+   to the admin widgets declared in this file - the KPI rows and the report
+   charts - so they degrade in the same rhythm as the rest of the app.
+   ========================================================================== */
+
+/* Tablet: KPI rows breathe a little less and chart legends wrap sooner. */
+@media (max-width: 1024px) {
+  .kpi-row {
+    padding: 10px 0;
+  }
+
+  .kpi-title {
+    font-size: 13px;
+  }
+
+  .legend-list {
+    gap: 12px;
+  }
+}
+
+/* Mobile: a KPI row becomes a stacked label-over-value block, and the chart
+   legends stack vertically instead of squeezing onto one line. */
+@media (max-width: 540px) {
+  .kpi-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .kpi-value {
+    font-size: 15px;
+  }
+
+  .legend-list {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

@@ -1,0 +1,1920 @@
+/* ==========================================================================
+   Campus360 - Shared Dashboard Design System (dashboard.css)
+   ==========================================================================
+   This stylesheet provides the shared responsive layout, structure, and 
+   UI components for all role-based dashboards (Student, Faculty, Admin).
+   Built with pure CSS and aligned with the Campus360 design tokens.
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Poppins:wght@500;600;700&family=Rubik:wght@500;600;700&display=swap");
+
+/* ==========================================================================
+   1. RESET & DESIGN TOKENS
+   --------------------------------------------------------------------------
+   The shared Campus360 application design system. Student, Faculty and Admin
+   all render through this one file; the role stylesheets only add what is
+   genuinely specific to that role and never restate the shell.
+   ========================================================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Campus360 Brand Palette - the same values the landing page uses */
+  --blue: #2563eb;
+  --blue-hover: #1d4ed8;
+  --blue-light: rgba(37, 99, 235, 0.08);
+  --blue-border: rgba(37, 99, 235, 0.18);
+
+  --indigo: #4f46e5;
+  --violet: #7c3aed;
+  --violet-light: rgba(124, 58, 237, 0.08);
+  /* Campus360 cyan: the single shared value, identical to --cyan in
+     style.css and auth.css. The dashboard shell is restyled often, so it is
+     worth stating once here that these three files must stay in step. */
+  --cyan: #38bdf8;
+  --cyan-light: rgba(56, 189, 248, 0.1);
+
+  /* Status Colors
+     "-light" is the badge/pill background tint, "-ink" is the readable text
+     colour painted on top of it. Every status component pairs the two, so a
+     badge never needs a per-component override. */
+  --emerald: #10b981;
+  --emerald-light: rgba(16, 185, 129, 0.1);
+  --success-ink: #059669;
+  --amber: #f59e0b;
+  --amber-light: rgba(245, 158, 11, 0.1);
+  --warning-ink: #d97706;
+  --rose: #ef4444;
+  --rose-light: rgba(239, 68, 68, 0.1);
+  --danger-ink: #dc2626;
+
+  /* Surfaces & Typography - layered light mode, deliberately NOT one flat
+     white: the page rests on --bg-app (#f8fafc), cards lift to --surface,
+     the sidebar is a soft gradient, and the topbar is a frosted sheet.
+     Tonal steps are small so the UI reads as one premium surface without
+     hard horizontal section lines. */
+  --ink: #0f172a;
+  --ink-soft: #1e293b;
+  --muted: #64748b;
+  --muted-light: #94a3b8;
+  --line: #e2e8f0;
+  --line-subtle: #f1f5f9;
+  --surface: #ffffff;
+  --bg-app: #f8fafc;
+  --sidebar-bg: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+  --topbar-bg: rgba(255, 255, 255, 0.85);
+
+  /* Dimensions - translated from the landing navbar, not copied from it.
+     The marketing bar is 96px tall because it floats over a hero; an
+     application bar sits above dense data, so it is deliberately shorter.
+     The sidebar and the topbar share one --topbar-h so the brand block and
+     the page title line up across the full width of the shell.
+
+     --sidebar-w is sized to hold the 38px application-shell Campus360 brand
+     mark (see the BRAND MARK section) plus the role badge:
+     38px mark + 10px gap + ~101px wordmark + 32px padding + ~57px badge
+     ~= 238px, so the rail carries slack rather than clipping the
+     wordmark. */
+  --sidebar-w: 252px;
+  --topbar-h: 76px;
+
+  /* Scale Tokens - the landing page's radius scale (12 / 18 / 24) so app
+     cards, buttons and panels share the same corner language. */
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-pill: 999px;
+
+  /* Shadows - the landing page's resting/lifted elevation pair: soft at
+     rest, clearly lifted on hover, never heavy. */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px rgba(15, 23, 42, 0.05);
+  --shadow-lift: 0 2px 4px rgba(15, 23, 42, 0.05), 0 20px 44px rgba(15, 23, 42, 0.09);
+  --shadow-brand: 0 10px 24px rgba(37, 99, 235, 0.22);
+
+  /* ==========================================================================
+     SHARED APPLICATION SURFACE TOKENS
+     --------------------------------------------------------------------------
+     Every value below is lifted directly from index.html / style.css and
+     pages/login.html / auth.css. They are named here so the application
+     shell is not maintained by hand-editing dozens of rules, and so the
+     landing page and the app cannot drift apart.
+
+     The single most important one is --card-border: the reference pages draw
+     card edges as a TRANSLUCENT hairline, not a solid grey line. A solid
+     border is what makes an interface read as a generic admin template; the
+     alpha edge is a large part of why the marketing site reads as premium.
+     ========================================================================== */
+  --card-border: rgba(226, 232, 240, 0.9);
+  --card-border-hover: rgba(37, 99, 235, 0.24);
+  --card-pad: 28px;
+  --card-pad-sm: 22px;
+  --card-lift: -4px; /* landing card hover distance */
+  --btn-h: 44px; /* landing .login-btn / .hero-btn height */
+  --btn-radius: var(--r-sm);
+  --content-max: 1320px;
+}
+
+body {
+  font-family: "Manrope", sans-serif;
+  background-color: var(--bg-app);
+  color: var(--ink);
+  min-height: 100vh;
+
+  /* Base type size for the whole application. The reference pages set
+     their body copy at 16px; an application reads better one step down, and
+     every component sets its own size on top of this. */
+  font-size: 15px;
+  line-height: 1.6;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+
+/* ==========================================================================
+   2. APPLICATION SHELL
+   --------------------------------------------------------------------------
+   The frame every page sits in: a fixed rail on the left, a sticky bar on
+   top, and one scrolling content column on the right. All three roles use
+   this identical frame - only the content inside it changes.
+   ========================================================================== */
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-app);
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  /* One continuous surface: no hard horizontal bands anywhere in the
+     application. The four radial washes below are the SAME four stops, in the
+     same four corners, as the landing page's `main` background - only at about
+     half strength, because a marketing page can afford a loud atmosphere while
+     a screen full of timetables and grade tables cannot. This is the single
+     strongest cue that the shell belongs to the same product as index.html. */
+  background:
+    radial-gradient(circle at 18% 18%, rgba(37, 99, 235, 0.05), transparent 30%),
+    radial-gradient(circle at 82% 24%, rgba(124, 58, 237, 0.05), transparent 30%),
+    radial-gradient(circle at 28% 62%, rgba(37, 99, 235, 0.03), transparent 28%),
+    radial-gradient(circle at 75% 72%, rgba(124, 58, 237, 0.03), transparent 28%),
+    var(--bg-app);
+}
+
+/* ==========================================================================
+   3. SIDEBAR
+   --------------------------------------------------------------------------
+   The landing navbar and the login card both build the Campus360 lockup the
+   same way: a fixed-size orbit mark, then the Poppins wordmark whose "360" is
+   set in Rubik with the blue -> violet gradient.
+
+   The sidebar uses that identical construction so the brand never changes
+   weight as a visitor moves from the marketing site into the application,
+   stepped down one notch for the denser rail:
+     mark      38 x 38  (proportioned for the 252px application rail)
+     wordmark  18px     (app-shell scale; landing/login stay at 20px)
+     gap       10px
+   which lands the whole lockup at ~149px wide inside the 252px rail, leaving
+   comfortable room for the role badge.
+   ========================================================================== */
+
+.app-sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--card-border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 40;
+}
+
+/* ==========================================================================
+   CAMPUS360 BRAND MARK
+   --------------------------------------------------------------------------
+   Sizing aligned with the landing-page master reference (index.html).
+
+   index.html / style.css is the single source of truth for the Campus360
+   lockup. The application sidebar uses the SAME visual elements:
+
+     mark        38 x 38   (sized to fit the 252px rail alongside the role chip)
+     gap          10px     (same construction as landing navbar and login card)
+     wordmark    18px      Poppins, weight 600, #0f172a
+     "360"       Rubik, weight 700, blue -> violet gradient
+     BRAND H     38px      (the mark sets the height of the lockup)
+
+   The lockup occupies ~149px of the rail: 38px mark + 10px gap + ~101px wordmark.
+   The rail is sized to hold that comfortably, and the role badge sits right
+   beside the wordmark on the same line.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   BRAND LOCKUP
+   --------------------------------------------------------------------------
+   Measured in the browser: at the landing navbar's 40px mark the lockup plus
+   the role badge needs 284px, which does not fit a sidebar - the badge was
+   being clipped. The fix follows the pattern login.html already uses: the
+   lockup sits on one line, and the supporting line sits beneath it. The badge
+   therefore never competes with the wordmark for horizontal room.
+
+   The wordmark steps down slightly from the landing navbar and the login
+   card (Poppins 600 / 18px here vs 20px there, "360" in Rubik 700 with the
+   brand gradient), so the
+   brand is still recognisably the same lockup; only the surrounding rail is
+   proportioned for its own context.
+   APP-SHELL LOGO DIMENSIONS (landing style.css / login auth.css keep 40/20):
+     mark     38 x 38  (.brand-icon / .brand-icon img, object-fit: contain)
+     gap      10px     (.brand-lockup gap, align-items: center)
+     wordmark 18px     Poppins, weight 600, #0f172a
+     "360"    Rubik, weight 700, blue -> violet gradient
+   -------------------------------------------------------------------------- */
+
+.sidebar-brand {
+  height: var(--topbar-h);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 16px;
+  text-decoration: none;
+  transition: background-color 0.18s ease;
+}
+
+/* No rule under the brand block: the reference navbar floats on the page tone
+   with no hard edge beneath it. */
+.sidebar-brand:hover {
+  background-color: var(--bg-app);
+}
+
+/* Line 1 of the lockup. The mark is locked to a square box and the image is
+   contained inside it, so the PNG is never stretched at any rail size. */
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Same typeface stack and weight as the landing navbar / login card; the
+   size steps down to 18px for the denser application rail. */
+.brand-title {
+  font-family: "Poppins", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+/* The "360" keeps the landing gradient treatment. */
+.brand-title span {
+  font-family: "Rubik", sans-serif;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Line 2: the role, as quiet metadata under the brand rather than a chip
+   jammed against the wordmark. */
+.brand-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--line-subtle);
+  color: var(--muted);
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+/* --- Navigation ----------------------------------------------------------- */
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.nav-section-title {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-light);
+  padding: 10px 12px 6px;
+}
+
+/* One rhythm for every row: identical height, radius and side padding, so the
+   rail reads as a single column rather than a stack of varied boxes. */
+.nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 600;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.nav-link:hover {
+  color: var(--ink);
+  background-color: var(--line-subtle);
+}
+
+.nav-link.active {
+  color: var(--blue);
+  background: var(--blue-light);
+  font-weight: 700;
+}
+
+/* The active item is marked by a short brand bar on the leading edge, echoing
+   the accent bars on the landing page's cards. It is the clearest "you are
+   here" signal in the whole shell.
+
+   The bar sits INSIDE the pill's left edge. It used to hang outside the link
+   at left: -12px, which put it exactly on the sidebar's outer boundary, so it
+   rendered as a sliver clipped against the edge of the window. */
+.nav-link.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  border-radius: var(--r-pill);
+  background: var(--blue);
+}
+
+/* ==========================================================================
+   ICONS
+   --------------------------------------------------------------------------
+   One unified icon system for the whole application: inline SVG line-art,
+   matching the recipe used in pages/login.html:
+
+     viewBox="0 0 24 24"
+     fill="none"
+     stroke="currentColor"
+     stroke-width="2"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     aria-hidden="true"
+
+   No text glyphs, dingbats, or emoji are used for application controls.
+   Because stroke is `currentColor`, every icon automatically inherits the
+   colour of its parent element (nav link, stat card, button, badge) and
+   responds to hover/active states without special rules.
+   ========================================================================== */
+
+.icon,
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Nav icons sit inside the 42px min-height nav links. */
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Stat card icon: 16px glyph inside the 30px circular chip */
+.stat-icon .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Topbar round action icon buttons (notifications, search) */
+.action-icon-btn .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Standard button icon (plus, download, action) */
+.btn .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-xs .icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* Status badge inline icon */
+.badge .icon {
+  width: 12px;
+  height: 12px;
+}
+
+/* Activity feed circular icon */
+.activity-icon .icon {
+  width: 17px;
+  height: 17px;
+}
+
+/* Empty state large hero icon */
+.empty-icon .icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Sidebar footer logout icon */
+.logout-link .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Topbar search input icon */
+.search-box .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--muted-light);
+}
+
+.nav-counter {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--r-pill);
+  background: var(--blue);
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.sidebar-footer {
+  padding: 16px 12px;
+  border-top: 1px solid var(--card-border);
+  background-color: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.user-snippet {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--r-sm);
+  background: var(--bg-app);
+  border: 1px solid var(--card-border);
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm);
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* Role variants: the sidebar avatar and role badge are tinted per role so a
+   glance at any screenshot tells you which workspace you are in. These replace
+   the per-page inline gradients that were previously repeated in every
+   dashboard's markup. */
+.user-avatar.faculty {
+  background: linear-gradient(135deg, var(--indigo), var(--violet));
+}
+
+.user-avatar.admin {
+  background: linear-gradient(135deg, var(--violet), var(--cyan));
+}
+
+.brand-badge.admin {
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--violet);
+}
+
+.brand-badge.faculty {
+  background: var(--violet-light);
+  color: var(--indigo);
+}
+
+.brand-badge.student {
+  background: var(--blue-light);
+  color: var(--blue);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role-label {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+.user-profile-link {
+  font-size: 10.5px;
+  color: var(--blue);
+  text-decoration: none;
+  font-weight: 700;
+  margin-top: 2px;
+  transition: color 0.15s ease;
+}
+
+.user-profile-link:hover {
+  text-decoration: underline;
+  color: var(--blue-hover);
+}
+
+
+.logout-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  color: var(--danger-ink);
+  background: var(--rose-light);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.logout-link:hover {
+  background: rgba(239, 68, 68, 0.18);
+  color: var(--rose);
+}
+
+
+/* ==========================================================================
+   4. TOPBAR
+   --------------------------------------------------------------------------
+   One slim bar across the content area carrying a three-step reading order:
+   the uppercase context label, the page title, and the utility cluster on the
+   right. The title is the largest type in the shell - it is the "page" in the
+   page hierarchy - but still far below the landing hero, because this is an
+   interface, not a poster.
+   ========================================================================== */
+
+.app-topbar {
+  height: var(--topbar-h);
+  /* frosted sheet: content scrolls underneath a translucent surface instead
+     of a hard white bar, echoing the landing navbar's scrolled state */
+  background: var(--topbar-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 36px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  flex-shrink: 0;
+}
+
+.topbar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+/* The context line above the page title: a small uppercase label in the brand
+   colour that tells you which workspace you are looking at. */
+.topbar-subtitle {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--blue);
+  line-height: 1;
+}
+
+.topbar-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--r-pill);
+  padding: 9px 16px;
+  width: 240px;
+  color: var(--muted-light);
+  font-size: 13.5px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* The field is a white surface on the page tone, not a grey well - it should
+   look like the search box the reference navbar uses. */
+.search-box:focus-within {
+  border-color: var(--blue-border);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.action-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.18s ease;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.action-icon-btn:hover {
+  color: var(--blue);
+  border-color: var(--blue-border);
+  background-color: var(--blue-light);
+}
+
+.action-icon-btn .badge-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rose);
+  border: 2px solid var(--surface);
+}
+
+.topbar-context-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--r-pill);
+  font-size: 12.5px;
+  font-weight: 700;
+  background: var(--blue-light);
+  color: var(--blue);
+  border: 1px solid var(--blue-border);
+}
+
+.topbar-context-pill .pulse-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+
+
+/* ==========================================================================
+   5. PAGE CONTENT
+   --------------------------------------------------------------------------
+   The scrolling area. One max-width stops tables stretching edge to edge on
+   a wide monitor, and one vertical gap keeps every section on the page at the
+   same rhythm.
+   ========================================================================== */
+
+.content-wrapper {
+  /* The reference pages run their content on a 1200px measure inside a
+     60px-gutter column. The application needs a little more room for tables,
+     so it runs slightly wider, but it is still a controlled measure rather
+     than a full-bleed stretch - this is what stops panels from looking
+     stretched and thin on a 1440p display. */
+  padding: 32px 36px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: var(--content-max);
+  width: 100%;
+}
+
+.welcome-banner {
+  background: linear-gradient(120deg, #ffffff 0%, #f8fafc 62%, #f5f8fd 100%);
+  border: 1px solid var(--card-border);
+  border-radius: var(--r-lg);
+  padding: 30px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-banner::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 240px;
+  height: 100%;
+  background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.welcome-text h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.welcome-text p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.welcome-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 2;
+}
+
+
+/* ==========================================================================
+   6. STAT CARDS
+   --------------------------------------------------------------------------
+   Compact metric tiles. The number is the loudest thing in the card, but it
+   sits BELOW the page title in the hierarchy so a wall of KPIs never competes
+   with the heading that tells you which page you are on.
+   ========================================================================== */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--r-md);
+  padding: var(--card-pad) var(--card-pad) 22px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* A card lifts by a hair on hover and picks up a slightly stronger edge, which
+   is enough to feel alive without turning the dashboard into a hover gallery. */
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+  border-color: var(--blue-border);
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+/* The icon is a soft brand wash, not a boxed chip. A filled rounded square
+   behind a small glyph is a common dashboard tic; on the reference pages
+   accents are washes and circles, never containers. */
+.stat-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  background: var(--blue-light);
+  color: var(--blue);
+  flex-shrink: 0;
+}
+
+.stat-icon.violet {
+  background: var(--violet-light);
+  color: var(--violet);
+}
+
+.stat-icon.emerald {
+  background: var(--emerald-light);
+  color: var(--success-ink);
+}
+
+.stat-icon.amber {
+  background: var(--amber-light);
+  color: var(--warning-ink);
+}
+
+/* The figure is the loudest element on the card, but it is still type rather
+   than a display face - hierarchy comes from weight and size, not from scale. */
+.stat-value {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.stat-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--muted-light);
+  line-height: 1.4;
+  margin-top: auto;
+}
+
+.stat-trend-up {
+  color: var(--emerald);
+  font-weight: 700;
+}
+
+.stat-trend-down {
+  color: var(--rose);
+  font-weight: 700;
+}
+
+/* .stat-trend-up / .stat-trend-down are the paired "vs last term" deltas on a
+   stat card. Only the upward variant is used at the moment because every
+   figure in the static demo data improves; the downward one is the matching
+   half of the pair and is what real (falling) data will render. */
+
+/* ==========================================================================
+   7. CARDS & PANELS
+   --------------------------------------------------------------------------
+   Ported directly from the reference pages. The landing page's cards are:
+
+     background  #ffffff
+     border      1px solid rgba(226, 232, 240, 0.9)   <- translucent edge
+     radius      18px
+     shadow      --shadow-card
+     hover       translateY(-4px) + blue-tinted edge + --shadow-lift
+
+   Three things made the previous version of this file read as a generic
+   admin template, and all three are corrected here:
+
+     1. A solid grey border. The reference uses a translucent hairline, which
+        is far softer and is most of what makes the marketing cards look
+        expensive. Now --card-border.
+     2. A tinted header band. Filling .card-header with a grey strip on every
+        card is the single loudest "ERP dashboard" signal there is - it
+        stacks a second rectangle on top of the first. The reference pages
+        have no header band at all: just white space, a title, and a hairline
+        rule. Removed entirely.
+     3. Cramped padding. The reference cards sit at 28-32px; this was 20px,
+        which made every panel look squeezed and cheap. Now --card-pad.
+   ========================================================================== */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+}
+
+/* Interactive cards lift by the same distance as the landing cards. */
+.card.is-interactive:hover {
+  transform: translateY(var(--card-lift));
+  box-shadow: var(--shadow-lift);
+  border-color: var(--card-border-hover);
+}
+
+/* The header is white space, not a second box: a title block on the left, an
+   optional action on the right, and one hairline separating it from the body.
+   The rule lives on the header itself (rather than on whatever element happens
+   to follow it) so it holds no matter what the card body is made of. */
+.card-header {
+  padding: var(--card-pad) var(--card-pad) 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.card-header-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.card-subtitle {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted-light);
+  line-height: 1;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+
+/* Body sits below the header rule with the same generous inset. */
+.card-body {
+  padding: var(--card-pad);
+}
+
+.card-body.p-0 {
+  padding: 0;
+}
+
+.card-footer {
+  padding: 16px var(--card-pad);
+  border-top: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* One vertical rhythm across the shell: every layout gap is 24px, which is
+   what makes differently-shaped pages feel like one screen. */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.grid-2-1 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.grid-1-2 {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 24px;
+}
+
+/* --------------------------------------------------------------------------
+   LAYOUT UTILITIES
+   --------------------------------------------------------------------------
+   Small, composable helpers for the few layout decisions that recur across
+   the dashboards. These used to be written as inline style="" attributes in
+   the HTML; naming them here keeps the markup as clean as index.html and
+   makes the spacing consistent between pages.
+
+     .row-center    - inline cluster of controls (buttons, filters)
+     .row-between   - space-between cluster that wraps on small screens
+     .row-stack     - vertical rhythm inside a card body
+     .fill          - flexible child that absorbs the leftover width
+     .w-100/260/140 - fixed widths for search boxes and selects
+   -------------------------------------------------------------------------- */
+
+.row-center {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.row-tight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Fills the remaining width of a flex row (used beside avatars / icons). */
+.fill {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Fixed widths for the filter controls in the admin/faculty toolbars. */
+.w-search {
+  width: 260px;
+}
+
+.w-select-md {
+  width: 160px;
+}
+
+.w-select-sm {
+  width: 140px;
+}
+
+.w-meter {
+  width: 140px;
+}
+
+/* Tighter clusters used inside tables and card headers, where the 12px gap of
+   .row-center would push a row of small buttons too far apart. */
+.row-center-sm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.row-tight-lg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* The admin/faculty filter toolbar: a card body that behaves as a
+   space-between bar instead of a plain padded block. */
+.toolbar-row {
+  padding: 20px var(--card-pad);
+}
+
+/* A card header that wraps its title and its actions onto two lines rather
+   than forcing them onto one. */
+.card-header-wrap {
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+
+/* ==========================================================================
+   8. DATA TABLES
+   --------------------------------------------------------------------------
+   Tables are the densest surface in the product, so they get thin separators
+   and a compact row rather than a heavy grid. The header is a tinted band;
+   hover is a single faint wash.
+   ========================================================================== */
+
+.table-responsive {
+  width: 100%;
+  /* Long registries scroll inside their own frame rather than stretching the
+     page sideways on a phone. */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14.5px;
+}
+
+/* The header is a quiet uppercase band. A tinted surface plus a hairline does
+   the separating, so the table needs no heavy boxes around it. */
+.data-table th {
+  background: var(--bg-app);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 14px var(--card-pad);
+  border-bottom: 1px solid var(--card-border);
+  white-space: nowrap;
+}
+
+/* Generous row height: 15px of vertical padding gives the table the calm,
+   scannable rhythm of a real application rather than a dense data dump. */
+.data-table td {
+  padding: 15px var(--card-pad);
+  border-bottom: 1px solid var(--line-subtle);
+  color: var(--ink-soft);
+  vertical-align: middle;
+}
+
+.data-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.data-table tbody tr:hover {
+  background-color: var(--blue-light);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.cell-title {
+  font-weight: 700;
+  color: var(--ink);
+  display: block;
+  line-height: 1.4;
+}
+
+.cell-subtext {
+  font-size: 13px;
+  color: var(--muted);
+  display: block;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   9. STATUS BADGES & PILLS
+   ========================================================================== */
+
+/* Badges: a soft tinted pill with a readable ink colour on top. The tint comes
+   from the "-light" token and the text from the matching "-ink" token, so every
+   status in the product is built the same way - never a saturated fill. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: var(--r-pill);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.badge-success {
+  background: var(--emerald-light);
+  color: var(--success-ink);
+}
+
+.badge-warning {
+  background: var(--amber-light);
+  color: var(--warning-ink);
+}
+
+.badge-danger {
+  background: var(--rose-light);
+  color: var(--danger-ink);
+}
+
+/* The danger badge is part of the shared status family above. It has no
+   instance in the current pages because nothing is in a failed state yet -
+   it is what the backend will use for failed submissions, rejected records
+   and failed login attempts. Kept so the palette stays complete. */
+
+.badge-primary {
+  background: var(--blue-light);
+  color: var(--blue);
+}
+
+.badge-secondary {
+  background: var(--line-subtle);
+  color: var(--muted);
+}
+
+.badge-purple {
+  background: var(--violet-light);
+  color: var(--violet);
+}
+
+.badge-dot-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   10. BUTTONS
+   --------------------------------------------------------------------------
+   Ported from the reference pages. index.html renders its primary action as
+   14px/700 with 12px 24px padding, a 12px radius and the brand gradient under
+   --shadow-brand; login.html uses the identical recipe. The application uses
+   the same numbers so a button behaves the same before and after sign-in.
+
+   --btn-h is the shared height (44px). Anything smaller is a deliberate,
+   named variant (.btn-sm, .btn-xs) - never an ad-hoc override.
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--btn-h);
+  padding: 12px 24px;
+  border-radius: var(--r-sm);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+/* The one deliberate step below --btn-h, for actions sitting in a card footer
+   or a table row where the full-size button would crowd its neighbours. */
+.btn-sm {
+  min-height: 36px;
+  padding: 8px 15px;
+  font-size: 13px;
+}
+
+/* Extra-small button: the Present / Absent / Late controls packed into a
+   dense table cell, where even .btn-sm is too large. */
+.btn-xs {
+  min-height: 28px;
+  padding: 4px 9px;
+  font-size: 11.5px;
+  gap: 4px;
+}
+
+/* The primary button is the same object the user just clicked on the login
+   page: blue-to-violet gradient, white 14px/700 label, brand shadow, -2px
+   lift. Nothing about it changes when they enter the application. */
+.btn-primary {
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+  color: #ffffff;
+  box-shadow: var(--shadow-brand);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--blue-hover), var(--violet));
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.28);
+  transform: translateY(-2px);
+}
+
+.btn-outline {
+  background: var(--surface);
+  border-color: var(--card-border);
+  color: var(--ink-soft);
+}
+
+.btn-outline:hover {
+  border-color: var(--blue-border);
+  color: var(--blue);
+  background: var(--blue-light);
+}
+
+.btn-text {
+  background: transparent;
+  color: var(--blue);
+  padding: 6px 10px;
+}
+
+.btn-text:hover {
+  background: var(--blue-light);
+  border-radius: var(--r-sm);
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-app);
+  border: 1px solid var(--card-border);
+  padding: 4px;
+  border-radius: var(--r-pill);
+  width: fit-content;
+}
+
+.filter-tab {
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: var(--r-pill);
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  text-decoration: none;
+}
+
+.filter-tab.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   BACKEND-BOUND CONTROLS
+   --------------------------------------------------------------------------
+   Buttons and selects that are part of the designed UI but whose behaviour
+   needs the FastAPI backend (create / edit / delete / export / bulk actions
+   and the toolbar filters).
+
+   They are marked `disabled` in the HTML so the current state is honest and
+   the control is properly skipped by keyboard and screen readers - the
+   pointer cursor and the muted palette tell a visitor at a glance that the
+   action is not wired up yet. No JavaScript is attached to them: the handler
+   arrives with the endpoint.
+   -------------------------------------------------------------------------- */
+
+.btn:disabled,
+.btn.is-pending {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+  transform: none;
+  filter: saturate(0.6);
+}
+
+.btn-primary:disabled {
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+}
+
+/* Keep a hint of the brand hue so a disabled primary button still reads as
+   part of Campus360 rather than as a broken element. */
+.btn-outline:disabled {
+  background: var(--bg-app);
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+/* Toolbar filters waiting on the API */
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background-color: var(--bg-app);
+  color: var(--muted);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  letter-spacing: 0.01em;
+}
+
+.form-control {
+  font-family: inherit;
+  font-size: 14.5px;
+  min-height: 44px;
+  padding: 11px 16px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--card-border);
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.form-control::placeholder {
+  color: var(--muted-light);
+}
+
+/* Focus is a soft brand ring rather than a hard outline: clearly visible,
+   never harsh. */
+.form-control:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+
+/* ==========================================================================
+   11. PROGRESS BARS & DATA CHARTS (HTML + CSS)
+   ========================================================================== */
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--line-subtle);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--blue), var(--cyan));
+}
+
+.progress-fill.violet {
+  background: linear-gradient(90deg, var(--violet), var(--indigo));
+}
+
+.progress-fill.emerald {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.progress-fill.amber {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+/* Pure CSS Bar Chart */
+.css-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  height: 170px;
+  padding-top: 24px;
+  border-bottom: 2px solid var(--line);
+}
+
+.chart-bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.chart-bar-fill {
+  width: 100%;
+  max-width: 44px;
+  background: linear-gradient(180deg, var(--blue), rgba(37, 99, 235, 0.75));
+  border-radius: 6px 6px 0 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.chart-bar-fill.secondary {
+  background: linear-gradient(180deg, var(--violet), rgba(124, 58, 237, 0.75));
+}
+
+.chart-bar-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* The percentage printed above each bar. The bar HEIGHT stays inline because
+   it is the data itself (89%, 84%, ...) and changes per dataset; only this
+   repeated label styling belongs in the stylesheet. */
+.chart-bar-value {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Spacing for a legend block that follows a chart inside a card body. */
+.legend-list.spaced {
+  margin-top: 16px;
+}
+
+/* ==========================================================================
+   12. EMPTY STATES & ACTIVITY LISTS
+   ========================================================================== */
+
+/* Empty states: a calm, intentional "nothing here yet" surface rather than a
+   broken-looking gap. Kept as a shared component (icon + title + supporting text)
+   so every table can use it once the backend returns a genuinely empty result. */
+.empty-state {
+  padding: 44px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--blue-light);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 21px;
+}
+
+.empty-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.empty-text {
+  font-size: 14.5px;
+  color: var(--muted);
+  max-width: 380px;
+  line-height: 1.6;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px var(--card-pad);
+  border-bottom: 1px solid var(--line-subtle);
+  transition: background-color 0.15s ease;
+}
+
+.activity-item:hover {
+  background-color: var(--blue-light);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: var(--blue-light);
+  color: var(--blue);
+  flex-shrink: 0;
+}
+
+.activity-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.activity-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   13. RESPONSIVE DESIGN
+   --------------------------------------------------------------------------
+   Four tiers, same as the landing page, so the application reflows in step
+   with the marketing site:
+
+     1024px  tablet - narrower rail, tighter content padding
+      768px  mobile - the rail becomes a horizontal scrolling nav strip
+      420px  phone  - the last tight spots (buttons, titles, tables)
+
+   The rail keeps its full structure - it does not get replaced by a
+   different navigation system, it simply changes axis.
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-w: 224px;
+    --topbar-h: 68px;
+  }
+
+  .grid-2,
+  .grid-3,
+  .grid-2-1,
+  .grid-1-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .content-wrapper {
+    padding: 24px 24px 32px;
+    gap: 20px;
+  }
+
+  .app-topbar {
+    padding: 0 24px;
+  }
+
+  .topbar-title {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .app-sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  /* The rail becomes a horizontal strip here, so the brand block is centred
+     and the role badge drops away - at this width the topbar already states
+     the workspace. The lockup itself is untouched: same 38px mark and 18px
+     wordmark as every other app page. */
+  .sidebar-brand {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 10px 14px;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-section-title {
+    display: none;
+  }
+
+  .nav-link {
+    padding: 8px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  /* Keep the profile + Sign Out reachable on small screens: the footer
+     collapses from a stacked column into one compact row under the nav. */
+  .sidebar-footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    border-top: none;
+  }
+
+  .user-snippet {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .user-profile-link {
+    display: none; /* the profile link lives in the nav already on mobile */
+  }
+
+  .logout-link {
+    flex-shrink: 0;
+  }
+
+  .app-topbar {
+    padding: 0 16px;
+    height: 64px;
+  }
+
+  .search-box {
+    display: none;
+  }
+
+  /* the semester pill would crowd the title on a phone - drop it first */
+  .topbar-context-pill {
+    display: none;
+  }
+
+  .content-wrapper {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .welcome-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .welcome-actions {
+    flex-wrap: wrap;
+  }
+
+  /* two-up on tablets/phones instead of a single long column */
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .card-header {
+    padding: 14px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .card-body {
+    padding: 16px;
+  }
+
+  /* The toolbar utilities (search box + selects) would otherwise keep their
+     desktop pixel widths and push the card into horizontal overflow. */
+  .w-search,
+  .w-select-md,
+  .w-select-sm,
+  .w-meter {
+    width: 100%;
+  }
+
+  /* A filter toolbar and a row of action buttons both become full-width stacks
+     instead of a cramped single line. */
+  .row-between,
+  .row-center {
+    width: 100%;
+  }
+
+  .row-tight {
+    flex-wrap: wrap;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   <= 540px  PHONE
+   Titles step down, toolbars go full width and tables tighten. Long registries
+   still scroll inside .table-responsive rather than stretching the page.
+   -------------------------------------------------------------------------- */
+@media (max-width: 540px) {
+  .topbar-title {
+    font-size: 19px;
+  }
+
+  .topbar-actions {
+    gap: 8px;
+  }
+
+  .app-topbar {
+    padding: 0 16px;
+    height: 64px;
+  }
+
+  .welcome-text h2 {
+    font-size: 17px;
+  }
+
+  .card-title {
+    font-size: 15px;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 11px 16px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   <= 420px  SMALL PHONE
+   The last few tight spots. overflow-x is hidden on the content column only
+   (never on <body>), so a wide table can still scroll inside its own frame
+   without the whole page sliding sideways.
+   -------------------------------------------------------------------------- */
+@media (max-width: 420px) {
+  .app-main {
+    overflow-x: hidden;
+  }
+
+  .content-wrapper {
+    padding: 16px 14px 28px;
+  }
+
+  .topbar-title {
+    font-size: 18px;
+  }
+
+  .btn {
+    padding: 9px 13px;
+    font-size: 13px;
+  }
+
+  .btn-sm {
+    padding: 7px 11px;
+    font-size: 12.5px;
+  }
+
+  .btn-xs {
+    padding: 4px 8px;
+    font-size: 11.5px;
+  }
+}

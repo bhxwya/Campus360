@@ -1,0 +1,38 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor & IDE Directories
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Temporary & Log Files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node / Dependency Directories (future proofing)
+node_modules/
+
+# Python / Virtual Environments (for upcoming FastAPI phase)
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Build & Test Artefacts
+dist/
+build/
+coverage/
+.cache/
+

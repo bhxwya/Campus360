@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login - Campus360</title>
+  <link rel="icon" type="image/png" href="../assets/campus360-orbit.png" />
 
   <!-- Google Fonts matching the main Campus360 design tokens -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,6 +17,10 @@
 
   <!-- Dedicated Authentication Stylesheet -->
   <link rel="stylesheet" href="../css/auth.css" />
+  <!-- Shared behaviour + demo auth load from <head>; the DOM-dependent
+       wiring inside both files waits for DOMContentLoaded. -->
+  <script src="../js/script.js"></script>
+  <script src="../js/auth.js"></script>
 </head>
 
 <body class="auth-body">
@@ -123,7 +128,7 @@
       <!-- Credential Form:
            Contains user identification, password input, auxiliary options,
            and primary action trigger. -->
-      <form class="auth-form" action="#" method="POST" novalidate>
+      <form id="login-form" class="auth-form" action="#" method="POST" novalidate>
 
         <!-- Institutional ID or Email Field -->
         <div class="form-group">
@@ -141,8 +146,13 @@
               placeholder="e.g. ST-2026-8941 or user@campus.edu"
               required
               autocomplete="username"
+              aria-describedby="campus-id-error"
             />
           </div>
+
+          <!-- Inline validation message: filled in by js/auth.js on submit,
+               cleared again as soon as the user types. -->
+          <p class="field-error" id="campus-id-error" aria-live="polite" hidden></p>
         </div>
 
         <!-- Password Field -->
@@ -161,8 +171,13 @@
               placeholder="Enter your security password"
               required
               autocomplete="current-password"
+              aria-describedby="password-error"
             />
           </div>
+
+          <!-- Inline validation message: filled in by js/auth.js on submit,
+               cleared again as soon as the user types. -->
+          <p class="field-error" id="password-error" aria-live="polite" hidden></p>
         </div>
 
         <!-- Auxiliary Actions: Remember Me checkbox & Forgot Password recovery link -->
@@ -177,6 +192,8 @@
             <span class="checkbox-label">Remember my login</span>
           </label>
 
+          <!-- Visual placeholder for now: a real recovery flow needs the
+               backend, so this link does not navigate anywhere yet. -->
           <a href="#" class="forgot-link">Forgot password?</a>
         </div>
 
@@ -205,8 +222,6 @@
     <p>© 2026 Campus360. Centralized Educational Management Platform.</p>
   </footer>
 
-  <!-- Dedicated Authentication Script Hook -->
-  <script src="../js/auth.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,437 @@
+/* ==========================================================================
+   Campus360 - Student Role Stylesheet (student.css)
+   ==========================================================================
+   Provides specific styling extensions for student-facing views:
+   Attendance visual meter, timetable grid, assignment status pills,
+   academic grade badges, and announcement feed cards.
+   Inherits design tokens and structural layout from dashboard.css.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. TIMETABLE SCHEDULE CARDS & GRID
+   ========================================================================== */
+
+.timetable-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+/* The timetable day column is a card that also acts as a scroll container, so
+   it carries the same border / radius / shadow as every other panel. */
+.day-column {
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--r-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+}
+
+.day-column:hover {
+  transform: translateY(var(--card-lift));
+  box-shadow: var(--shadow-lift);
+  border-color: var(--card-border-hover);
+}
+
+.day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.day-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.day-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--blue);
+  background: var(--blue-light);
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+}
+
+/* Current-day highlight. The week is a static five-column grid, so "today" is
+   marked in the markup (the `is-today` column) rather than computed - the page
+   has no script, and inventing one would mean touching js/. The treatment is
+   deliberately quiet: a brand-tinted edge, a faint wash at the top of the
+   column, and one gradient chip. The sessions inside keep their own subject
+   colour so the week is still readable as a week. */
+.day-column.is-today {
+  border-color: var(--blue-border);
+  box-shadow: var(--shadow-lift);
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.04) 0%, var(--surface) 46%);
+}
+
+.day-column.is-today .day-header {
+  border-bottom-color: var(--blue-border);
+}
+
+.day-today-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+  vertical-align: middle;
+}
+
+.class-card {
+  border: 1px solid var(--card-border);
+  border-left: 4px solid var(--blue);
+  border-radius: var(--r-sm);
+  padding: 14px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.class-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card);
+}
+
+.class-card.lab {
+  border-left-color: var(--violet);
+}
+
+.class-card.lecture {
+  border-left-color: var(--blue);
+}
+
+.class-card.tutorial {
+  border-left-color: var(--cyan);
+}
+
+.class-time {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.class-subject {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.class-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* Today's Schedule List (Used on dashboard) */
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.schedule-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  background: var(--bg-app);
+  border: 1px solid var(--card-border);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.schedule-row:hover {
+  background-color: var(--blue-light);
+  border-color: var(--blue-border);
+}
+
+.schedule-time-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 66px;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  background: var(--surface); /* token-driven: stays in step with the shared palette */
+  border: 1px solid var(--card-border);
+}
+
+.schedule-time-badge strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.schedule-time-badge small {
+  font-size: 10.5px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   2. ATTENDANCE METRICS & SUBJECT BREAKDOWN
+   ========================================================================== */
+
+.attendance-meter-card {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 24px;
+}
+
+.radial-percentage {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: conic-gradient(var(--blue) 0% 86%, var(--line) 86% 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.radial-percentage-inner {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--surface); /* token-driven: stays in step with the shared palette */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.radial-percentage-inner strong {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.radial-percentage-inner small {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+/* The copy that sits beside the radial dial: an eligibility badge, the
+   standing headline, and the explanatory note. */
+.attendance-eligibility {
+  margin-bottom: 8px;
+}
+
+.attendance-status-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.attendance-status-note {
+  font-size: 14.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* The percentage printed next to a per-subject progress track. */
+.meter-value {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* Small muted metadata line (a publish date, an updated stamp). */
+.meta-muted {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   3. ANNOUNCEMENT & NOTICE FEED
+   ========================================================================== */
+
+.announcement-card {
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--r-md);
+  padding: var(--card-pad);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+  position: relative;
+}
+
+.announcement-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+  border-color: var(--blue-border);
+}
+
+.announcement-card.pinned {
+  border-left: 4px solid var(--amber);
+}
+
+.announcement-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.announcement-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+
+.announcement-desc {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.announcement-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-subtle);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   4. ACADEMIC RECORDS & PROFILE SUMMARY
+   ========================================================================== */
+
+.student-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  padding: 20px;
+  background: var(--bg-app);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--card-border);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-item span {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+
+/* ==========================================================================
+   5. RESPONSIVE
+   --------------------------------------------------------------------------
+   Same 1024 / 768 / 540 rhythm as dashboard.css. The timetable and info
+   grids are already auto-fit, so they mostly need their minimum track size
+   reduced on phones - otherwise a 280px minimum still forces a horizontal
+   scroll on a 360px screen.
+   ========================================================================== */
+
+/* Tablet: tighter padding on the student-specific cards. */
+@media (max-width: 1024px) {
+  .attendance-meter-card {
+    gap: 24px;
+    padding: 20px;
+  }
+
+  .announcement-card {
+    padding: 18px 20px;
+  }
+}
+
+/* Mobile: single column, comfortable touch spacing. */
+@media (max-width: 540px) {
+  .timetable-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .day-column {
+    padding: 14px;
+  }
+
+  /* The attendance summary stacks: the radial dial on top, the copy below. */
+  .attendance-meter-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 18px;
+  }
+
+  /* Schedule rows keep the time badge but let the subject wrap under it. */
+  .schedule-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .announcement-card {
+    padding: 16px 18px;
+  }
+
+  .announcement-meta,
+  .announcement-footer {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .announcement-title {
+    font-size: 15px;
+  }
+
+  .student-info-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 14px;
+    gap: 12px;
+  }
+}
+
+/* Small phones: the info grid drops to a single column so long values such as
+   a registration number or email are never clipped. */
+@media (max-width: 400px) {
+  .student-info-grid {
+    grid-template-columns: 1fr;
+  }
+}

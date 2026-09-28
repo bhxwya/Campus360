@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Announcements - Campus360</title>
+  <link rel="icon" type="image/png" href="../../assets/campus360-orbit.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Poppins:wght@500;600;700&family=Rubik:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+  <link rel="stylesheet" href="../../css/student.css" />
+  <!-- Shared behaviour + demo auth load from <head>; the DOM-dependent
+       wiring inside both files waits for DOMContentLoaded. -->
+
+  <!-- ============================================================
+       BACKEND-BOUND CONTROLS
+       The action buttons and filter selects on this page are part of the
+       designed Campus360 UI, but their behaviour needs the FastAPI backend
+       (create / edit / delete / export / save / filter). Until those
+       endpoints exist they carry the `disabled` attribute, so the current
+       state is honest: a visitor sees the intended control, the muted
+       styling and the not-allowed cursor show it is not live yet, and
+       keyboard and screen-reader users correctly skip it.
+
+       No JavaScript is attached to them and no fake behaviour is faked.
+       The handler arrives with the endpoint in the next phase.
+       ============================================================ -->
+  <script src="../../js/script.js"></script>
+  <script src="../../js/auth.js"></script>
+</head>
+
+<body data-demo-protected>
+
+  <div class="app-layout">
+
+    <!-- ============================================================
+         APPLICATION SIDEBAR
+         Shared shell: identical for Student, Faculty and Admin. Only the
+         navigation items inside it differ per role.
+         ============================================================ -->
+    <aside class="app-sidebar">
+      
+      <!-- Brand Logo & Identity -->
+      <a href="dashboard.html" class="sidebar-brand" aria-label="Campus360 Home">
+        <span class="brand-lockup"><span class="brand-icon">
+          <img src="../../assets/campus360-orbit.png" alt="Campus360 Logo" />
+        </span>
+        <span class="brand-title">Campus<span>360</span></span></span>
+        <span class="brand-badge student">Student</span>
+      </a>
+
+      <!-- Primary Sidebar Navigation Links -->
+      <nav class="sidebar-nav">
+        <span class="nav-section-title">Academic Portal</span>
+        
+        <a href="dashboard.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9.5 21v-6.5h5V21"/></svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="attendance.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span>Attendance</span>
+        </a>
+
+        <a href="timetable.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="17" rx="2.5"/><path d="M8 3v3.5M16 3v3.5M3 10h18"/></svg>
+          <span>Timetable</span>
+        </a>
+
+        <a href="assignments.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
+          <span>Assignments</span>
+          <span class="nav-counter">4</span>
+        </a>
+
+        <a href="marks-results.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 20v-5M12 20V4M18 20v-9"/></svg>
+          <span>Marks &amp; Results</span>
+        </a>
+
+        <a href="announcements.html" class="nav-link active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5L11 19z"/><path d="M16 8.5a4.5 4.5 0 0 1 0 7"/><path d="M18.8 6a8 8 0 0 1 0 12"/></svg>
+          <span>Announcements</span>
+        </a>
+
+        <a href="academic-records.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          <span>Academic Records</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar User Profile & Sign Out Footer -->
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar">S</div>
+          <div class="user-info">
+            <span class="user-name">Alex Johnson</span>
+            <span class="user-role-label">B.Tech CS &bull; Sem 5</span>
+            <a href="academic-records.html" class="user-profile-link">View profile</a>
+          </div>
+        </div>
+
+        <a href="../login.html" class="logout-link">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><path d="M21 12H9"/></svg>
+          <span>Sign Out</span>
+        </a>
+      </div>
+
+    </aside>
+
+    <!-- ============================================================
+         APPLICATION MAIN CONTENT
+         Topbar + page content. Styled entirely by css/dashboard.css, so all
+         three roles share one shell and differ only in their content.
+         ============================================================ -->
+    <main class="app-main">
+
+      <!-- ============================================================
+           TOPBAR
+           Page heading, semester context and the quick actions.
+           ============================================================ -->
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <span class="topbar-subtitle">Notice Board</span>
+          <h1 class="topbar-title">Campus Announcements</h1>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="filter-bar">
+            <span class="filter-tab active">All Notices</span>
+            <span class="filter-tab">Academic</span>
+            <span class="filter-tab">Examinations</span>
+            <span class="filter-tab">Events</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-wrapper">
+
+        <!-- Pinned Announcement Card -->
+        <article class="announcement-card pinned">
+          <div class="announcement-meta">
+            <div class="row-center-sm">
+              <span class="badge badge-warning"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-4.8L5 21V5.5A2 2 0 0 1 7 3.5h10a2 2 0 0 1 2 2z"/></svg> Pinned Notice</span>
+              <span class="badge badge-primary">Examinations Cell</span>
+            </div>
+            <span class="meta-muted">Published: Sep 25, 2026</span>
+          </div>
+
+          <h2 class="announcement-title">End-Semester Final Examination Schedule &amp; Hall Ticket Guidelines</h2>
+          
+          <p class="announcement-desc">
+            The tentative timetable for the Fall 2026 end-semester examinations has been published on the official portal. Students must resolve any attendance discrepancies and settle pending library clearances prior to October 15, 2026. Hall tickets will be downloadable directly from your Campus360 dashboard starting October 18.
+          </p>
+
+          <div class="announcement-footer">
+            <span>Audience: All Undergraduate &amp; Postgraduate Students</span>
+            <button type="button" class="btn btn-outline btn-sm" disabled>Download Timetable PDF</button>
+          </div>
+        </article>
+
+        <!-- ============================================================
+             ANNOUNCEMENT FEED
+             Notices from the administration in reverse-chronological order,
+             newest first. Pinned and unread states carry the accent treatment.
+             ============================================================ -->
+        <article class="announcement-card">
+          <div class="announcement-meta">
+            <span class="badge badge-purple">Department of CS</span>
+            <span class="meta-muted">Published: Sep 23, 2026</span>
+          </div>
+
+          <h2 class="announcement-title">Annual Hackathon 2026 &bull; Project Registrations Now Open</h2>
+          
+          <p class="announcement-desc">
+            Registration is officially open for Campus360 HackFest 2026! Teams of 3-4 members are invited to submit solution briefs focusing on AI in Education, Campus Sustainability, and Smart City Infrastructure. Mentorship sessions by industry engineers commence next week.
+          </p>
+
+          <div class="announcement-footer">
+            <span>Audience: Engineering &amp; Computing Students</span>
+            <button type="button" class="btn btn-primary btn-sm" disabled>Register Team</button>
+          </div>
+        </article>
+
+        <article class="announcement-card">
+          <div class="announcement-meta">
+            <span class="badge badge-secondary">Campus Facilities</span>
+            <span class="meta-muted">Published: Sep 20, 2026</span>
+          </div>
+
+          <h2 class="announcement-title">Central Library Weekend Timings &amp; Extended Reading Rooms</h2>
+          
+          <p class="announcement-desc">
+            In preparation for mid-term tests and group assignments, the Central Library reading rooms will remain open until 02:00 AM every Friday through Sunday until the conclusion of examinations. High-speed WiFi and silent discussion cubicles will be accessible upon student ID verification.
+          </p>
+
+          <div class="announcement-footer">
+            <span>Audience: Entire Campus Community</span>
+            <button type="button" class="btn btn-outline btn-sm" disabled>View Facility Guidelines</button>
+          </div>
+        </article>
+
+      </div>
+    </main>
+
+  </div>
+
+
+</body>
+</html>

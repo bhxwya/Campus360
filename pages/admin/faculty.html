@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Faculty Management - Campus360</title>
+  <link rel="icon" type="image/png" href="../../assets/campus360-orbit.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Poppins:wght@500;600;700&family=Rubik:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+  <link rel="stylesheet" href="../../css/admin.css" />
+  <!-- Shared behaviour + demo auth load from <head>; the DOM-dependent
+       wiring inside both files waits for DOMContentLoaded. -->
+
+  <!-- ============================================================
+       BACKEND-BOUND CONTROLS
+       The action buttons and filter selects on this page are part of the
+       designed Campus360 UI, but their behaviour needs the FastAPI backend
+       (create / edit / delete / export / save / filter). Until those
+       endpoints exist they carry the `disabled` attribute, so the current
+       state is honest: a visitor sees the intended control, the muted
+       styling and the not-allowed cursor show it is not live yet, and
+       keyboard and screen-reader users correctly skip it.
+
+       No JavaScript is attached to them and no fake behaviour is faked.
+       The handler arrives with the endpoint in the next phase.
+       ============================================================ -->
+  <script src="../../js/script.js"></script>
+  <script src="../../js/auth.js"></script>
+</head>
+
+<body data-demo-protected>
+
+  <div class="app-layout">
+
+    <!-- ============================================================
+         APPLICATION SIDEBAR
+         Shared shell: identical for Student, Faculty and Admin. Only the
+         navigation items inside it differ per role.
+         ============================================================ -->
+    <aside class="app-sidebar">
+      
+      <!-- Brand Logo & Identity -->
+      <a href="dashboard.html" class="sidebar-brand" aria-label="Campus360 Home">
+        <span class="brand-lockup"><span class="brand-icon">
+          <img src="../../assets/campus360-orbit.png" alt="Campus360 Logo" />
+        </span>
+        <span class="brand-title">Campus<span>360</span></span></span>
+        <span class="brand-badge admin">Admin</span>
+      </a>
+
+      <!-- Primary Sidebar Navigation Links -->
+      <nav class="sidebar-nav">
+        <span class="nav-section-title">Institutional Admin</span>
+        
+        <a href="dashboard.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9.5 21v-6.5h5V21"/></svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="students.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Students</span>
+        </a>
+
+        <a href="faculty.html" class="nav-link active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="7" width="19" height="13" rx="2.2"/><path d="M16 20V5.5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2V20"/></svg>
+          <span>Faculty</span>
+        </a>
+
+        <a href="courses.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5h6a4 4 0 0 1 4 4V21a3 3 0 0 0-3-3H2z"/><path d="M22 3.5h-6a4 4 0 0 0-4 4V21a3 3 0 0 1 3-3h7z"/></svg>
+          <span>Courses</span>
+        </a>
+
+        <a href="notices.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5L11 19z"/><path d="M16 8.5a4.5 4.5 0 0 1 0 7"/><path d="M18.8 6a8 8 0 0 1 0 12"/></svg>
+          <span>Notices</span>
+        </a>
+
+        <a href="reports.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 20v-5M12 20V4M18 20v-9"/></svg>
+          <span>Reports</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar User Profile & Sign Out Footer -->
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar admin">A</div>
+          <div class="user-info">
+            <span class="user-name">Central Administration</span>
+            <span class="user-role-label">System Administrator</span>
+            <a href="dashboard.html" class="user-profile-link">View profile</a>
+          </div>
+        </div>
+
+        <a href="../login.html" class="logout-link">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><path d="M21 12H9"/></svg>
+          <span>Sign Out</span>
+        </a>
+      </div>
+
+    </aside>
+
+    <!-- ============================================================
+
+         APPLICATION MAIN CONTENT
+
+         Topbar + page content. Styled entirely by css/dashboard.css, so all
+
+         three roles share one shell and differ only in their content.
+
+         ============================================================ -->
+
+    <main class="app-main">
+
+      <!-- ============================================================
+
+           TOPBAR
+
+           Page heading, search, actions and the profile area.
+
+           ============================================================ -->
+
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <span class="topbar-subtitle">Academic Personnel</span>
+          <h1 class="topbar-title">Faculty Directory</h1>
+        </div>
+
+        <div class="topbar-actions">
+          <button type="button" class="btn btn-primary btn-sm" disabled>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Add Faculty Member</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content-wrapper">
+
+        <!-- Metrics Overview -->
+        <section class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Total Faculty</span>
+              <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V6.5L12 3l7 3.5V21"/><path d="M9 21v-4h6v4"/><path d="M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></svg></span>
+            </div>
+            <div class="stat-value">218</div>
+            <div class="stat-meta"><span>Active full-time instructors</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Professors / PhDs</span>
+              <span class="stat-icon violet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+            </div>
+            <div class="stat-value">142</div>
+            <div class="stat-meta"><span>65.1% doctorate holders</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Active Research Labs</span>
+              <span class="stat-icon emerald"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+            </div>
+            <div class="stat-value">28</div>
+            <div class="stat-meta"><span class="stat-trend-up">&uarr; 3 newly inaugurated</span></div>
+          </div>
+        </section>
+
+        <!-- Faculty Directory Table -->
+        <section class="card">
+          <div class="card-header">
+            <div class="card-header-titles">
+              <span class="card-subtitle">Staff Register</span>
+              <h2 class="card-title">Institutional Faculty Members</h2>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" disabled>Export Roster</button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Faculty ID</th>
+                  <th>Faculty Name &amp; Designation</th>
+                  <th>Department</th>
+                  <th>Assigned Courses</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>FAC-0104</strong></td>
+                  <td>
+                    <span class="cell-title">Dr. Alan Turing</span>
+                    <span class="cell-subtext">Professor &bull; alan.turing@campus360.edu</span>
+                  </td>
+                  <td>Computer Science</td>
+                  <td>CS-301, CS-504</td>
+                  <td><span class="badge badge-success"><span class="badge-dot-indicator"></span> Active</span></td>
+                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
+                </tr>
+
+                <tr>
+                  <td><strong>FAC-0112</strong></td>
+                  <td>
+                    <span class="cell-title">Dr. Grace Hopper</span>
+                    <span class="cell-subtext">Associate Professor &bull; grace.h@campus360.edu</span>
+                  </td>
+                  <td>Computer Science</td>
+                  <td>CS-302, CS-310</td>
+                  <td><span class="badge badge-success"><span class="badge-dot-indicator"></span> Active</span></td>
+                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
+                </tr>
+
+                <tr>
+                  <td><strong>FAC-0125</strong></td>
+                  <td>
+                    <span class="cell-title">Prof. Vint Cerf</span>
+                    <span class="cell-subtext">Distinguished Lecturer &bull; vint.c@campus360.edu</span>
+                  </td>
+                  <td>Computer Science</td>
+                  <td>CS-303</td>
+                  <td><span class="badge badge-success"><span class="badge-dot-indicator"></span> Active</span></td>
+                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
+                </tr>
+
+                <tr>
+                  <td><strong>FAC-0138</strong></td>
+                  <td>
+                    <span class="cell-title">Dr. Claude Shannon</span>
+                    <span class="cell-subtext">Professor &bull; claude.s@campus360.edu</span>
+                  </td>
+                  <td>Electronics &amp; Computing</td>
+                  <td>CS-304, EC-401</td>
+                  <td><span class="badge badge-secondary">On Sabbatical</span></td>
+                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+
+</body>
+</html>

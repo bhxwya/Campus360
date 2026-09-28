@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics &amp; Reports - Campus360</title>
+  <link rel="icon" type="image/png" href="../../assets/campus360-orbit.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Poppins:wght@500;600;700&family=Rubik:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+  <link rel="stylesheet" href="../../css/admin.css" />
+  <!-- Shared behaviour + demo auth load from <head>; the DOM-dependent
+       wiring inside both files waits for DOMContentLoaded. -->
+
+  <!-- ============================================================
+       BACKEND-BOUND CONTROLS
+       The action buttons and filter selects on this page are part of the
+       designed Campus360 UI, but their behaviour needs the FastAPI backend
+       (create / edit / delete / export / save / filter). Until those
+       endpoints exist they carry the `disabled` attribute, so the current
+       state is honest: a visitor sees the intended control, the muted
+       styling and the not-allowed cursor show it is not live yet, and
+       keyboard and screen-reader users correctly skip it.
+
+       No JavaScript is attached to them and no fake behaviour is faked.
+       The handler arrives with the endpoint in the next phase.
+       ============================================================ -->
+  <script src="../../js/script.js"></script>
+  <script src="../../js/auth.js"></script>
+</head>
+
+<body data-demo-protected>
+
+  <div class="app-layout">
+
+    <!-- ============================================================
+         APPLICATION SIDEBAR
+         Shared shell: identical for Student, Faculty and Admin. Only the
+         navigation items inside it differ per role.
+         ============================================================ -->
+    <aside class="app-sidebar">
+      
+      <!-- Brand Logo & Identity -->
+      <a href="dashboard.html" class="sidebar-brand" aria-label="Campus360 Home">
+        <span class="brand-lockup"><span class="brand-icon">
+          <img src="../../assets/campus360-orbit.png" alt="Campus360 Logo" />
+        </span>
+        <span class="brand-title">Campus<span>360</span></span></span>
+        <span class="brand-badge admin">Admin</span>
+      </a>
+
+      <!-- Primary Sidebar Navigation Links -->
+      <nav class="sidebar-nav">
+        <span class="nav-section-title">Institutional Admin</span>
+        
+        <a href="dashboard.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9.5 21v-6.5h5V21"/></svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="students.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Students</span>
+        </a>
+
+        <a href="faculty.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="7" width="19" height="13" rx="2.2"/><path d="M16 20V5.5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2V20"/></svg>
+          <span>Faculty</span>
+        </a>
+
+        <a href="courses.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5h6a4 4 0 0 1 4 4V21a3 3 0 0 0-3-3H2z"/><path d="M22 3.5h-6a4 4 0 0 0-4 4V21a3 3 0 0 1 3-3h7z"/></svg>
+          <span>Courses</span>
+        </a>
+
+        <a href="notices.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5L11 19z"/><path d="M16 8.5a4.5 4.5 0 0 1 0 7"/><path d="M18.8 6a8 8 0 0 1 0 12"/></svg>
+          <span>Notices</span>
+        </a>
+
+        <a href="reports.html" class="nav-link active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 20v-5M12 20V4M18 20v-9"/></svg>
+          <span>Reports</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar User Profile & Sign Out Footer -->
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar admin">A</div>
+          <div class="user-info">
+            <span class="user-name">Central Administration</span>
+            <span class="user-role-label">System Administrator</span>
+            <a href="dashboard.html" class="user-profile-link">View profile</a>
+          </div>
+        </div>
+
+        <a href="../login.html" class="logout-link">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><path d="M21 12H9"/></svg>
+          <span>Sign Out</span>
+        </a>
+      </div>
+
+    </aside>
+
+    <!-- ============================================================
+
+         APPLICATION MAIN CONTENT
+
+         Topbar + page content. Styled entirely by css/dashboard.css, so all
+
+         three roles share one shell and differ only in their content.
+
+         ============================================================ -->
+
+    <main class="app-main">
+
+      <!-- ============================================================
+
+           TOPBAR
+
+           Page heading, search, actions and the profile area.
+
+           ============================================================ -->
+
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <span class="topbar-subtitle">Institutional Intelligence</span>
+          <h1 class="topbar-title">Performance Analytics &amp; Reports</h1>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="filter-bar">
+            <span class="filter-tab active">Academic Year 2026-27</span>
+            <span class="filter-tab">2025-26</span>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-sm" disabled>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>
+            <span>Export Master Report</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content-wrapper">
+
+        <!-- Executive Summary Cards -->
+        <section class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Institution Attendance Rate</span>
+              <span class="stat-icon emerald">%</span>
+            </div>
+            <div class="stat-value">86.7%</div>
+            <div class="stat-meta"><span class="stat-trend-up">&uarr; 1.4% year-over-year</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Pass Percentage</span>
+              <span class="stat-icon violet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+            </div>
+            <div class="stat-value">94.8%</div>
+            <div class="stat-meta"><span class="stat-trend-up">&uarr; High retention</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Average Student CGPA</span>
+              <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span>
+            </div>
+            <div class="stat-value">8.12</div>
+            <div class="stat-meta"><span>Across all 6 degree tracks</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Faculty Publication Count</span>
+              <span class="stat-icon amber"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5h6a4 4 0 0 1 4 4V21a3 3 0 0 0-3-3H2z"/><path d="M22 3.5h-6a4 4 0 0 0-4 4V21a3 3 0 0 1 3-3h7z"/></svg></span>
+            </div>
+            <div class="stat-value">134</div>
+            <div class="stat-meta"><span>Indexed research papers</span></div>
+          </div>
+        </section>
+
+        <!-- Two Column Visual Data Charts (Pure HTML + CSS, Zero JS Chart Libraries) -->
+        <div class="grid-2">
+
+          <!-- Chart 1: Department Attendance Averages -->
+          <section class="card">
+            <div class="card-header">
+              <div class="card-header-titles">
+                <span class="card-subtitle">Engagement Metrics</span>
+                <h2 class="card-title">Department Attendance Rate (%)</h2>
+              </div>
+              <span class="badge badge-secondary">CSS Bar Metric</span>
+            </div>
+
+            <div class="card-body">
+              <div class="css-bar-chart" aria-label="Department Attendance Chart">
+                <div class="chart-bar-group">
+                  <span class="chart-bar-value">89%</span>
+                  <div class="chart-bar-fill" style="height: 89%;"></div>
+                  <span class="chart-bar-label">CSE</span>
+                </div>
+
+                <div class="chart-bar-group">
+                  <span class="chart-bar-value">84%</span>
+                  <div class="chart-bar-fill" style="height: 84%;"></div>
+                  <span class="chart-bar-label">ECE</span>
+                </div>
+
+                <div class="chart-bar-group">
+                  <span class="chart-bar-value">87%</span>
+                  <div class="chart-bar-fill" style="height: 87%;"></div>
+                  <span class="chart-bar-label">MECH</span>
+                </div>
+
+                <div class="chart-bar-group">
+                  <span class="chart-bar-value">82%</span>
+                  <div class="chart-bar-fill" style="height: 82%;"></div>
+                  <span class="chart-bar-label">CIVIL</span>
+                </div>
+
+                <div class="chart-bar-group">
+                  <span class="chart-bar-value">91%</span>
+                  <div class="chart-bar-fill" style="height: 91%;"></div>
+                  <span class="chart-bar-label">MGMT</span>
+                </div>
+              </div>
+
+              <div class="legend-list spaced">
+                <div class="legend-item">
+                  <span class="legend-dot primary"></span>
+                  <span>Average Semester Attendance Rate</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Chart 2: Grade Distribution Breakdown -->
+          <section class="card">
+            <div class="card-header">
+              <div class="card-header-titles">
+                <span class="card-subtitle">Academic Distribution</span>
+                <h2 class="card-title">Cumulative Grade Distribution</h2>
+              </div>
+              <span class="badge badge-secondary">All Scholars</span>
+            </div>
+
+            <div class="card-body">
+              <div class="css-bar-chart" aria-label="Grade Distribution Chart">
+                <div class="chart-bar-group">
+                  <span class="chart-bar-value">18%</span>
+                  <div class="chart-bar-fill secondary" style="height: 18%;"></div>
+                  <span class="chart-bar-label">O (9.5+)</span>
+                </div>
+
+                <div class="chart-bar-group">
+                  <span class="chart-bar-value">42%</span>
+                  <div class="chart-bar-fill secondary" style="height: 42%;"></div>
+                  <span class="chart-bar-label">A+ (8.5+)</span>
+                </div>
+
+                <div class="chart-bar-group">
+                  <span class="chart-bar-value">28%</span>
+                  <div class="chart-bar-fill secondary" style="height: 28%;"></div>
+                  <span class="chart-bar-label">A (7.5+)</span>
+                </div>
+
+                <div class="chart-bar-group">
+                  <span class="chart-bar-value">8%</span>
+                  <div class="chart-bar-fill secondary" style="height: 8%;"></div>
+                  <span class="chart-bar-label">B (6.5+)</span>
+                </div>
+
+                <div class="chart-bar-group">
+                  <span class="chart-bar-value">4%</span>
+                  <div class="chart-bar-fill secondary" style="height: 4%;"></div>
+                  <span class="chart-bar-label">&lt; 6.0</span>
+                </div>
+              </div>
+
+              <div class="legend-list spaced">
+                <div class="legend-item">
+                  <span class="legend-dot secondary"></span>
+                  <span>Percentage of Total Enrolled Scholars</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+
+</body>
+</html>

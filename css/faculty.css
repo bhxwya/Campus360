@@ -1,0 +1,318 @@
+/* ==========================================================================
+   Campus360 - Faculty Role Stylesheet (faculty.css)
+   ==========================================================================
+   Provides faculty-specific dashboard widgets, class roster indicators,
+   grading quick-view surfaces, and assignment submission trackers.
+   Inherits design tokens and structural layout from dashboard.css.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. FACULTY CLASS SELECTOR & QUICK BAR
+   ========================================================================== */
+
+.course-selector-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  padding: 16px 20px;
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-card);
+  flex-wrap: wrap;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.selector-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+/* ==========================================================================
+   1b. ASSIGNED COURSE CONTEXT
+   --------------------------------------------------------------------------
+   The PPT scope gives Faculty an "assigned courses" module: the courses a
+   member of staff is actually teaching this term, with the section and
+   semester context attached.
+
+   Two surfaces are built on the same visual language:
+
+     .course-context-strip  - a READ-ONLY reminder of the course currently in
+                              view, placed at the top of a working page. It
+                              is the non-interactive twin of
+                              .course-selector-bar: same card treatment, but
+                              it states the context instead of offering a
+                              picker, so it never implies a filter that does
+                              not exist yet.
+
+     .assigned-course-card  - one course in the dashboard's "My Assigned
+                              Courses" list, showing the course code as a
+                              brand chip plus its section / semester / roster.
+
+   Both are static for now. The course list will come from the FastAPI
+   endpoint that returns the signed-in faculty member's assignments; the
+   markup is shaped for that response and uses sample data until then.
+   ========================================================================== */
+
+/* Course code chip - the strongest visual cue for "which course is this". */
+.course-code-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border-radius: var(--r-sm);
+  background: linear-gradient(135deg, var(--blue), var(--indigo));
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.22);
+}
+
+.course-code-chip.violet {
+  background: linear-gradient(135deg, var(--violet), var(--indigo));
+}
+
+.course-code-chip.cyan {
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+}
+
+/* --- Read-only context strip --------------------------------------------- */
+
+.course-context-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-left: 4px solid var(--blue);
+  padding: 18px 22px;
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-card);
+  flex-wrap: wrap;
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+}
+
+/* Same lift as every other Campus360 surface. */
+.course-context-strip:hover {
+  transform: translateY(var(--card-lift));
+  box-shadow: var(--shadow-lift);
+  border-color: var(--card-border-hover);
+}
+
+.course-context-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.course-context-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.course-context-meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* The small "Assigned Course" label that frames the strip. */
+.course-context-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--blue);
+  margin-bottom: 2px;
+}
+
+/* --- Assigned course card (dashboard list) ------------------------------ */
+
+.assigned-course-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.assigned-course-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px var(--card-pad);
+  border-bottom: 1px solid var(--line-subtle);
+  transition: background-color 0.2s ease;
+}
+
+.assigned-course-card:last-child {
+  border-bottom: none;
+}
+
+.assigned-course-card:hover {
+  background-color: var(--blue-light);
+}
+
+.assigned-course-card .fill {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.assigned-course-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.assigned-course-meta {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* Small stat block on the right of each course row. */
+.assigned-course-stat {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.assigned-course-stat strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.assigned-course-stat span {
+  font-size: 10.5px;
+  color: var(--muted-light);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+
+
+/* ==========================================================================
+   2. ATTENDANCE MARKING MATRIX
+   ========================================================================== */
+
+/* A status pill on the attendance register. Deliberately small: it sits inside
+   a table cell next to a student name and must not compete with it. */
+.attendance-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: var(--r-pill);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Status ink tokens come from dashboard.css, so these pills inherit the
+   shared palette without needing an override. */
+.attendance-status-pill.present {
+  background: var(--emerald-light);
+  color: var(--success-ink);
+}
+
+.attendance-status-pill.absent {
+  background: var(--rose-light);
+  color: var(--danger-ink);
+}
+
+/* `.late` completes the present / absent / late triple above. The demo roster
+   only contains present and absent students, so it renders nothing today - it
+   is the state a real register will produce once late arrivals are tracked. */
+.attendance-status-pill.late {
+  background: var(--amber-light);
+  color: var(--warning-ink);
+}
+
+/* ==========================================================================
+   3. SUBMISSION EVALUATION CARDS
+   --------------------------------------------------------------------------
+   The pair below is the header strip for an individual submission being
+   evaluated: .submission-meta-strip is the framed row, and
+   .submission-counter-box is the "42 / 18" style counter that sits inside it.
+
+   The Assignments page shows the same information as table columns today; the
+   strip is the per-submission view that arrives with the evaluation endpoint.
+   ========================================================================== */
+
+.submission-meta-strip {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 13px;
+  color: var(--muted);
+  padding: 12px 16px;
+  background: var(--bg-app);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--card-border);
+}
+
+.submission-counter-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.submission-counter-box strong {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+
+/* ==========================================================================
+   4. RESPONSIVE
+   --------------------------------------------------------------------------
+   Matches the 1024 / 768 / 540 breakpoints used by dashboard.css so the
+   faculty widgets reflow in step with the shell around them.
+   ========================================================================== */
+
+/* Tablet: the selector bar and the assigned-course list stop trying to keep
+   everything on one line. */
+@media (max-width: 1024px) {
+  .course-selector-bar,
+  .course-context-strip {
+    padding: 14px 16px;
+  }
+
+  .assigned-course-card {
+    padding: 12px 16px;
+  }
+}
+
+/* Mobile: a course row stacks chip / name / stat vertically, and the
+   evaluation strip wraps instead of overflowing. */
+@media (max-width: 540px) {
+  .course-selector-bar,
+  .course-context-strip,
+  .assigned-course-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  /* The counter/stat column is no longer a right-hand column, so it reads
+     correctly left-aligned underneath the course name. */
+  .assigned-course-stat {
+    text-align: left;
+  }
+
+  .submission-meta-strip {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+

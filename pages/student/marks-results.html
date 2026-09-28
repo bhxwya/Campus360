@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marks &amp; Results - Campus360</title>
+  <link rel="icon" type="image/png" href="../../assets/campus360-orbit.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Poppins:wght@500;600;700&family=Rubik:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+  <link rel="stylesheet" href="../../css/student.css" />
+  <!-- Shared behaviour + demo auth load from <head>; the DOM-dependent
+       wiring inside both files waits for DOMContentLoaded. -->
+
+  <!-- ============================================================
+       BACKEND-BOUND CONTROLS
+       The action buttons and filter selects on this page are part of the
+       designed Campus360 UI, but their behaviour needs the FastAPI backend
+       (create / edit / delete / export / save / filter). Until those
+       endpoints exist they carry the `disabled` attribute, so the current
+       state is honest: a visitor sees the intended control, the muted
+       styling and the not-allowed cursor show it is not live yet, and
+       keyboard and screen-reader users correctly skip it.
+
+       No JavaScript is attached to them and no fake behaviour is faked.
+       The handler arrives with the endpoint in the next phase.
+       ============================================================ -->
+  <script src="../../js/script.js"></script>
+  <script src="../../js/auth.js"></script>
+</head>
+
+<body data-demo-protected>
+
+  <div class="app-layout">
+
+    <!-- ============================================================
+         APPLICATION SIDEBAR
+         Shared shell: identical for Student, Faculty and Admin. Only the
+         navigation items inside it differ per role.
+         ============================================================ -->
+    <aside class="app-sidebar">
+      
+      <!-- Brand Logo & Identity -->
+      <a href="dashboard.html" class="sidebar-brand" aria-label="Campus360 Home">
+        <span class="brand-lockup"><span class="brand-icon">
+          <img src="../../assets/campus360-orbit.png" alt="Campus360 Logo" />
+        </span>
+        <span class="brand-title">Campus<span>360</span></span></span>
+        <span class="brand-badge student">Student</span>
+      </a>
+
+      <!-- Primary Sidebar Navigation Links -->
+      <nav class="sidebar-nav">
+        <span class="nav-section-title">Academic Portal</span>
+        
+        <a href="dashboard.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9.5 21v-6.5h5V21"/></svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="attendance.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span>Attendance</span>
+        </a>
+
+        <a href="timetable.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="17" rx="2.5"/><path d="M8 3v3.5M16 3v3.5M3 10h18"/></svg>
+          <span>Timetable</span>
+        </a>
+
+        <a href="assignments.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
+          <span>Assignments</span>
+          <span class="nav-counter">4</span>
+        </a>
+
+        <a href="marks-results.html" class="nav-link active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 20v-5M12 20V4M18 20v-9"/></svg>
+          <span>Marks &amp; Results</span>
+        </a>
+
+        <a href="announcements.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5L11 19z"/><path d="M16 8.5a4.5 4.5 0 0 1 0 7"/><path d="M18.8 6a8 8 0 0 1 0 12"/></svg>
+          <span>Announcements</span>
+        </a>
+
+        <a href="academic-records.html" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          <span>Academic Records</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar User Profile & Sign Out Footer -->
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar">S</div>
+          <div class="user-info">
+            <span class="user-name">Alex Johnson</span>
+            <span class="user-role-label">B.Tech CS &bull; Sem 5</span>
+            <a href="academic-records.html" class="user-profile-link">View profile</a>
+          </div>
+        </div>
+
+        <a href="../login.html" class="logout-link">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><path d="M21 12H9"/></svg>
+          <span>Sign Out</span>
+        </a>
+      </div>
+
+    </aside>
+
+    <!-- ============================================================
+         APPLICATION MAIN CONTENT
+         Topbar + page content. Styled entirely by css/dashboard.css, so all
+         three roles share one shell and differ only in their content.
+         ============================================================ -->
+    <main class="app-main">
+
+      <!-- ============================================================
+           TOPBAR
+           Page heading, semester context and the quick actions.
+           ============================================================ -->
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <span class="topbar-subtitle">Academic Evaluation</span>
+          <h1 class="topbar-title">Marks &amp; Exam Performance</h1>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="filter-bar">
+            <span class="filter-tab active">Semester 5</span>
+            <span class="filter-tab">Semester 4</span>
+            <span class="filter-tab">Semester 3</span>
+          </div>
+
+          <button type="button" class="btn btn-outline btn-sm" disabled>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>
+            <span>Download Transcript</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content-wrapper">
+
+        <!-- ============================================================
+             PERFORMANCE OVERVIEW
+             Semester GPA, credit load and the class rank the student currently
+             holds. Detailed subject marks follow in the table below.
+             ============================================================ -->
+        <section class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Cumulative GPA</span>
+              <span class="stat-icon emerald"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span>
+            </div>
+            <div class="stat-value">8.64</div>
+            <div class="stat-meta"><span class="stat-trend-up">&uarr; Top 5% in Cohort</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Semester SGPA</span>
+              <span class="stat-icon violet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+            </div>
+            <div class="stat-value">8.80</div>
+            <div class="stat-meta"><span>Current projected SGPA</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Internal Average</span>
+              <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="m16.5 3.5 3 3L8 18l-4 1 1-4z"/></svg></span>
+            </div>
+            <div class="stat-value">84.2%</div>
+            <div class="stat-meta"><span>Across all continuous tests</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Earned Grade Points</span>
+              <span class="stat-icon amber"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.6 14.3 7 22l5-2.6L17 22l-1.6-7.7"/></svg></span>
+            </div>
+            <div class="stat-value">184 / 210</div>
+            <div class="stat-meta"><span>Zero academic backlogs</span></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             SUBJECT-WISE EVALUATION
+             Internal and external marks per subject with the resulting grade.
+             Rows use the shared data-table component, not a page-specific one.
+             ============================================================ -->
+        <section class="card">
+          <div class="card-header">
+            <div class="card-header-titles">
+              <span class="card-subtitle">Course Scorecard</span>
+              <h2 class="card-title">Continuous Internal Assessments &amp; Mid-Terms</h2>
+            </div>
+            <span class="badge badge-success">Academic Status: Outstanding</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Course Code &amp; Title</th>
+                  <th>Credits</th>
+                  <th>Internal-1 (30)</th>
+                  <th>Mid-Term (50)</th>
+                  <th>Lab / Practical (20)</th>
+                  <th>Weighted Total</th>
+                  <th>Grade</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span class="cell-title">Advanced Data Structures</span>
+                    <span class="cell-subtext">CS-301</span>
+                  </td>
+                  <td>4</td>
+                  <td><strong>28</strong> / 30</td>
+                  <td><strong>46</strong> / 50</td>
+                  <td><strong>19</strong> / 20</td>
+                  <td><strong>93%</strong></td>
+                  <td><span class="badge badge-success">A+ (10.0)</span></td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <span class="cell-title">Database Management Systems</span>
+                    <span class="cell-subtext">CS-302</span>
+                  </td>
+                  <td>4</td>
+                  <td><strong>27</strong> / 30</td>
+                  <td><strong>44</strong> / 50</td>
+                  <td><strong>18</strong> / 20</td>
+                  <td><strong>89%</strong></td>
+                  <td><span class="badge badge-primary">A (9.0)</span></td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <span class="cell-title">Computer Networks</span>
+                    <span class="cell-subtext">CS-303</span>
+                  </td>
+                  <td>3</td>
+                  <td><strong>25</strong> / 30</td>
+                  <td><strong>41</strong> / 50</td>
+                  <td><strong>17</strong> / 20</td>
+                  <td><strong>83%</strong></td>
+                  <td><span class="badge badge-primary">B+ (8.0)</span></td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <span class="cell-title">Theory of Computation</span>
+                    <span class="cell-subtext">CS-304</span>
+                  </td>
+                  <td>3</td>
+                  <td><strong>29</strong> / 30</td>
+                  <td><strong>48</strong> / 50</td>
+                  <td>&mdash;</td>
+                  <td><strong>96%</strong></td>
+                  <td><span class="badge badge-success">O (10.0)</span></td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <span class="cell-title">Software Engineering</span>
+                    <span class="cell-subtext">CS-305</span>
+                  </td>
+                  <td>3</td>
+                  <td><strong>24</strong> / 30</td>
+                  <td><strong>39</strong> / 50</td>
+                  <td><strong>18</strong> / 20</td>
+                  <td><strong>81%</strong></td>
+                  <td><span class="badge badge-primary">B+ (8.0)</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+
+</body>
+</html>

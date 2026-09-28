@@ -178,7 +178,7 @@ main {
 .logo {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
 
   color: #0f172a;
   text-decoration: none;
@@ -333,214 +333,6 @@ main {
   filter: brightness(1.06);
 
   box-shadow: 0 14px 28px rgba(37, 99, 235, 0.3);
-}
-
-/* Theme switch (Light Scheme / Dark Scheme pill) */
-
-/* Toggle container = the <label>.
-   It draws the pill's OUTER ring, the frame and the drop shadow.
-   From the outside in, the pill is layered like this:
-     1. ring     -> border
-     2. frame    -> background + the 3px padding (the gap around the plate)
-     3. plate    -> .switch-face (the white or dark area)
-     4. hairline -> inset box-shadow on the plate
-     5. icon + text
-   The class name and the checkbox id stay exactly as they were. */
-.theme-switch {
-  position: relative;
-
-  display: inline-grid; /* ONE cell: both faces are stacked in it, see .switch-face */
-
-  padding: 3px;
-
-  border: 1px solid #cbd5e1;
-  border-radius: 999px;
-
-  background: #f1f5f9;
-
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
-
-  cursor: pointer;
-
-  flex-shrink: 0;
-
-  transition:
-    background 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.3s ease,
-    transform 0.2s ease;
-}
-
-/* The checkbox keeps the switch state and stays focusable (Tab + Space) but is
-   invisible: 1x1 and fully transparent. `display: none` would remove it from the
-   keyboard tab order, which would make the switch mouse-only. */
-.theme-switch input {
-  position: absolute;
-
-  width: 1px;
-  height: 1px;
-
-  margin: 0;
-
-  opacity: 0;
-
-  pointer-events: none;
-}
-
-/* A "face" is one plate: an icon plus a name.
-   `grid-area: 1 / 1` puts BOTH faces into the same cell, so they sit on top of each
-   other and the pill is exactly as wide as the widest label. The inactive face is
-   faded out and `visibility: hidden`, which also removes its text from the
-   accessibility tree - that is why the switch is announced as "Light Scheme" while
-   it is off and as "Dark Scheme" while it is on. */
-.switch-face {
-  grid-area: 1 / 1;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-
-  height: 34px;
-  padding: 0 16px;
-
-  border-radius: 999px;
-
-  font-family: "Manrope", sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-
-  opacity: 0; /* hidden by default; the light face is switched back on below */
-  visibility: hidden;
-
-  transition:
-    opacity 0.28s ease,
-    visibility 0.28s ease,
-    background 0.3s ease,
-    box-shadow 0.3s ease,
-    color 0.3s ease;
-}
-
-/* SWITCH-PLATES */
-
-/* LIGHT SCHEME plate: clean white with a thin inner hairline (layer 4 above).
-   It sits after `.switch-face`, so its opacity/visibility win - this is the plate
-   that is visible while the switch is OFF. */
-.switch-face--light {
-  background: #ffffff;
-
-  color: #1e293b;
-
-  box-shadow:
-    inset 0 0 0 1px rgba(100, 116, 139, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-
-  opacity: 1;
-  visibility: visible;
-}
-
-/* DARK SCHEME plate: deep slate with light text, built from the same layers. */
-.switch-face--dark {
-  background: #0f172a;
-
-  color: #f1f5f9;
-
-  box-shadow:
-    inset 0 0 0 1px rgba(148, 163, 184, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-/* Icons: line art that inherits its colour from the plate (stroke: currentColor). */
-.switch-icon {
-  width: 17px;
-  height: 17px;
-
-  flex-shrink: 0;
-
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* The sun keeps the blue side of the Campus360 palette ... */
-.switch-face--light .switch-icon {
-  color: #2563eb;
-}
-
-/* ... and the moon takes the violet side in the dark scheme. */
-.switch-face--dark .switch-icon {
-  color: #c4b5fd;
-}
-
-/* The scheme name: one line, vertically centred inside the plate. */
-.switch-text {
-  line-height: 1;
-}
-
-/* --------------------------------------------------------------------------
-   ON = "Dark Scheme" is the selected scheme
-   `:has()` lets the <label> react to the checkbox inside it - there is no
-   sibling/child path from the input up to its own parent without it.
-   If a browser does not support `:has()`, the dark plate still appears; only the
-   outer frame and the halo would keep their light colours.
-   -------------------------------------------------------------------------- */
-
-/* cross-fade the plates: the light one fades out ... */
-.theme-switch input:checked ~ .switch-face--light {
-  opacity: 0;
-  visibility: hidden;
-}
-
-/* ... while the dark one fades in. `visibility` is transitioned as well: it stays
-   `visible` for the whole fade and only flips to `hidden` at the end of it. */
-.theme-switch input:checked ~ .switch-face--dark {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* The frame around the plate turns dark, and the violet halo makes the selected
-   scheme read as "active" - the one brand-coloured cue in this control. */
-.theme-switch:has(input:checked) {
-  background: #1e293b;
-
-  box-shadow:
-    0 4px 12px rgba(15, 23, 42, 0.35),
-    0 0 0 4px rgba(124, 58, 237, 0.14);
-}
-
-/* Hover: lift the pill and add a soft brand glow, the same idea as .login-btn:hover. */
-.theme-switch:hover {
-  transform: translateY(-1px);
-
-  box-shadow:
-    0 6px 16px rgba(15, 23, 42, 0.16),
-    0 0 0 4px rgba(37, 99, 235, 0.12);
-}
-
-/* The checked rule above is more specific than this plain hover rule, so the dark
-   state needs its own hover to get the same feedback. */
-.theme-switch:hover:has(input:checked) {
-  box-shadow:
-    0 8px 18px rgba(15, 23, 42, 0.4),
-    0 0 0 5px rgba(124, 58, 237, 0.2);
-}
-
-/* Keyboard focus: drawn on the plate, and the 3px offset places the ring in the
-   frame gap. `:focus-visible` means a mouse click leaves no ring behind, and the
-   checkbox itself stays invisible. */
-.theme-switch input:focus-visible ~ .switch-face {
-  outline: 2px solid #7c3aed;
-  outline-offset: 3px;
-}
-
-/* Pressed: the pill settles a little (this rule comes after the hover rule, so it
-   wins for `transform` while the mouse button is down). */
-.theme-switch:active {
-  transform: scale(0.985);
 }
 
 /* =========================
@@ -1370,7 +1162,9 @@ main {
   border-right: 1px solid var(--line);
 }
 
-/* Sidebar brand */
+/* Sidebar brand — canonical Campus360 logo lockup (40px mark / 10px gap /
+   20px Poppins 600 wordmark, #0F172A). Matches the navbar .logo exactly;
+   only the surrounding rail padding differs. */
 
 .platform-sidebar-brand {
   height: 72px;
@@ -1378,31 +1172,44 @@ main {
   display: flex;
   align-items: center;
 
-  gap: 9px;
+  gap: 10px;
 
   padding: 0 20px;
 
   border-bottom: 1px solid #e2e8f0;
+
+  color: #0f172a;
+  text-decoration: none;
 }
 
 .platform-sidebar-brand img {
-  width: 27px;
-  height: 27px;
+  width: 40px;
+  height: 40px;
 
   object-fit: contain;
+  flex-shrink: 0;
 }
 
 .platform-sidebar-brand > span {
-  color: #1e293b;
+  color: #0f172a;
 
-  font-family: "Manrope", sans-serif;
+  font-family: "Poppins", sans-serif;
 
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 600;
+
+  white-space: nowrap;
 }
 
 .platform-sidebar-brand > span > span {
-  color: #2563eb;
+  font-family: "Rubik", sans-serif;
+  font-weight: 700;
+
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Sidebar navigation */
@@ -2630,4 +2437,279 @@ main {
   font-size: 12px;
 
   text-align: center;
+}
+
+
+/* ==========================================================================
+   RESPONSIVE
+   ==========================================================================
+   The landing page is the Campus360 visual benchmark, so its proportions are
+   preserved rather than redesigned: the sections keep their typography scale,
+   card padding and border radii, and only the COLUMN COUNT and the outer
+   padding change as the viewport narrows.
+
+   Breakpoints match the rest of the product (dashboard.css / auth.css) so the
+   whole site reflows together:
+
+     1024px  tablet  - three-up grids become two-up, hero art recedes
+      768px  mobile  - everything becomes one column, the navbar collapses
+      480px  phone   - the last few tight spots (nav links, footer, CTAs)
+
+   Nothing is scaled down with viewport units: the type stays readable and the
+   layout simply stops trying to fit three or four things side by side.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   <= 1024px  TABLET
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  /* --- Navbar: the centred link row would collide with the logo, so it
+         returns to normal flow directly under the bar. --- */
+  .navbar {
+    height: 88px;
+    padding: 0 32px;
+  }
+
+  .navbar.scrolled {
+    height: 72px;
+  }
+
+  .navbar nav {
+    position: static;
+    transform: none;
+    gap: 28px;
+  }
+
+  /* --- Hero: less dead space above the copy, and the floating module cards
+         pull in from the right so they stay clear of the text column. --- */
+  .hero {
+    min-height: 680px;
+  }
+
+  .hero-content {
+    padding-left: 32px;
+  }
+
+  .hero-module {
+    transform: scale(0.9);
+  }
+
+  /* --- Grids: three-up becomes two-up, keeping the same 24px rhythm. --- */
+  .feature-grid,
+  .core-feature-grid,
+  .about-story {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* --- The mock dashboard is too wide to read at this size; let it scroll
+         inside its own frame instead of stretching the page. --- */
+  .platform-window {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* --- Section padding follows the navbar padding. --- */
+  .features,
+  .core-features,
+  .how-it-works,
+  .about,
+  .footer {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .contact-content {
+    padding: 44px 40px;
+    gap: 40px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   <= 768px  MOBILE
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  /* --- Navbar: a compact bar with the logo and the Login action. The link
+         row is dropped here - with a fixed bar there is no room for it, and
+         every destination it links to is reachable from the app itself. --- */
+  .navbar {
+    height: 72px;
+    padding: 0 20px;
+  }
+
+  .navbar.scrolled {
+    height: 64px;
+  }
+
+  .navbar nav {
+    display: none;
+  }
+
+  .login-btn {
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+
+  /* --- Hero: the copy becomes the whole hero. The floating module cards and
+         the orbit brand are decorative at this width, so they are hidden
+         rather than shrunk into unreadable clutter. --- */
+  .hero {
+    min-height: auto;
+    padding: 130px 20px 72px;
+  }
+
+  .hero-content {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .hero-content h1 {
+    font-size: 40px;
+  }
+
+  .hero-content p {
+    font-size: 16px;
+  }
+
+  .hero-visual {
+    display: none;
+  }
+
+  .hero-btn {
+    padding: 14px 26px;
+    font-size: 15px;
+  }
+
+  /* --- Every multi-column band becomes a single readable column. --- */
+  .feature-grid,
+  .core-feature-grid,
+  .why-grid,
+  .about-story,
+  .contact-content {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-content {
+    padding: 36px 24px;
+    gap: 28px;
+    text-align: center;
+  }
+
+  .contact-actions {
+    justify-content: center;
+  }
+
+  /* --- Card padding eases off so the text keeps a comfortable measure. --- */
+  .feature-card,
+  .core-feature-card,
+  .why-item,
+  .story-item {
+    padding: 24px;
+  }
+
+  .section-heading {
+    margin-bottom: 36px;
+  }
+
+  .section-heading h2 {
+    font-size: 28px;
+  }
+
+  /* --- Section padding --- */
+  .features,
+  .core-features,
+  .how-it-works,
+  .about,
+  .footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .features {
+    padding-top: 24px;
+  }
+
+  /* A shorter vertical rhythm keeps the long single-column page scannable. */
+  :root {
+    --section-y: 64px;
+  }
+
+  /* The dashboard mock is a desktop-scale illustration; below tablet width it
+     is removed rather than left as a squashed, unreadable strip. */
+  .platform-preview {
+    display: none;
+  }
+
+  /* --- Footer: the brand block and the links stack and centre. --- */
+  .footer-content,
+  .footer-bottom {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 18px;
+  }
+
+  .footer-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 18px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   <= 480px  PHONE
+   -------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 16px;
+  }
+
+  /* The logo lockup deliberately has no phone-tier size step: 40px mark +
+     20px wordmark is the brand on every page at every width (see the
+     canonical block near the top of this file). It still fits a 320px bar. */
+
+  .login-btn {
+    padding: 9px 15px;
+    font-size: 12.5px;
+  }
+
+  .hero {
+    padding: 120px 16px 56px;
+  }
+
+  .hero-content h1 {
+    font-size: 33px;
+  }
+
+  .hero-content p {
+    font-size: 15px;
+  }
+
+  .hero-btn {
+    width: 100%;
+  }
+
+  .feature-card,
+  .core-feature-card,
+  .why-item,
+  .story-item {
+    padding: 20px;
+  }
+
+  .section-heading h2 {
+    font-size: 25px;
+  }
+
+  .features,
+  .core-features,
+  .how-it-works,
+  .about,
+  .footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* Keep the landing page itself free of sideways scrolling. */
+  body {
+    overflow-x: hidden;
+  }
 }
