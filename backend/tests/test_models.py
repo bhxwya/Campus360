@@ -47,6 +47,7 @@ EXPECTED_TABLES = {
     "student_profiles",
     "timetable_entries",
     "users",
+    "user_sessions",  # Stage 3: server-side auth sessions
 }
 
 

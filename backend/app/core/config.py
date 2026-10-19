@@ -39,7 +39,10 @@ class Settings(BaseSettings):
     Two fields have **no default on purpose**: ``db_password`` and
     ``secret_key``. If they are missing from the environment/.env, the app
     fails at startup with a clear validation error instead of silently running
-    with an empty password or a weak signing key.
+    with an empty password or a weak (future) signing key. ``secret_key`` is
+    currently RESERVED (see its comment) - Stage 3 sessions are opaque and
+    server-side, so nothing signs material with it yet - but it remains required
+    so a strong secret is always configured and available when needed.
     """
 
     model_config = SettingsConfigDict(
@@ -65,13 +68,23 @@ class Settings(BaseSettings):
     #: accidental print of a Settings object cannot leak the password.
     db_password: SecretStr
 
-    # --- Authentication (used from Stage 3) -------------------------------
-    #: Signs session/CSRF material. Never hardcode; never commit.
+    # --- Authentication ----------------------------------------------------------
+    #: RESERVED for future signed-token work (e.g. if stateless tokens or
+    #: password-reset links are ever added). The current Stage 3 sessions are
+    #: OPAQUE and looked up server-side, so they need no signing key - this
+    #: value is validated and stored but not yet consumed by any code path.
+    #: Keeping it required avoids a config/schema churn later and keeps the
+    #: "one strong secret per deployment" habit in place. Never hardcode; never
+    #: commit.
     secret_key: SecretStr
     #: True in production (HTTPS-only cookies). False for plain-HTTP local dev.
     cookie_secure: bool = False
     #: Session lifetime in seconds (default 8 hours).
     session_max_age_seconds: int = 8 * 60 * 60
+    #: Cookie names - kept as settings so they can be renamed without code
+    #: changes (e.g. to avoid collisions when several apps share a domain).
+    session_cookie_name: str = "campus360_session"
+    csrf_cookie_name: str = "campus360_csrf"
 
     # --- CORS -------------------------------------------------------------
     #: Explicit origins allowed to send credentialed requests (the CORS spec

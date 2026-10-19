@@ -33,6 +33,7 @@ from app.models.enums import (
     UserRole,
 )
 from app.models.mark import Mark
+from app.models.session import UserSession
 from app.models.timetable import TimetableEntry
 from app.models.user import FacultyProfile, StudentProfile, User
 
@@ -56,5 +57,6 @@ __all__ = [
     "SubmissionStatus",
     "TimetableEntry",
     "User",
+    "UserSession",
     "UserRole",
 ]
