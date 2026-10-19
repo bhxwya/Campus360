@@ -25,8 +25,9 @@ Development proceeds in stages. This is what is **actually working today**:
 | SQLAlchemy + Psycopg 3 + Alembic wiring | ✅ Working (verified to the DB socket) |
 | Static frontend served by FastAPI (one origin) | ✅ Working |
 | Lint (ruff) + tests (pytest) | ✅ Running |
-| PostgreSQL database & application user | ⏳ **Waiting for your manual setup (see below)** |
-| Database schema / migrations | ⏳ Stage 2 |
+| PostgreSQL database & application user | ✅ Complete (Stage 1) |
+| Database schema / 11 tables / 9 enums | ✅ Complete (Stage 2) |
+| Initial Alembic migration (applied) | ✅ Complete (Stage 2) |
 | Real authentication & authorization | ⏳ Stage 3 |
 | Academic features (courses, attendance, marks, …) | ⏳ Stage 4 |
 | Frontend ↔ API integration | ⏳ Stage 5 |
@@ -233,11 +234,13 @@ Campus360/
 │   │   │   └── session.py     # engine, sessionmaker, get_db dependency
 │   │   ├── api/
 │   │   │   └── health.py      # GET /api/v1/health, GET /api/v1/health/db
-│   │   └── models/  schemas/  services/  repositories/   # from Stage 2 on
+│   │   └── models/        # SQLAlchemy models (see below); schemas/ services/ repositories/ from Stage 3+
 │   └── tests/
 │       ├── conftest.py        # forces test environment + test database
 │       ├── test_health.py
-│       └── test_settings.py
+│       ├── test_settings.py
+│       ├── test_models.py             # Stage 2: metadata/constraints (no DB)
+│       └── test_models_integration.py # Stage 2: real-PostgreSQL behaviour
 ├── alembic/                   # migration env + versions/ (schema history)
 ├── alembic.ini                # NO credentials in here (URL comes from .env)
 ├── pyproject.toml             # dependencies + ruff + pytest configuration
@@ -297,8 +300,8 @@ hardening, and security tests have been reviewed.
 
 ## 🗓️ Development Roadmap
 
-1. **Stage 1 — Audit & foundation** ✅ (database creation step still pending)
-2. **Stage 2 — Database design:** models, constraints, indexes, first migration
+1. **Stage 1 — Audit & foundation** ✅
+2. **Stage 2 — Database design** ✅ 11 tables, constraints, indexes, initial migration
 3. **Stage 3 — Authentication:** hashing, sessions, role authorization, tests
 4. **Stage 4 — Core academic features:** courses, enrollments, timetable,
    attendance, assignments, marks, announcements

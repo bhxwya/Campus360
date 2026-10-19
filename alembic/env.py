@@ -28,13 +28,12 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY_ROOT / "backend"))
 
 # Imported after sys.path setup (they are not installed as a package).
+# Importing the models package registers every table on Base.metadata.
+# Without this, `alembic revision --autogenerate` would see an EMPTY schema
+# and propose DROPping every existing table - a classic Alembic footgun.
+from app import models  # noqa: F401,E402
 from app.core.config import get_settings  # noqa: E402
 from app.db.base import Base  # noqa: E402
-
-# NOTE (Stage 2): once models exist, import them here so their tables are
-# registered on Base.metadata. Without those imports, `alembic revision
-# --autogenerate` cannot see the tables and would propose dropping them.
-# Example: from app import models  # noqa: F401
 
 # This is the Alembic Config object, giving access to values from alembic.ini.
 config = context.config
