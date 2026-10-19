@@ -1,0 +1,47 @@
+[project]
+name = "campus360"
+version = "0.1.0"
+description = "Campus360 backend - REST API for the Campus360 educational management system."
+readme = "README.md"
+requires-python = ">=3.14"
+# Dependencies are managed with `uv add` / `uv add --dev`; they appear below
+# this line. Do not edit the [tool.*] sections at the bottom by hand unless
+# changing lint/test behaviour.
+dependencies = [
+    "alembic>=1.20.0",
+    "fastapi>=0.149.0",
+    "psycopg[binary]>=3.2",
+    "pydantic>=2.14.1",
+    "pydantic-settings>=2.16.0",
+    "sqlalchemy>=2.0",
+    "uvicorn[standard]>=0.54.0",
+]
+
+# ---------------------------------------------------------------------------
+# Ruff: one tool for linting AND formatting (replaces flake8/black/isort).
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+extend-exclude = [".venv", "alembic/versions"]
+
+[tool.ruff.lint]
+# E/F = pycodestyle/pyflakes basics, I = import sorting, B = common bug patterns,
+# UP = modern Python syntax upgrades.
+select = ["E", "F", "I", "B", "UP"]
+
+# ---------------------------------------------------------------------------
+# Pytest: tests live in backend/tests, `backend/` is put on sys.path so the
+# `app` package imports without being pip-installed.
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+pythonpath = ["backend"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "httpx2>=2.14.0",
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+]
