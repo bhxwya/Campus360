@@ -28,7 +28,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api import admin, auth, faculty, health
+from app.api import admin, auth, faculty, health, student
 from app.core.config import get_settings
 
 #: Repository root (…/Campus360). This file is backend/app/main.py,
@@ -89,6 +89,8 @@ def create_app() -> FastAPI:
     # Stage 5: the faculty API. Every route inside depends on `require_faculty`,
     # and course-scoped routes additionally validate lead_faculty_id ownership.
     application.include_router(faculty.router, prefix=settings.api_prefix)
+    # Stage 7: the student API. Every route inside depends on `require_student`.
+    application.include_router(student.router, prefix=settings.api_prefix)
 
     # --- Existing frontend (static files, untouched) -------------------------
     # Mounting each subdirectory separately (instead of "/" over the repo)
