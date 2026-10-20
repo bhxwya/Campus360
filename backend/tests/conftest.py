@@ -34,9 +34,12 @@ from app.db.session import SessionLocal  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models import (  # noqa: E402
     Announcement,
+    Assignment,
+    AssignmentSubmission,
     AttendanceRecord,
     Course,
     Enrollment,
+    FacultyProfile,
     Mark,
     TimetableEntry,
     User,
@@ -94,7 +97,18 @@ def make_user(migrated_test_db: None):
         db = SessionLocal()
         try:
             user = create_user(db, email=email, password=password, role=role, is_active=is_active)
+            # A FACULTY user needs a FacultyProfile so they can be set as
+            # ``lead_faculty_id`` on courses (course ownership authority).
+            if role == UserRole.FACULTY:
+                db.add(
+                    FacultyProfile(
+                        user_id=user.id,
+                        faculty_code=f"FAC-{user.id:06d}",
+                        full_name="Test Faculty",
+                    )
+                )
         finally:
+            db.commit()
             db.close()
         created_ids.append(user.id)
         return user
@@ -140,30 +154,51 @@ def _login(client: TestClient, email: str, password: str) -> AuthedAdmin:
     return AuthedAdmin(client=client, csrf_token=csrf_cookie, user=me.json())
 
 
+#: Every authed fixture below builds ITS OWN TestClient (instead of sharing
+#: the module-level `client` fixture). One TestClient == one cookie jar; if
+#: two role fixtures shared a client, the LAST login would overwrite the
+#: session cookie and every later request would run as the wrong user. With
+#: separate clients, a single test can legitimately act as admin AND faculty
+#: AND student at the same time.
+
+
 @pytest.fixture()
-def admin_client(client, make_user) -> AuthedAdmin:
+def admin_client(make_user) -> AuthedAdmin:
     """A TestClient logged in as an ADMIN, with the CSRF header ready."""
     make_user("admin@campus360.example.com", "AdminPass123", UserRole.ADMIN)
-    return _login(client, "admin@campus360.example.com", "AdminPass123")
+    with TestClient(app) as test_client:
+        yield _login(test_client, "admin@campus360.example.com", "AdminPass123")
 
 
 @pytest.fixture()
-def student_client(client, make_user) -> AuthedAdmin:
+def student_client(make_user) -> AuthedAdmin:
     """A TestClient logged in as a STUDENT (a NON-admin, for 403 tests)."""
     make_user("student@campus360.example.com", "StudentPass123", UserRole.STUDENT)
-    return _login(client, "student@campus360.example.com", "StudentPass123")
+    with TestClient(app) as test_client:
+        yield _login(test_client, "student@campus360.example.com", "StudentPass123")
 
 
 @pytest.fixture()
-def faculty_client(client, make_user) -> AuthedAdmin:
+def faculty_client(make_user) -> AuthedAdmin:
     """A TestClient logged in as a FACULTY member (also a non-admin)."""
     make_user("faculty@campus360.example.com", "FacultyPass123", UserRole.FACULTY)
-    return _login(client, "faculty@campus360.example.com", "FacultyPass123")
+    with TestClient(app) as test_client:
+        yield _login(test_client, "faculty@campus360.example.com", "FacultyPass123")
 
 
-#: Tables that Stage 4 tests create rows in, in DELETION order (children
+@pytest.fixture()
+def faculty_client2(make_user) -> AuthedAdmin:
+    """A second FACULTY client, for cross-faculty 403 tests."""
+    make_user("faculty2@campus360.example.com", "FacultyPass456", UserRole.FACULTY)
+    with TestClient(app) as test_client:
+        yield _login(test_client, "faculty2@campus360.example.com", "FacultyPass456")
+
+
+#: Tables that Stage 4/5 tests create rows in, in DELETION order (children
 #: first) so the RESTRICT foreign keys never block the cleanup.
 _CLEANUP_ORDER = (
+    ("assignment_submissions", AssignmentSubmission),
+    ("assignments", Assignment),
     ("marks", Mark),
     ("attendance_records", AttendanceRecord),
     ("enrollments", Enrollment),

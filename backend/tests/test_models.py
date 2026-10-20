@@ -31,7 +31,7 @@ from app.models import (
     TimetableEntry,
     User,
 )
-from sqlalchemy import CheckConstraint, Numeric, UniqueConstraint
+from sqlalchemy import CheckConstraint, DateTime, Numeric, Text, UniqueConstraint
 from sqlalchemy.dialects import postgresql
 
 #: The 11 application tables the initial migration must create.
@@ -84,6 +84,12 @@ def test_check_constraints_exist() -> None:
 
     assert {"ck_marks_score_not_negative", "ck_marks_score_within_max"} <= check_names("marks")
     assert "ck_assignments_weightage_percent_range" in check_names("assignments")
+    assert "ck_assignments_max_score_positive" in check_names("assignments")
+    assert {
+        "ck_assignment_submissions_submission_score_range",
+        "ck_assignment_submissions_submission_max_score_positive",
+        "ck_assignment_submissions_submission_grade_state",
+    } <= check_names("assignment_submissions")
     assert "ck_timetable_entries_valid_time_range" in check_names("timetable_entries")
     assert "ck_courses_credits_positive" in check_names("courses")
     # Stage 2.1 hardening: email_normalized must equal lower(email) at the DB.
@@ -127,6 +133,7 @@ def test_foreign_key_ondelete_policies() -> None:
         ("timetable_entries", "course_id"): "CASCADE",
         ("student_profiles", "user_id"): "CASCADE",
         ("announcements", "created_by"): "SET NULL",
+        ("assignment_submissions", "graded_by"): "SET NULL",
     }
     for (table_name, column), ondelete in expected.items():
         table = Base.metadata.tables[table_name]
@@ -148,6 +155,69 @@ def test_marks_use_numeric_not_float() -> None:
         col = marks.columns[column_name]
         assert isinstance(col.type, Numeric), f"{column_name} must be NUMERIC, got {col.type!r}"
         assert not isinstance(col.type, (postgresql.DOUBLE_PRECISION,)), f"{column_name} is float"
+
+
+def test_assignment_max_score_column() -> None:
+    """assignments.max_score: exact NUMERIC, NOT NULL, default 100 on BOTH the
+    ORM side (Python default) and the database side (server default)."""
+    col = Base.metadata.tables["assignments"].columns["max_score"]
+    assert isinstance(col.type, Numeric)
+    assert col.nullable is False
+    assert col.default.arg == 100.0
+    assert str(col.server_default.arg).strip() == "100"
+
+
+def test_submission_grading_columns() -> None:
+    """The grade snapshot/audit columns exist with the designed types."""
+    submissions = Base.metadata.tables["assignment_submissions"]
+    assert isinstance(submissions.columns["score"].type, Numeric)
+    assert isinstance(submissions.columns["max_score"].type, Numeric)
+    assert isinstance(submissions.columns["feedback"].type, Text)
+    graded_at = submissions.columns["graded_at"]
+    assert isinstance(graded_at.type, DateTime)
+    assert graded_at.type.timezone is True
+    assert graded_at.nullable is True
+
+
+def test_graded_by_keys_to_faculty_profile_not_user() -> None:
+    """graded_by must reference faculty_profiles.id (the id the faculty
+    service records everywhere, e.g. Mark.recorded_by), never users.id."""
+    table = Base.metadata.tables["assignment_submissions"]
+    fks = [fk for fk in table.foreign_keys if fk.parent.name == "graded_by"]
+    assert len(fks) == 1
+    assert fks[0].target_fullname == "faculty_profiles.id"
+
+
+def test_submission_score_bound_uses_snapshot_not_hardcoded_100() -> None:
+    """score <= max_score (the grading-time snapshot), never score <= 100."""
+    table = Base.metadata.tables["assignment_submissions"]
+    score_range = next(
+        c
+        for c in table.constraints
+        if isinstance(c, CheckConstraint)
+        and c.name == "ck_assignment_submissions_submission_score_range"
+    )
+    sql = str(score_range.sqltext)
+    assert "score <= max_score" in sql
+    assert "<= 100" not in sql
+
+
+def test_submission_grade_state_uses_lowercase_status_values() -> None:
+    """The state-machine CHECK must use the lowercase values pg_enum stores."""
+    table = Base.metadata.tables["assignment_submissions"]
+    state = next(
+        c
+        for c in table.constraints
+        if isinstance(c, CheckConstraint)
+        and c.name == "ck_assignment_submissions_submission_grade_state"
+    )
+    sql = str(state.sqltext)
+    for literal in ("'submitted'", "'graded'", "'returned'"):
+        assert literal in sql
+    # submitted => no grade data; graded/returned => the full grading state.
+    assert "score IS NULL AND max_score IS NULL AND graded_at IS NULL" in sql
+    assert "score IS NOT NULL" in sql
+    assert "graded_at IS NOT NULL" in sql
 
 
 def test_alembic_resolves_a_head_revision() -> None:

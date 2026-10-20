@@ -17,7 +17,7 @@ Isolation & safety model (important to understand):
   teardown roll back the aborted transaction.
 """
 
-from datetime import date, time
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 
 import pytest
@@ -25,6 +25,8 @@ from alembic.config import Config
 from app.core.config import PROJECT_ROOT, get_settings
 from app.db.session import SessionLocal
 from app.models import (
+    Assignment,
+    AssignmentSubmission,
     Course,
     DayOfWeek,
     Enrollment,
@@ -38,7 +40,7 @@ from app.models import (
     UserRole,
 )
 from app.models.attendance import AttendanceRecord
-from app.models.enums import AttendanceStatus
+from app.models.enums import AttendanceStatus, SubmissionStatus
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -127,6 +129,41 @@ def make_timetable_entry(
     session.add(entry)
     session.flush()
     return entry
+
+
+def make_assignment(
+    session: Session, course: Course, faculty: FacultyProfile | None = None, **kwargs
+) -> Assignment:
+    """One assignment; ``kwargs`` set grading-relevant fields (max_score...)."""
+    assignment = Assignment(
+        course=course,
+        created_by=faculty.id if faculty is not None else None,
+        title="Test Assignment",
+        due_at=datetime(2026, 11, 1, tzinfo=UTC),
+        **kwargs,
+    )
+    session.add(assignment)
+    session.flush()
+    return assignment
+
+
+def make_submission(
+    session: Session, assignment: Assignment, student: StudentProfile, **kwargs
+) -> AssignmentSubmission:
+    """Insert a submission; ``kwargs`` override the submitted-row defaults
+    (status, submitted_at, content) to construct grading scenarios."""
+    fields: dict = {
+        "assignment": assignment,
+        "student": student,
+        "submitted_at": datetime(2026, 10, 20, tzinfo=UTC),
+        "content": "answer",
+        "status": SubmissionStatus.SUBMITTED,
+    }
+    fields.update(kwargs)
+    submission = AssignmentSubmission(**fields)
+    session.add(submission)
+    session.flush()
+    return submission
 
 
 # ---------------------------------------------------------------------------
@@ -374,3 +411,203 @@ def test_valid_schema_roundtrip(session: Session) -> None:
     assert mark.score == Decimal("42.50")  # NUMERIC round-trips exactly
     assert mark.recorder.faculty_code == "FAC-1"
     assert entry.course.code == "CS-101"
+
+
+# ---------------------------------------------------------------------------
+# Assignment max_score + submission grading state (PostgreSQL-enforced)
+# ---------------------------------------------------------------------------
+def test_assignment_max_score_defaults_to_100(session: Session) -> None:
+    """Both the ORM default and the MIGRATION's server default must yield 100."""
+    course = make_course(session)
+    assignment = make_assignment(session, course)
+    session.refresh(assignment)
+    assert assignment.max_score == Decimal("100")  # ORM default + DB round-trip
+
+    # Raw SQL proves the migration's SERVER default with no ORM defaults in
+    # play - what a pre-existing row would be backfilled with.
+    raw = session.execute(
+        text(
+            "INSERT INTO assignments (course_id, title, due_at, is_active) "
+            "VALUES (:c, 'Raw assignment', now(), true) RETURNING max_score"
+        ),
+        {"c": course.id},
+    ).scalar()
+    assert raw == Decimal("100")
+
+
+def test_assignment_zero_max_score_rejected(session: Session) -> None:
+    """max_score must be positive (ck_assignments_max_score_positive)."""
+    course = make_course(session)
+    with pytest.raises(IntegrityError):
+        make_assignment(session, course, max_score=0)
+
+
+def test_assignment_negative_max_score_rejected(session: Session) -> None:
+    """A negative grading scale must never store."""
+    course = make_course(session)
+    with pytest.raises(IntegrityError):
+        make_assignment(session, course, max_score=-5)
+
+
+def test_submitted_submission_carries_no_grade_fields(session: Session) -> None:
+    """Positive control: a plain submitted row (grade fields all NULL) is valid."""
+    student = make_student(session)
+    course = make_course(session)
+    faculty = make_faculty(session)
+    assignment = make_assignment(session, course, faculty)
+    submission = make_submission(session, assignment, student)
+    assert submission.status == SubmissionStatus.SUBMITTED
+    assert submission.score is None
+    assert submission.max_score is None
+    assert submission.graded_at is None
+
+
+def test_score_above_snapshot_max_rejected(session: Session) -> None:
+    """score > snapshot max_score violates ck_..._submission_score_range."""
+    student = make_student(session)
+    course = make_course(session)
+    faculty = make_faculty(session)
+    assignment = make_assignment(session, course, faculty, max_score=64)
+    with pytest.raises(IntegrityError):
+        make_submission(
+            session,
+            assignment,
+            student,
+            score=Decimal("65"),
+            max_score=Decimal("64"),
+            status=SubmissionStatus.GRADED,
+            graded_by=faculty.id,
+            graded_at=datetime(2026, 10, 20, tzinfo=UTC),
+        )
+
+
+def test_score_equal_to_snapshot_max_accepted(session: Session) -> None:
+    """The boundary value must be storable - only scores ABOVE it fail."""
+    student = make_student(session)
+    course = make_course(session)
+    faculty = make_faculty(session)
+    assignment = make_assignment(session, course, faculty, max_score=64)
+    submission = make_submission(
+        session,
+        assignment,
+        student,
+        score=Decimal("64"),
+        max_score=Decimal("64"),
+        status=SubmissionStatus.GRADED,
+        graded_by=faculty.id,
+        graded_at=datetime(2026, 10, 20, tzinfo=UTC),
+    )
+    assert submission.score == Decimal("64.00")
+
+
+def test_score_without_snapshot_rejected(session: Session) -> None:
+    """A score with NULL max_score must fail: the range CHECK's NOT NULL guard
+    (a bare 'score <= max_score' would silently PASS via SQL NULL logic)."""
+    student = make_student(session)
+    course = make_course(session)
+    faculty = make_faculty(session)
+    assignment = make_assignment(session, course, faculty)
+    with pytest.raises(IntegrityError):
+        make_submission(
+            session,
+            assignment,
+            student,
+            score=Decimal("50"),
+            status=SubmissionStatus.GRADED,
+            graded_at=datetime(2026, 10, 20, tzinfo=UTC),
+        )
+
+
+def test_graded_status_requires_score_and_timestamp(session: Session) -> None:
+    """submission_grade_state: a 'graded' row without a score is impossible."""
+    student = make_student(session)
+    course = make_course(session)
+    faculty = make_faculty(session)
+    assignment = make_assignment(session, course, faculty)
+    with pytest.raises(IntegrityError):
+        make_submission(
+            session,
+            assignment,
+            student,
+            max_score=Decimal("100"),
+            status=SubmissionStatus.GRADED,
+            graded_at=datetime(2026, 10, 20, tzinfo=UTC),
+        )
+
+
+def test_returned_status_requires_full_grading_state(session: Session) -> None:
+    """RETURNED is a graded state too: bare 'returned' (no score) must fail."""
+    student = make_student(session)
+    course = make_course(session)
+    faculty = make_faculty(session)
+    assignment = make_assignment(session, course, faculty)
+    with pytest.raises(IntegrityError):
+        make_submission(session, assignment, student, status=SubmissionStatus.RETURNED)
+
+
+def test_submitted_status_with_graded_at_rejected(session: Session) -> None:
+    """A submitted row carrying a grading timestamp contradicts grade_state."""
+    student = make_student(session)
+    course = make_course(session)
+    faculty = make_faculty(session)
+    assignment = make_assignment(session, course, faculty)
+    with pytest.raises(IntegrityError):
+        make_submission(
+            session,
+            assignment,
+            student,
+            status=SubmissionStatus.SUBMITTED,
+            graded_at=datetime(2026, 10, 20, tzinfo=UTC),
+        )
+
+
+def test_valid_grading_roundtrip(session: Session) -> None:
+    """Full grade state (score, snapshot, feedback, grader, time) round-trips."""
+    student = make_student(session)
+    course = make_course(session)
+    faculty = make_faculty(session)
+    assignment = make_assignment(session, course, faculty, max_score=150)
+    graded = make_submission(
+        session,
+        assignment,
+        student,
+        score=Decimal("120.50"),
+        max_score=Decimal("150.00"),
+        feedback="Excellent extra-credit work",
+        graded_by=faculty.id,
+        graded_at=datetime(2026, 10, 20, 12, 0, tzinfo=UTC),
+        status=SubmissionStatus.GRADED,
+    )
+    assert graded.score == Decimal("120.50")
+    assert graded.max_score == Decimal("150.00")
+    assert graded.feedback == "Excellent extra-credit work"
+    assert graded.graded_by == faculty.id
+    assert graded.graded_at == datetime(2026, 10, 20, 12, 0, tzinfo=UTC)
+
+
+def test_grade_snapshot_survives_assignment_max_change(session: Session) -> None:
+    """Editing the assignment's maximum never rewrites stored snapshots, and
+    the row-level CHECK compares against the SNAPSHOT, not the live row."""
+    student = make_student(session)
+    course = make_course(session)
+    faculty = make_faculty(session)
+    assignment = make_assignment(session, course, faculty, max_score=100)
+    graded = make_submission(
+        session,
+        assignment,
+        student,
+        score=Decimal("95"),
+        max_score=Decimal("100"),
+        status=SubmissionStatus.GRADED,
+        graded_by=faculty.id,
+        graded_at=datetime(2026, 10, 20, tzinfo=UTC),
+    )
+
+    # Squeeze the assignment below the already-issued score: still valid,
+    # because the grade was earned on the scale it snapshotted.
+    assignment.max_score = Decimal("50")
+    session.flush()
+    session.expire(graded)
+
+    assert graded.max_score == Decimal("100.00")
+    assert graded.score == Decimal("95.00")
