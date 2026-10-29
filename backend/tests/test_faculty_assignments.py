@@ -52,9 +52,7 @@ def _create_course_in_db(lead_faculty_id: int) -> int:
 
 def _owned_course(faculty_client) -> int:
     """A course led by the authenticated faculty member."""
-    return _create_course_in_db(
-        _faculty_profile_id_from_user(faculty_client.user["id"])
-    )
+    return _create_course_in_db(_faculty_profile_id_from_user(faculty_client.user["id"]))
 
 
 def _assignment_body(course_id: int, **overrides) -> dict:
@@ -75,9 +73,7 @@ def _assignment_body(course_id: int, **overrides) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def test_create_assignment_accepts_max_score_at_column_capacity(
-    faculty_client, db_cleaner
-) -> None:
+def test_create_assignment_accepts_max_score_at_column_capacity(faculty_client, db_cleaner) -> None:
     """999.99 - the largest value NUMERIC(5,2) can store - is accepted."""
     course_id = _owned_course(faculty_client)
 
@@ -132,9 +128,7 @@ def test_patch_assignment_rejects_max_score_above_column_capacity(
     )
     assert response.status_code == 422, response.text
 
-    follow_up = faculty_client.client.get(
-        f"/api/v1/faculty/assignments/{assignment_id}"
-    )
+    follow_up = faculty_client.client.get(f"/api/v1/faculty/assignments/{assignment_id}")
     assert follow_up.status_code == 200, follow_up.text
     assert follow_up.json()["max_score"] == 500.0
 
@@ -181,9 +175,7 @@ def test_patch_assignment_rejects_zero_weightage(faculty_client, db_cleaner) -> 
     )
     assert response.status_code == 422, response.text
 
-    follow_up = faculty_client.client.get(
-        f"/api/v1/faculty/assignments/{assignment_id}"
-    )
+    follow_up = faculty_client.client.get(f"/api/v1/faculty/assignments/{assignment_id}")
     assert follow_up.status_code == 200, follow_up.text
     assert follow_up.json()["weightage_percent"] == 15.0
 

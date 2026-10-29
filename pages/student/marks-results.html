@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -78,7 +76,7 @@
         <a href="assignments.html" class="nav-link">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
           <span>Assignments</span>
-          <span class="nav-counter">4</span>
+          <span class="nav-counter">—</span>
         </a>
 
         <a href="marks-results.html" class="nav-link active">
@@ -102,8 +100,8 @@
         <div class="user-snippet">
           <div class="user-avatar">S</div>
           <div class="user-info">
-            <span class="user-name">Alex Johnson</span>
-            <span class="user-role-label">B.Tech CS &bull; Sem 5</span>
+            <span class="user-name">—</span>
+            <span class="user-role-label">—</span>
             <a href="academic-records.html" class="user-profile-link">View profile</a>
           </div>
         </div>
@@ -134,15 +132,9 @@
         </div>
 
         <div class="topbar-actions">
-          <div class="filter-bar">
-            <span class="filter-tab active">Semester 5</span>
-            <span class="filter-tab">Semester 4</span>
-            <span class="filter-tab">Semester 3</span>
-          </div>
-
-          <button type="button" class="btn btn-outline btn-sm" disabled>
+          <button type="button" class="btn btn-outline btn-sm" disabled data-export-csv>
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>
-            <span>Download Transcript</span>
+            <span>Download Results CSV</span>
           </button>
         </div>
       </header>
@@ -157,38 +149,38 @@
         <section class="stats-grid">
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Cumulative GPA</span>
+              <span class="stat-label">Courses with results</span>
               <span class="stat-icon emerald"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span>
             </div>
-            <div class="stat-value">8.64</div>
-            <div class="stat-meta"><span class="stat-trend-up">&uarr; Top 5% in Cohort</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">All components recorded</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Semester SGPA</span>
+              <span class="stat-label">Courses in progress</span>
               <span class="stat-icon violet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
             </div>
-            <div class="stat-value">8.80</div>
-            <div class="stat-meta"><span>Current projected SGPA</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Marks still incomplete</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Internal Average</span>
+              <span class="stat-label">Course results</span>
               <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="m16.5 3.5 3 3L8 18l-4 1 1-4z"/></svg></span>
             </div>
-            <div class="stat-value">84.2%</div>
-            <div class="stat-meta"><span>Across all continuous tests</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Currently enrolled courses</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Earned Grade Points</span>
+              <span class="stat-label">Transcript</span>
               <span class="stat-icon amber"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.6 14.3 7 22l5-2.6L17 22l-1.6-7.7"/></svg></span>
             </div>
-            <div class="stat-value">184 / 210</div>
-            <div class="stat-meta"><span>Zero academic backlogs</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Historical transcript unavailable</div>
           </div>
         </section>
 
@@ -221,68 +213,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td>
-                    <span class="cell-title">Advanced Data Structures</span>
-                    <span class="cell-subtext">CS-301</span>
-                  </td>
-                  <td>4</td>
-                  <td><strong>28</strong> / 30</td>
-                  <td><strong>46</strong> / 50</td>
-                  <td><strong>19</strong> / 20</td>
-                  <td><strong>93%</strong></td>
-                  <td><span class="badge badge-success">A+ (10.0)</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">Database Management Systems</span>
-                    <span class="cell-subtext">CS-302</span>
-                  </td>
-                  <td>4</td>
-                  <td><strong>27</strong> / 30</td>
-                  <td><strong>44</strong> / 50</td>
-                  <td><strong>18</strong> / 20</td>
-                  <td><strong>89%</strong></td>
-                  <td><span class="badge badge-primary">A (9.0)</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">Computer Networks</span>
-                    <span class="cell-subtext">CS-303</span>
-                  </td>
-                  <td>3</td>
-                  <td><strong>25</strong> / 30</td>
-                  <td><strong>41</strong> / 50</td>
-                  <td><strong>17</strong> / 20</td>
-                  <td><strong>83%</strong></td>
-                  <td><span class="badge badge-primary">B+ (8.0)</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">Theory of Computation</span>
-                    <span class="cell-subtext">CS-304</span>
-                  </td>
-                  <td>3</td>
-                  <td><strong>29</strong> / 30</td>
-                  <td><strong>48</strong> / 50</td>
-                  <td>&mdash;</td>
-                  <td><strong>96%</strong></td>
-                  <td><span class="badge badge-success">O (10.0)</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">Software Engineering</span>
-                    <span class="cell-subtext">CS-305</span>
-                  </td>
-                  <td>3</td>
-                  <td><strong>24</strong> / 30</td>
-                  <td><strong>39</strong> / 50</td>
-                  <td><strong>18</strong> / 20</td>
-                  <td><strong>81%</strong></td>
-                  <td><span class="badge badge-primary">B+ (8.0)</span></td>
+                  <td colspan="7" class="table-state">Loading your results</td>
                 </tr>
               </tbody>
             </table>

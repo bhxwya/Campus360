@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -141,6 +139,10 @@
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             <span>Add Faculty Member</span>
           </button>
+          <button type="button" class="btn btn-outline btn-sm" disabled data-import-faculty>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+            <span>Import Faculty</span>
+          </button>
         </div>
       </header>
 
@@ -150,29 +152,59 @@
         <section class="stats-grid">
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Total Faculty</span>
+              <span class="stat-label">Faculty members</span>
               <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V6.5L12 3l7 3.5V21"/><path d="M9 21v-4h6v4"/><path d="M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></svg></span>
             </div>
-            <div class="stat-value">218</div>
-            <div class="stat-meta"><span>Active full-time instructors</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Faculty profiles in total</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Professors / PhDs</span>
+              <span class="stat-label">Active faculty</span>
               <span class="stat-icon violet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
             </div>
-            <div class="stat-value">142</div>
-            <div class="stat-meta"><span>65.1% doctorate holders</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Accounts with active status</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Active Research Labs</span>
+              <span class="stat-label">Inactive faculty</span>
               <span class="stat-icon emerald"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
             </div>
-            <div class="stat-value">28</div>
-            <div class="stat-meta"><span class="stat-trend-up">&uarr; 3 newly inaugurated</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Deactivated but preserved</div>
+          </div>
+        </section>
+
+        <!-- Faculty Filter Toolbar -->
+        <section class="card">
+          <div class="card-body row-between toolbar-row">
+            <div class="row-center">
+              <div class="search-box w-search">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="M16.8 16.8 21 21"/></svg>
+                <input type="text" id="faculty-search" placeholder="Search by name, email, or faculty code..." aria-label="Search faculty" data-filter-type="search" />
+              </div>
+
+              <select class="form-control w-select-md" id="faculty-dept" aria-label="Department filter" data-filter-type="department">
+                <option value="">All Departments</option>
+                <!-- Department options populated by JavaScript -->
+              </select>
+
+              <select class="form-control w-select-md" id="faculty-designation" aria-label="Designation filter" data-filter-type="designation">
+                <option value="">All Designations</option>
+                <!-- Designation options populated by JavaScript -->
+              </select>
+
+              <select class="form-control w-select-md" id="faculty-state" aria-label="Status filter" data-filter-type="state">
+                <option value="">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+
+              <button class="btn btn-sm btn-outline secondary" type="button" id="faculty-reset">Reset</button>
+            </div>
           </div>
         </section>
 
@@ -183,11 +215,19 @@
               <span class="card-subtitle">Staff Register</span>
               <h2 class="card-title">Institutional Faculty Members</h2>
             </div>
-            <button type="button" class="btn btn-outline btn-sm" disabled>Export Roster</button>
+            <button type="button" class="btn btn-outline btn-sm" disabled data-export-csv>Export CSV</button>
           </div>
 
           <div class="table-responsive">
-            <table class="data-table">
+            <table class="data-table faculty-directory-table">
+              <colgroup>
+                <col style="width: 14%" />
+                <col style="width: 26%" />
+                <col style="width: 18%" />
+                <col style="width: 12%" />
+                <col style="width: 10%" />
+                <col style="width: 20%" />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Faculty ID</th>
@@ -195,56 +235,12 @@
                   <th>Department</th>
                   <th>Assigned Courses</th>
                   <th>Status</th>
-                  <th>Action</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>FAC-0104</strong></td>
-                  <td>
-                    <span class="cell-title">Dr. Alan Turing</span>
-                    <span class="cell-subtext">Professor &bull; alan.turing@campus360.edu</span>
-                  </td>
-                  <td>Computer Science</td>
-                  <td>CS-301, CS-504</td>
-                  <td><span class="badge badge-success"><span class="badge-dot-indicator"></span> Active</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>FAC-0112</strong></td>
-                  <td>
-                    <span class="cell-title">Dr. Grace Hopper</span>
-                    <span class="cell-subtext">Associate Professor &bull; grace.h@campus360.edu</span>
-                  </td>
-                  <td>Computer Science</td>
-                  <td>CS-302, CS-310</td>
-                  <td><span class="badge badge-success"><span class="badge-dot-indicator"></span> Active</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>FAC-0125</strong></td>
-                  <td>
-                    <span class="cell-title">Prof. Vint Cerf</span>
-                    <span class="cell-subtext">Distinguished Lecturer &bull; vint.c@campus360.edu</span>
-                  </td>
-                  <td>Computer Science</td>
-                  <td>CS-303</td>
-                  <td><span class="badge badge-success"><span class="badge-dot-indicator"></span> Active</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>FAC-0138</strong></td>
-                  <td>
-                    <span class="cell-title">Dr. Claude Shannon</span>
-                    <span class="cell-subtext">Professor &bull; claude.s@campus360.edu</span>
-                  </td>
-                  <td>Electronics &amp; Computing</td>
-                  <td>CS-304, EC-401</td>
-                  <td><span class="badge badge-secondary">On Sabbatical</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
+                  <td colspan="6" class="table-state">Loading faculty…</td>
                 </tr>
               </tbody>
             </table>

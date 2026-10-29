@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Set your password - Campus360</title>
+  <link rel="icon" type="image/png" href="../assets/campus360-orbit.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Poppins:wght@500;600;700&family=Rubik:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="../css/auth.css" />
+
+  <!--
+    Public activation page: no session required. The activation token in the
+    URL proves identity. The student chooses their own password here and the
+    server verifies the single-use token before activating the account.
+  -->
+  <script src="../js/activate.js" defer></script>
+</head>
+
+<body class="auth-body">
+
+  <main class="auth-page">
+    <a href="login.html" class="back-link">← Back to sign in</a>
+
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1>Set your password</h1>
+        <p id="activate-subtitle">Create the password for your Campus360 account.</p>
+      </div>
+
+      <!-- Outside the form on purpose: a link without a token hides the form
+           but must still show why. -->
+      <p id="activate-general-error" class="field-error" role="alert" hidden></p>
+
+      <form id="activate-form" method="post" novalidate>
+        <input type="hidden" id="activate-token" />
+
+        <div class="form-group">
+          <label for="activate-password">New password</label>
+          <input
+            type="password"
+            id="activate-password"
+            name="password"
+            minlength="8"
+            maxlength="128"
+            required
+            autocomplete="new-password"
+            placeholder="At least 8 characters"
+          />
+          <p id="activate-password-error" class="field-error" hidden></p>
+        </div>
+
+        <div class="form-group">
+          <label for="activate-password-confirm">Confirm password</label>
+          <input
+            type="password"
+            id="activate-password-confirm"
+            required
+            autocomplete="new-password"
+            placeholder="Type it again"
+          />
+          <p id="activate-confirm-error" class="field-error" hidden></p>
+        </div>
+
+        <div class="auth-actions">
+          <button type="button" class="btn btn-outline" id="activate-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="activate-submit">Set password &amp; activate</button>
+        </div>
+      </form>
+
+      <div id="activate-success" class="auth-success" hidden>
+        <h2>Account activated</h2>
+        <p>Your password is set. You can now <a href="login.html">sign in</a>.</p>
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>

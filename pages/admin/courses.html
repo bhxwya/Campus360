@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -150,29 +148,29 @@
         <section class="stats-grid">
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Active Courses</span>
+              <span class="stat-label">Courses</span>
               <span class="stat-icon emerald"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5h6a4 4 0 0 1 4 4V21a3 3 0 0 0-3-3H2z"/><path d="M22 3.5h-6a4 4 0 0 0-4 4V21a3 3 0 0 1 3-3h7z"/></svg></span>
             </div>
-            <div class="stat-value">146</div>
-            <div class="stat-meta"><span>Current semester offerings</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Entries in the catalogue</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Laboratory Modules</span>
+              <span class="stat-label">Active courses</span>
               <span class="stat-icon violet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="19" height="12.5" rx="2.2"/><path d="M9 20.5h6M12 16.5v4"/></svg></span>
             </div>
-            <div class="stat-value">48</div>
-            <div class="stat-meta"><span>Hands-on practical tracks</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Open for enrollment</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Departments</span>
+              <span class="stat-label">Inactive courses</span>
               <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V6.5L12 3l7 3.5V21"/><path d="M9 21v-4h6v4"/><path d="M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></svg></span>
             </div>
-            <div class="stat-value">12</div>
-            <div class="stat-meta"><span>Engineering, Sciences &amp; Mgmt</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Deactivated but preserved</div>
           </div>
         </section>
 
@@ -181,7 +179,7 @@
           <div class="card-header">
             <div class="card-header-titles">
               <span class="card-subtitle">Course Registry</span>
-              <h2 class="card-title">Curriculum Offerings &bull; Fall 2026</h2>
+              <h2 class="card-title">Curriculum Offerings</h2>
             </div>
             <span class="badge badge-primary">Accredited Syllabus</span>
           </div>
@@ -201,55 +199,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>CS-301</strong></td>
-                  <td>
-                    <span class="cell-title">Advanced Data Structures</span>
-                    <span class="cell-subtext">Core Computing Requirement</span>
-                  </td>
-                  <td>Computer Science</td>
-                  <td>4 Credits</td>
-                  <td>Dr. Alan Turing</td>
-                  <td><span class="badge badge-success">Active</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Curriculum</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>CS-302</strong></td>
-                  <td>
-                    <span class="cell-title">Database Management Systems</span>
-                    <span class="cell-subtext">Relational Modeling &amp; SQL Query Tuning</span>
-                  </td>
-                  <td>Computer Science</td>
-                  <td>4 Credits</td>
-                  <td>Dr. Grace Hopper</td>
-                  <td><span class="badge badge-success">Active</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Curriculum</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>CS-303</strong></td>
-                  <td>
-                    <span class="cell-title">Computer Networks</span>
-                    <span class="cell-subtext">OSI Layers, TCP/IP &amp; Socket Architecture</span>
-                  </td>
-                  <td>Computer Science</td>
-                  <td>3 Credits</td>
-                  <td>Prof. Vint Cerf</td>
-                  <td><span class="badge badge-success">Active</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Curriculum</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>CS-305</strong></td>
-                  <td>
-                    <span class="cell-title">Software Engineering</span>
-                    <span class="cell-subtext">Agile Methodologies, Architecture &amp; Testing</span>
-                  </td>
-                  <td>Computer Science</td>
-                  <td>3 Credits</td>
-                  <td>Prof. Margaret Hamilton</td>
-                  <td><span class="badge badge-success">Active</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Curriculum</button></td>
+                  <td colspan="7" class="table-state">Loading courses…</td>
                 </tr>
               </tbody>
             </table>

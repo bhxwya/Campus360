@@ -91,6 +91,35 @@ class Settings(BaseSettings):
     #: forbids combining the "*" wildcard with credentials).
     cors_origins: list[str] = ["http://localhost:5500", "http://127.0.0.1:5500"]
 
+    # --- Email delivery -----------------------------------------------------
+    #: Which provider delivers activation emails. "log" writes a masked notice
+    #: to the server log for local development (never raw tokens/URLs).
+    #: "smtp" uses the SMTP settings below. "none" never sends (useful when
+    #: email is intentionally not configured; activation emails stay pending).
+    email_provider: str = "log"
+    #: SMTP host (only used when email_provider == "smtp").
+    smtp_host: str = "localhost"
+    #: SMTP port (only used when email_provider == "smtp").
+    smtp_port: int = 587
+    #: SMTP username (optional; leave unset for servers that don't auth).
+    smtp_user: str | None = None
+    #: SMTP password (optional). SecretStr so it can't leak into logs/reprs.
+    smtp_password: SecretStr | None = None
+    #: From address for activation emails.
+    email_from: str = "noreply@campus360.example"
+    #: Public origin of the site, e.g. https://campus360.example. The emailed
+    #: link is ``<origin>/pages/activate.html?token=...``. Used only to build
+    #: the link body; the token itself is validated server-side by its hash.
+    activation_link_base_url: str = "http://localhost:8000"
+    #: How long an activation token remains valid (seconds). Default 1 hour.
+    activation_ttl_seconds: int = 60 * 60
+
+    # --- Bulk import limits -------------------------------------------------
+    #: Maximum rows accepted in a single import CSV (protects memory/time).
+    import_max_rows: int = 500
+    #: Maximum upload file size in mebibytes (protects disk/network).
+    import_max_file_mb: int = 5
+
     # --- Tests ------------------------------------------------------------
     #: Separate database name so pytest can never touch development data.
     test_db_name: str = "campus360_test"

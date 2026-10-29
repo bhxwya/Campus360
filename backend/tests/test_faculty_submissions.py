@@ -70,9 +70,7 @@ def _setup_course_and_student(admin_client, faculty_client) -> tuple[dict, dict,
     return course, student
 
 
-def _create_assignment(
-    faculty_client, course_id: int, max_score: float | None = None
-) -> dict:
+def _create_assignment(faculty_client, course_id: int, max_score: float | None = None) -> dict:
     """Create an assignment and return the parsed body.
 
     ``max_score=None`` omits the field so the schema default (100) applies;
@@ -140,9 +138,7 @@ def test_list_submissions_empty_for_new_assignment(
     assert response.json() == []
 
 
-def test_list_submissions_returns_student_details(
-    faculty_client, admin_client, db_cleaner
-) -> None:
+def test_list_submissions_returns_student_details(faculty_client, admin_client, db_cleaner) -> None:
     """Submission response includes student code/name and null grading fields."""
     course, student = _setup_course_and_student(admin_client, faculty_client)
     assignment = _create_assignment(faculty_client, course["id"])
@@ -187,9 +183,7 @@ def test_list_submissions_returns_student_details(
 # ---------------------------------------------------------------------------
 
 
-def test_grade_submission_sets_score_and_status(
-    faculty_client, admin_client, db_cleaner
-) -> None:
+def test_grade_submission_sets_score_and_status(faculty_client, admin_client, db_cleaner) -> None:
     """Grading sets score + snapshot + grader + timestamp, flips to GRADED."""
     course, student = _setup_course_and_student(admin_client, faculty_client)
     assignment = _create_assignment(faculty_client, course["id"])
@@ -400,9 +394,7 @@ def test_assignment_max_score_change_does_not_rewrite_existing_grades(
     assert row["max_score"] == 100  # grading-time snapshot, unchanged
 
 
-def test_grade_submission_unknown_submission_returns_404(
-    faculty_client, db_cleaner
-) -> None:
+def test_grade_submission_unknown_submission_returns_404(faculty_client, db_cleaner) -> None:
     """Grading a non-existent submission returns 404."""
     response = faculty_client.client.post(
         "/api/v1/faculty/submissions/99999999/grade",

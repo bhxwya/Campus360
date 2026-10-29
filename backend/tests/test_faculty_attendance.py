@@ -45,10 +45,10 @@ def _setup_course_students_timetable(admin_client, faculty_client) -> tuple[dict
         student = admin_client.client.post(
             "/api/v1/admin/students",
             json={
-                "email": f"s{i+1}@campus360.example.com",
+                "email": f"s{i + 1}@campus360.example.com",
                 "password": "StudentPass123",
-                "student_code": f"ST-2026-100{i+1}",
-                "full_name": f"Test Student {i+1}",
+                "student_code": f"ST-2026-100{i + 1}",
+                "full_name": f"Test Student {i + 1}",
             },
             headers=admin_client.headers,
         )
@@ -63,6 +63,7 @@ def _setup_course_students_timetable(admin_client, faculty_client) -> tuple[dict
 
     # Create a timetable entry for this course
     from app.db.session import SessionLocal
+
     db = SessionLocal()
     try:
         tt = TimetableEntry(
@@ -87,9 +88,7 @@ def _setup_course_students_timetable(admin_client, faculty_client) -> tuple[dict
 # ---------------------------------------------------------------------------
 
 
-def test_attendance_batch_marks_all_records(
-    faculty_client, admin_client, db_cleaner
-) -> None:
+def test_attendance_batch_marks_all_records(faculty_client, admin_client, db_cleaner) -> None:
     """A valid batch marks every student and returns the count."""
     course, students, timetable_entry = _setup_course_students_timetable(
         admin_client, faculty_client
@@ -153,13 +152,18 @@ def test_attendance_batch_duplicate_returns_409_and_rolls_back(
     # Verify the NEW student was NOT marked (rollback worked)
     from app.db.session import SessionLocal
     from app.models.attendance import AttendanceRecord
+
     db = SessionLocal()
     try:
-        count = db.query(AttendanceRecord).filter(
-            AttendanceRecord.timetable_entry_id == timetable_entry["id"],
-            AttendanceRecord.attendance_date == __import__("datetime").date(2026, 10, 20),
-            AttendanceRecord.student_id == students[1]["id"],
-        ).count()
+        count = (
+            db.query(AttendanceRecord)
+            .filter(
+                AttendanceRecord.timetable_entry_id == timetable_entry["id"],
+                AttendanceRecord.attendance_date == __import__("datetime").date(2026, 10, 20),
+                AttendanceRecord.student_id == students[1]["id"],
+            )
+            .count()
+        )
         assert count == 0, "Rollback failed: second student was marked despite 409"
     finally:
         db.close()
@@ -187,9 +191,7 @@ def test_attendance_batch_cross_faculty_returns_403(
     assert response.status_code == 403, response.text
 
 
-def test_attendance_batch_unknown_timetable_entry_returns_404(
-    faculty_client, db_cleaner
-) -> None:
+def test_attendance_batch_unknown_timetable_entry_returns_404(faculty_client, db_cleaner) -> None:
     """A missing timetable entry returns 404."""
     response = faculty_client.client.post(
         "/api/v1/faculty/attendance/batch",

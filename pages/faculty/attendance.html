@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -73,7 +71,7 @@
         <a href="assignments.html" class="nav-link">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
           <span>Assignments</span>
-          <span class="nav-counter">18</span>
+          <span class="nav-counter">—</span>
         </a>
 
         <a href="marks.html" class="nav-link">
@@ -92,8 +90,8 @@
         <div class="user-snippet">
           <div class="user-avatar faculty">F</div>
           <div class="user-info">
-            <span class="user-name">Dr. Alan Turing</span>
-            <span class="user-role-label">Dept. of Computer Science</span>
+            <span class="user-name">—</span>
+            <span class="user-role-label">—</span>
             <a href="dashboard.html" class="user-profile-link">View profile</a>
           </div>
         </div>
@@ -133,7 +131,7 @@
         </div>
 
         <div class="topbar-actions">
-          <button type="button" class="btn btn-primary btn-sm" disabled>
+          <button type="button" class="btn btn-primary btn-sm" disabled title="The faculty API exposes no roster or timetable read, so no register can be built.">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
             <span>Save Attendance Register</span>
           </button>
@@ -145,23 +143,7 @@
         <!-- Context & Class Selector Bar -->
         <section class="course-selector-bar">
           <div class="selector-controls">
-            <div class="form-group">
-              <label class="form-label">Course</label>
-              <select class="form-control" aria-label="Select course" disabled>
-                <option>CS-301: Advanced Data Structures (Sec A)</option>
-                <option>CS-504: Algorithms Problem Solving</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Session Date</label>
-              <input type="text" class="form-control" value="Sep 25, 2026 (09:30 AM)" readonly aria-label="Session Date" />
-            </div>
-          </div>
-
-          <div class="row-center-sm">
-            <button type="button" class="btn btn-outline btn-sm" disabled>Mark All Present</button>
-            <button type="button" class="btn btn-outline btn-sm" disabled>Export Sheet</button>
+            <p class="empty-state">Attendance entry needs a faculty-scoped roster and timetable that the current API does not expose, so no register is shown.</p>
           </div>
         </section>
 
@@ -169,29 +151,29 @@
         <section class="stats-grid">
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Roster Strength</span>
+              <span class="stat-label">Roster strength</span>
               <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
             </div>
-            <div class="stat-value">64</div>
-            <div class="stat-meta"><span>Total registered students</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Not exposed by the faculty API</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Present Count</span>
+              <span class="stat-label">Present count</span>
               <span class="stat-icon emerald"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>
             </div>
-            <div class="stat-value">59</div>
-            <div class="stat-meta"><span class="stat-trend-up">92.2% Attendance</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Not exposed by the faculty API</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Absent Count</span>
+              <span class="stat-label">Absent count</span>
               <span class="stat-icon amber"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></span>
             </div>
-            <div class="stat-value">05</div>
-            <div class="stat-meta"><span>Leaves or unexcused</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Not exposed by the faculty API</div>
           </div>
         </section>
 
@@ -202,7 +184,7 @@
               <span class="card-subtitle">Class Roster</span>
               <h2 class="card-title">Student Attendance Entry Sheet</h2>
             </div>
-            <span class="badge badge-primary">Lecture #24 &bull; Unit 3: Graph Traversal</span>
+            <span class="badge badge-secondary">Unavailable with the current API</span>
           </div>
 
           <div class="table-responsive">
@@ -218,67 +200,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>2024-CS-0492</strong></td>
-                  <td>
-                    <span class="cell-title">Alex Johnson</span>
-                    <span class="cell-subtext">B.Tech CS &bull; Sem 5</span>
-                  </td>
-                  <td><strong>90.4%</strong> (38/42)</td>
-                  <td><span class="attendance-status-pill present"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Present</span></td>
-                  <td>
-                    <div class="row-tight">
-                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Absent</button>
-                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Late</button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td><strong>2024-CS-0493</strong></td>
-                  <td>
-                    <span class="cell-title">Maya Patel</span>
-                    <span class="cell-subtext">B.Tech CS &bull; Sem 5</span>
-                  </td>
-                  <td><strong>95.2%</strong> (40/42)</td>
-                  <td><span class="attendance-status-pill present"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Present</span></td>
-                  <td>
-                    <div class="row-tight">
-                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Absent</button>
-                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Late</button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td><strong>2024-CS-0494</strong></td>
-                  <td>
-                    <span class="cell-title">Liam O'Connor</span>
-                    <span class="cell-subtext">B.Tech CS &bull; Sem 5</span>
-                  </td>
-                  <td><strong>73.8%</strong> (31/42)</td>
-                  <td><span class="attendance-status-pill absent"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg> Absent</span></td>
-                  <td>
-                    <div class="row-tight">
-                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Present</button>
-                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Late</button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td><strong>2024-CS-0495</strong></td>
-                  <td>
-                    <span class="cell-title">Sophia Zhang</span>
-                    <span class="cell-subtext">B.Tech CS &bull; Sem 5</span>
-                  </td>
-                  <td><strong>88.1%</strong> (37/42)</td>
-                  <td><span class="attendance-status-pill present"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Present</span></td>
-                  <td>
-                    <div class="row-tight">
-                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Absent</button>
-                      <button type="button" class="btn btn-sm btn-outline btn-xs" disabled>Late</button>
-                    </div>
-                  </td>
+                  <td colspan="5" class="table-state">Attendance entry is unavailable with the current faculty API.</td>
                 </tr>
               </tbody>
             </table>

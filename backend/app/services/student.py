@@ -97,9 +97,7 @@ def list_courses(db: Session, user_id: int) -> list[MyEnrollmentResponse]:
     enrollments = (
         db.query(Enrollment)
         .filter(Enrollment.student_id == profile.id)
-        .options(
-            joinedload(Enrollment.course).joinedload(Course.lead_faculty)
-        )
+        .options(joinedload(Enrollment.course).joinedload(Course.lead_faculty))
         .order_by(Enrollment.id.asc())
         .all()
     )
@@ -112,9 +110,7 @@ def list_courses(db: Session, user_id: int) -> list[MyEnrollmentResponse]:
             course_title=e.course.title,
             credits=e.course.credits,
             department=e.course.department,
-            lead_faculty_name=(
-                e.course.lead_faculty.full_name if e.course.lead_faculty else None
-            ),
+            lead_faculty_name=(e.course.lead_faculty.full_name if e.course.lead_faculty else None),
         )
         for e in enrollments
     ]
@@ -167,9 +163,7 @@ def get_attendance_summary(db: Session, user_id: int) -> AttendanceSummaryRespon
     enrollments = (
         db.query(Enrollment)
         .filter(Enrollment.student_id == profile.id)
-        .options(
-            joinedload(Enrollment.course).joinedload(Course.lead_faculty)
-        )
+        .options(joinedload(Enrollment.course).joinedload(Course.lead_faculty))
         .order_by(Enrollment.id.asc())
         .all()
     )
@@ -182,15 +176,13 @@ def get_attendance_summary(db: Session, user_id: int) -> AttendanceSummaryRespon
         db.query(
             TimetableEntry.course_id,
             func.count(AttendanceRecord.id).label("total"),
-            func.count(
-                case((AttendanceRecord.status == AttendanceStatus.PRESENT, 1))
-            ).label("present"),
-            func.count(
-                case((AttendanceRecord.status == AttendanceStatus.LATE, 1))
-            ).label("late"),
-            func.count(
-                case((AttendanceRecord.status == AttendanceStatus.ABSENT, 1))
-            ).label("absent"),
+            func.count(case((AttendanceRecord.status == AttendanceStatus.PRESENT, 1))).label(
+                "present"
+            ),
+            func.count(case((AttendanceRecord.status == AttendanceStatus.LATE, 1))).label("late"),
+            func.count(case((AttendanceRecord.status == AttendanceStatus.ABSENT, 1))).label(
+                "absent"
+            ),
         )
         .join(AttendanceRecord, AttendanceRecord.timetable_entry_id == TimetableEntry.id)
         .filter(
@@ -217,16 +209,14 @@ def get_attendance_summary(db: Session, user_id: int) -> AttendanceSummaryRespon
 
     for e in enrollments:
         c = e.course
-        c_stats = stats_by_course.get(
-            c.id, {"total": 0, "present": 0, "late": 0, "absent": 0}
-        )
+        c_stats = stats_by_course.get(c.id, {"total": 0, "present": 0, "late": 0, "absent": 0})
         tot = c_stats["total"]
         pres = c_stats["present"]
         late = c_stats["late"]
         ab = c_stats["absent"]
 
         total_all_sessions += tot
-        total_attended_all += (pres + late)
+        total_attended_all += pres + late
 
         if tot > 0:
             pct = round((pres + late) * 100.0 / tot, 2)
@@ -245,9 +235,7 @@ def get_attendance_summary(db: Session, user_id: int) -> AttendanceSummaryRespon
                 course_id=c.id,
                 course_code=c.code,
                 course_title=c.title,
-                faculty_name=(
-                    c.lead_faculty.full_name if c.lead_faculty else None
-                ),
+                faculty_name=(c.lead_faculty.full_name if c.lead_faculty else None),
                 total_sessions=tot,
                 present_count=pres,
                 late_count=late,
@@ -262,9 +250,7 @@ def get_attendance_summary(db: Session, user_id: int) -> AttendanceSummaryRespon
         if total_all_sessions > 0
         else None
     )
-    return AttendanceSummaryResponse(
-        overall_percent=overall_pct, courses=course_summaries
-    )
+    return AttendanceSummaryResponse(overall_percent=overall_pct, courses=course_summaries)
 
 
 def list_attendance_records(
@@ -290,11 +276,7 @@ def list_attendance_records(
         .join(AttendanceRecord.timetable_entry)
         .join(TimetableEntry.course)
         .filter(AttendanceRecord.student_id == profile.id)
-        .options(
-            joinedload(AttendanceRecord.timetable_entry).joinedload(
-                TimetableEntry.course
-            )
-        )
+        .options(joinedload(AttendanceRecord.timetable_entry).joinedload(TimetableEntry.course))
     )
     if course_id is not None:
         query = query.filter(TimetableEntry.course_id == course_id)
@@ -372,9 +354,7 @@ def list_assignments(db: Session, user_id: int) -> list[StudentAssignmentRespons
                 submitted_at=submission.submitted_at if submission else None,
                 content=submission.content if submission else None,
                 score=(
-                    float(submission.score)
-                    if submission and submission.score is not None
-                    else None
+                    float(submission.score) if submission and submission.score is not None else None
                 ),
                 feedback=submission.feedback if submission else None,
                 graded_at=submission.graded_at if submission else None,
@@ -383,9 +363,7 @@ def list_assignments(db: Session, user_id: int) -> list[StudentAssignmentRespons
     return results
 
 
-def get_assignment(
-    db: Session, user_id: int, assignment_id: int
-) -> StudentAssignmentResponse:
+def get_assignment(db: Session, user_id: int, assignment_id: int) -> StudentAssignmentResponse:
     """Return a single assignment and the student's submission."""
     profile = _require_student_profile(db, user_id)
     assignment = (
@@ -407,9 +385,7 @@ def get_assignment(
         .first()
     )
     if not is_enrolled:
-        raise StudentError(
-            f"Not enrolled in course for assignment {assignment_id}", 403
-        )
+        raise StudentError(f"Not enrolled in course for assignment {assignment_id}", 403)
 
     submission = (
         db.query(AssignmentSubmission)
@@ -439,11 +415,7 @@ def get_assignment(
         submission_status=submission.status if submission else None,
         submitted_at=submission.submitted_at if submission else None,
         content=submission.content if submission else None,
-        score=(
-            float(submission.score)
-            if submission and submission.score is not None
-            else None
-        ),
+        score=(float(submission.score) if submission and submission.score is not None else None),
         feedback=submission.feedback if submission else None,
         graded_at=submission.graded_at if submission else None,
     )
@@ -591,18 +563,14 @@ def get_marks_summary(db: Session, user_id: int) -> MarksSummaryResponse:
     return MarksSummaryResponse(courses=summaries)
 
 
-def list_announcements(
-    db: Session, user_id: int
-) -> list[StudentAnnouncementResponse]:
+def list_announcements(db: Session, user_id: int) -> list[StudentAnnouncementResponse]:
     """Return active published notices targeted to all students."""
     _require_student_profile(db, user_id)
     announcements = (
         db.query(Announcement)
         .filter(
             Announcement.status == AnnouncementStatus.ACTIVE,
-            Announcement.audience.in_(
-                [AnnouncementAudience.ALL, AnnouncementAudience.STUDENTS]
-            ),
+            Announcement.audience.in_([AnnouncementAudience.ALL, AnnouncementAudience.STUDENTS]),
             Announcement.published_at.is_not(None),
         )
         .order_by(Announcement.published_at.desc(), Announcement.id.desc())
@@ -643,9 +611,7 @@ def get_dashboard(db: Session, user_id: int) -> DashboardResponse:
     att_row = (
         db.query(
             func.count(AttendanceRecord.id).label("total"),
-            func.count(
-                case((AttendanceRecord.status.in_(ATTENDED_STATUSES), 1))
-            ).label("attended"),
+            func.count(case((AttendanceRecord.status.in_(ATTENDED_STATUSES), 1))).label("attended"),
         )
         .filter(AttendanceRecord.student_id == profile.id)
         .first()
@@ -713,9 +679,7 @@ def get_dashboard(db: Session, user_id: int) -> DashboardResponse:
         db.query(Announcement)
         .filter(
             Announcement.status == AnnouncementStatus.ACTIVE,
-            Announcement.audience.in_(
-                [AnnouncementAudience.ALL, AnnouncementAudience.STUDENTS]
-            ),
+            Announcement.audience.in_([AnnouncementAudience.ALL, AnnouncementAudience.STUDENTS]),
             Announcement.published_at.is_not(None),
         )
         .order_by(Announcement.published_at.desc(), Announcement.id.desc())

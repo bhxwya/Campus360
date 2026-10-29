@@ -28,18 +28,18 @@ Development proceeds in stages. This is what is **actually working today**:
 | PostgreSQL database & application user | ✅ Complete (Stage 1) |
 | Database schema / 11 tables / 9 enums | ✅ Complete (Stage 2) |
 | Initial Alembic migration (applied) | ✅ Complete (Stage 2) |
-| Real authentication & authorization | ⏳ Stage 3 |
-| Academic features (courses, attendance, marks, …) | ⏳ Stage 4 |
-| Frontend ↔ API integration | ⏳ Stage 5 |
+| Real authentication & authorization | ✅ Server sessions, role checks, CSRF |
+| Academic features (courses, attendance, marks, …) | ✅ Backend APIs implemented |
+| Frontend ↔ API integration | 🚧 Dashboard, admin registries/reports, and core student/faculty reads wired |
 
-### Current authentication (demo — NOT real security)
+### Current authentication
 
-The login page still uses **frontend-only demo authentication** (`js/auth.js`):
-any non-empty ID and password is accepted, and the "session" is a
-`sessionStorage` flag. It stops casual URL guessing in the prototype and
-nothing more. Real login, password hashing, sessions, and server-side
-authorization replace this in **Stage 3** — the backend never trusts a role or
-ID sent by the browser.
+The login page sends credentials to `POST /api/v1/auth/login`. FastAPI creates
+an HttpOnly server-side session and a readable CSRF cookie; protected pages
+verify the session with `GET /api/v1/auth/me`. The frontend never stores a
+password or session token and uses the authenticated server role for routing.
+See [frontend verification](docs/FRONTEND-VERIFICATION.md) for manual checks
+and the documented endpoint limitations.
 
 ---
 
@@ -192,7 +192,35 @@ uv run pytest
 # ruff — lint + format check (use `--fix` / `format` to apply changes)
 uv run ruff check backend alembic
 uv run ruff format --check backend alembic
+
+# JavaScript syntax check (no build step; plain browser scripts)
+Get-ChildItem js\*.js, tests\browser\*.js | ForEach-Object { node --check $_.FullName }
 ```
+
+### Browser tests (Playwright)
+
+The browser suite in `tests/browser/` drives the real pages against a running
+server. `workflows.spec.js` **creates records** (students, faculty, courses,
+notices), so point it at a server whose `CAMPUS360_DB_NAME` is a dedicated,
+disposable database — never at data you care about.
+
+```powershell
+npm install                     # installs @playwright/test from package.json
+npx playwright install chromium # one-time browser download
+
+# Terminal 1: serve the app on the port the suite expects, on a test database
+$env:CAMPUS360_DB_NAME = "campus360_e2e"   # created like campus360_test
+uv run alembic upgrade head
+uv run python backend/scripts/create_user.py --email admin@example.edu --role admin
+uv run uvicorn app.main:app --app-dir backend --port 8099
+
+# Terminal 2: credentials of that admin account (never committed)
+$env:CAMPUS360_E2E_ADMIN_EMAIL = "admin@example.edu"
+$env:CAMPUS360_E2E_ADMIN_PASSWORD = "<the password you chose>"
+npx playwright test
+```
+
+`CAMPUS360_E2E_BASE_URL` overrides the default `http://127.0.0.1:8099`.
 
 ---
 
@@ -219,28 +247,42 @@ Campus360/
 ├── css/                       # style.css, auth.css, dashboard.css, student/faculty/admin
 ├── assets/                    # logo & imagery
 ├── js/
-│   ├── script.js              # shared UI behaviour (nav, search, filter tabs)
-│   └── auth.js                # DEMO auth (to be replaced in Stage 3)
+│   ├── script.js              # shared shell: skip link, nav state, corner toasts
+│   ├── api.js                 # same-origin API client, CSRF token, expiry redirect
+│   ├── portal.js              # page data binding, filters, dialogs, CSV import/export
+│   ├── auth.js                # route guard, sign-in, role check, sign-out
+│   └── activate.js            # public account-activation form
 ├── pages/
 │   ├── login.html
+│   ├── activate.html          # target of the emailed activation link
 │   └── student/  faculty/  admin/      # role dashboards & pages
 ├── backend/
 │   ├── app/
 │   │   ├── main.py            # app factory: CORS, routers, static mounts, /
 │   │   ├── core/
-│   │   │   └── config.py      # Settings: .env → typed config; builds the DB URL
+│   │   │   ├── config.py      # Settings: .env → typed config; builds the DB URL
+│   │   │   ├── security.py    # Argon2id hashing, session/CSRF token helpers
+│   │   │   ├── rate_limit.py  # failed-attempt throttle for login/activation
+│   │   │   ├── email.py       # activation email providers (log / smtp / none)
+│   │   │   └── programmes.py, departments.py  # catalogue policy lists
 │   │   ├── db/
 │   │   │   ├── base.py        # DeclarativeBase shared by all models
 │   │   │   └── session.py     # engine, sessionmaker, get_db dependency
 │   │   ├── api/
+│   │   │   ├── deps.py        # session, CSRF and role guards shared by routers
+│   │   │   ├── auth.py        # login, logout, /auth/me, account activation
+│   │   │   ├── student.py     # student-scoped read endpoints
+│   │   │   ├── faculty.py     # faculty-scoped assignment/mark endpoints
+│   │   │   ├── admin.py       # admin CRUD, enrollments, reports, notices
 │   │   │   └── health.py      # GET /api/v1/health, GET /api/v1/health/db
-│   │   └── models/        # SQLAlchemy models (see below); schemas/ services/ repositories/ from Stage 3+
-│   └── tests/
-│       ├── conftest.py        # forces test environment + test database
-│       ├── test_health.py
-│       ├── test_settings.py
-│       ├── test_models.py             # Stage 2: metadata/constraints (no DB)
-│       └── test_models_integration.py # Stage 2: real-PostgreSQL behaviour
+│   │   ├── models/            # SQLAlchemy models (see below)
+│   │   ├── schemas/           # request/response models
+│   │   └── services/          # business rules: admin, faculty, student, auth,
+│   │                          # activation, bulk_import / faculty_bulk_import
+│   │                          # (+ import_common, the shared CSV helpers)
+│   ├── scripts/create_user.py # local CLI to provision accounts (first admin)
+│   └── tests/                 # pytest: auth, authorization, admin, faculty, student, models
+├── tests/browser/             # Playwright end-to-end suite (see "Browser tests")
 ├── alembic/                   # migration env + versions/ (schema history)
 ├── alembic.ini                # NO credentials in here (URL comes from .env)
 ├── pyproject.toml             # dependencies + ruff + pytest configuration
@@ -270,11 +312,21 @@ Already in place:
   `.git/` are not reachable over HTTP (verified with 404 checks).
 - Database errors return a generic 503; details stay in server logs.
 - The application connects as a **non-superuser** role.
+- Argon2id password hashing; opaque server-side sessions (HttpOnly cookie)
+  with a synchronizer CSRF token on every state-changing request.
+- Every API route enforces its role server-side; faculty may only touch
+  courses they lead, and marks/attendance only for students enrolled in them.
+- Failed sign-ins are throttled per client + email (5 per 15 minutes) and
+  activation attempts per client. The counters live in the server process:
+  they reset on restart and are not shared between several workers, so a
+  multi-worker deployment also needs a proxy-level rate limit.
+- CSV imports enforce the size/row limits server-side and re-validate every
+  row on confirm; exported CSV cells are protected against formula injection.
 
-Planned (later stages): Argon2 password hashing, HttpOnly session cookies +
-CSRF protection, server-side role authorization, rate-limited login attempts,
-IDOR protections, pagination, and soft-deactivation to preserve academic
-history.
+Still open: request-body size limits belong in the reverse proxy (the import
+limit is checked after the body is read), and the `log` email provider never
+records activation links, so imported accounts can only be activated once a
+real provider (`CAMPUS360_EMAIL_PROVIDER=smtp`) is configured.
 
 This project is **not** claimed production-secure until deployment, HTTPS,
 hardening, and security tests have been reviewed.
@@ -294,7 +346,6 @@ hardening, and security tests have been reviewed.
 | CORS error in browser | Frontend on another origin → add it to `CAMPUS360_CORS_ORIGINS` (JSON array) and restart. |
 | `alembic` can't import `app` | Run it from the project root (`env.py` fixes `sys.path` itself). |
 | Tests: 503 on `/api/v1/health/db` | `campus360_test` missing or password mismatch — create it; keep `.env` in sync. |
-| Login still accepts anything | Expected until Stage 3 — that is the demo frontend auth, not real security. |
 
 ---
 
@@ -302,23 +353,28 @@ hardening, and security tests have been reviewed.
 
 1. **Stage 1 — Audit & foundation** ✅
 2. **Stage 2 — Database design** ✅ 11 tables, constraints, indexes, initial migration
-3. **Stage 3 — Authentication:** hashing, sessions, role authorization, tests
-4. **Stage 4 — Core academic features:** courses, enrollments, timetable,
-   attendance, assignments, marks, announcements
-5. **Stage 5 — Frontend integration:** wire every page to the real API
-6. **Stage 6 — Testing & quality:** full suite + security-focused tests
-7. **Stage 7 — Documentation & final audit**
+3. **Stage 3 — Authentication** ✅ Argon2id password hashing, server sessions, CSRF, role authorization, tests
+4. **Stage 4 — Core academic features** ✅ courses, enrollments, timetable, attendance,
+   assignments, marks, announcements
+5. **Stage 5 — Frontend integration** ✅ each page binds to the authenticated API; screens the
+   API cannot serve say so instead of showing sample data
+6. **Stage 6 — Testing & quality** ✅ backend suite, Ruff, JS syntax checks
+7. **Stage 7 — Documentation & final audit** ✅ README and docs/FRONTEND-VERIFICATION.md
 
 ---
 
 ## ✨ Features (frontend, per portal)
 
 - **Public:** landing page, hero, features, role overview, contact — responsive.
-- **Login:** role selection, inline validation, role-based routing (demo session).
+- **Login:** sign-in by institutional email, role selection, inline validation,
+  role-based routing, expired-session and wrong-role messages.
+- **Account activation:** imported students/faculty set their own password from
+  the emailed link (`/pages/activate.html?token=...`).
 - **Student:** dashboard, attendance, timetable, assignments, marks & results,
   announcements, academic records.
 - **Faculty:** dashboard, attendance, assignments, marks, announcements.
-- **Admin:** dashboard, student & faculty management, courses, notices, reports.
+- **Admin:** dashboard, student & faculty management (including CSV import with
+  review step and CSV export), courses, enrollments, notices, reports.
 
 ---
 

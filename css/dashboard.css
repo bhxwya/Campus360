@@ -1,7 +1,7 @@
 /* ==========================================================================
    Campus360 - Shared Dashboard Design System (dashboard.css)
    ==========================================================================
-   This stylesheet provides the shared responsive layout, structure, and 
+   This stylesheet provides the shared responsive layout, structure, and
    UI components for all role-based dashboards (Student, Faculty, Admin).
    Built with pure CSS and aligned with the Campus360 design tokens.
    ========================================================================== */
@@ -80,6 +80,7 @@
      ~= 238px, so the rail carries slack rather than clipping the
      wordmark. */
   --sidebar-w: 252px;
+  --sidebar-collapsed-w: 78px;
   --topbar-h: 76px;
 
   /* Scale Tokens - the landing page's radius scale (12 / 18 / 24) so app
@@ -115,7 +116,11 @@
   --card-lift: -4px; /* landing card hover distance */
   --btn-h: 44px; /* landing .login-btn / .hero-btn height */
   --btn-radius: var(--r-sm);
-  --content-max: 1320px;
+  /* A deliberate wide-screen ceiling, not a reading-width cap. Dashboard
+     content - especially the seven-column student roster - should use the
+     room the sidebar leaves. Beyond 1920px the wrapper centres instead of
+     pinning all remaining space to the right. */
+  --content-max: 1920px;
 }
 
 body {
@@ -204,6 +209,7 @@ select:focus-visible {
   top: 0;
   height: 100vh;
   z-index: 40;
+  transition: width 0.2s ease;
 }
 
 /* ==========================================================================
@@ -613,6 +619,97 @@ select:focus-visible {
 
 
 /* ==========================================================================
+   COLLAPSED DESKTOP RAIL
+   --------------------------------------------------------------------------
+   Below 768px the sidebar is a drawer, not a rail, so this whole state is
+   intentionally desktop-only. The labels stay in the DOM for assistive
+   technology; js/script.js also mirrors them into title/aria-label so each
+   icon has a pointer tooltip and an explicit accessible name.
+   ========================================================================== */
+
+@media (min-width: 769px) {
+  html.sidebar-collapsed .app-sidebar {
+    width: var(--sidebar-collapsed-w);
+  }
+
+  html.sidebar-collapsed .sidebar-brand {
+    align-items: center;
+    padding: 0 10px;
+  }
+
+  html.sidebar-collapsed .brand-lockup {
+    gap: 0;
+  }
+
+  html.sidebar-collapsed .brand-title,
+  html.sidebar-collapsed .brand-badge,
+  html.sidebar-collapsed .nav-section-title,
+  html.sidebar-collapsed .nav-link > span:not(.nav-icon),
+  html.sidebar-collapsed .nav-counter,
+  html.sidebar-collapsed .user-name,
+  html.sidebar-collapsed .user-role-label,
+  html.sidebar-collapsed .logout-link > span {
+    display: none;
+  }
+
+  html.sidebar-collapsed .sidebar-nav {
+    padding: 16px 10px;
+  }
+
+  html.sidebar-collapsed .nav-link {
+    justify-content: center;
+    gap: 0;
+    padding: 10px;
+  }
+
+  html.sidebar-collapsed .nav-link.active::before {
+    left: 3px;
+  }
+
+  html.sidebar-collapsed .sidebar-footer {
+    align-items: center;
+    padding: 14px 10px;
+  }
+
+  /* The avatar itself becomes the profile target: the real "View profile"
+     link is stretched over the snippet, so the action is still a keyboard
+     link and its accessible name is announced even though the text is gone. */
+  html.sidebar-collapsed .user-snippet {
+    position: relative;
+    width: 52px;
+    justify-content: center;
+    padding: 7px;
+    background: transparent;
+    border-color: transparent;
+  }
+
+  html.sidebar-collapsed .user-snippet:hover {
+    background: var(--bg-app);
+    border-color: var(--card-border);
+  }
+
+  html.sidebar-collapsed .user-info {
+    display: contents;
+  }
+
+  html.sidebar-collapsed .user-profile-link {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: var(--r-sm);
+    color: transparent;
+    font-size: 0;
+  }
+
+  html.sidebar-collapsed .logout-link {
+    width: 52px;
+    min-height: 42px;
+    padding: 10px;
+  }
+}
+
+
+/* ==========================================================================
    4. TOPBAR
    --------------------------------------------------------------------------
    One slim bar across the content area carrying a three-step reading order:
@@ -634,7 +731,9 @@ select:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 0 36px;
+  /* Follow the content wrapper when it hits its wide-screen ceiling, so the
+     title and actions do not drift outboard of the cards on very wide screens. */
+  padding: 0 max(36px, calc((100% - var(--content-max)) / 2 + 36px));
   position: sticky;
   top: 0;
   z-index: 30;
@@ -643,9 +742,80 @@ select:focus-visible {
 
 .topbar-left {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 5px;
   min-width: 0;
+}
+
+/* The sidebar control is injected into every .app-topbar by js/script.js so
+   all three roles get the same location without repeating markup. On desktop
+   it collapses the rail; below 768px it opens the drawer. */
+.sidebar-toggle {
+  width: 40px;
+  height: 40px;
+  /* Pull the control into the header's leading gutter so it reads as the
+     left-edge shell control rather than a fourth item in the title group.
+     The title still starts 20px after it and cannot overlap. */
+  margin-left: -20px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--card-border);
+  background: var(--surface);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.sidebar-toggle:hover {
+  color: var(--blue);
+  border-color: var(--blue-border);
+  background: var(--blue-light);
+}
+
+.sidebar-toggle .icon {
+  width: 19px;
+  height: 19px;
+}
+
+/* The drawer's own close control is only shown on small screens. */
+.sidebar-drawer-close {
+  display: none;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.sidebar-drawer-close:hover {
+  color: var(--ink);
+  background: var(--bg-app);
+}
+
+.sidebar-drawer-close .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* A non-focusable scrim. It is hidden/inert on desktop and while the drawer is
+   closed; CSS and js/script.js switch both together. */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  background: rgba(15, 23, 42, 0.48);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 /* The context line above the page title: a small uppercase label in the brand
@@ -671,7 +841,31 @@ select:focus-visible {
   display: flex;
   align-items: center;
   gap: 10px;
+  /* The cluster keeps its natural size when it fits, but the category filter
+     is data-driven and can be wider than the bar; it must shrink and scroll
+     instead of pushing the topbar past the viewport. */
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.topbar-actions > .action-icon-btn,
+.topbar-actions > .btn {
   flex-shrink: 0;
+}
+
+.topbar-actions .filter-bar {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.topbar-actions .filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.topbar-actions .filter-tab {
+  white-space: nowrap;
 }
 
 .search-box {
@@ -728,17 +922,6 @@ select:focus-visible {
   background-color: var(--blue-light);
 }
 
-.action-icon-btn .badge-dot {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--rose);
-  border: 2px solid var(--surface);
-}
-
 .topbar-context-pill {
   display: flex;
   align-items: center;
@@ -763,23 +946,23 @@ select:focus-visible {
 /* ==========================================================================
    5. PAGE CONTENT
    --------------------------------------------------------------------------
-   The scrolling area. One max-width stops tables stretching edge to edge on
-   a wide monitor, and one vertical gap keeps every section on the page at the
-   same rhythm.
+   The scrolling area. A wide-screen ceiling stops tables stretching without
+   limit, margin-inline balances any leftover room, and one vertical gap keeps
+   every section on the page at the same rhythm.
    ========================================================================== */
 
 .content-wrapper {
-  /* The reference pages run their content on a 1200px measure inside a
-     60px-gutter column. The application needs a little more room for tables,
-     so it runs slightly wider, but it is still a controlled measure rather
-     than a full-bleed stretch - this is what stops panels from looking
-     stretched and thin on a 1440p display. */
+  /* Cards, the filter toolbar and the table all read the width from this one
+     column. It fills the space beside the sidebar up to the deliberate
+     --content-max ceiling; margin-inline keeps any leftover space balanced
+     when that ceiling is reached, instead of leaving a void on the right. */
   padding: 32px 36px 48px;
   display: flex;
   flex-direction: column;
   gap: 24px;
   max-width: var(--content-max);
   width: 100%;
+  margin-inline: auto;
 }
 
 .welcome-banner {
@@ -1168,6 +1351,8 @@ select:focus-visible {
 
 .table-responsive {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   /* Long registries scroll inside their own frame rather than stretching the
      page sideways on a phone. */
   overflow-x: auto;
@@ -1214,6 +1399,3008 @@ select:focus-visible {
 
 .data-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* The Student Directory's roll-number column is the primary scan key, so it
+   gets a restrained brand tint and semibold figures. Scoped to the students
+   table: other registries keep the shared table appearance. */
+.student-directory-table th:first-child,
+.student-directory-table td.student-roll {
+  box-shadow: inset 3px 0 0 var(--blue-border);
+}
+
+.student-directory-table td.student-roll {
+  background: linear-gradient(90deg, var(--blue-light), rgba(37, 99, 235, 0) 88%);
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.student-directory-table tbody tr:hover td.student-roll {
+  background: var(--blue-light);
+}
+
+/* Keep the action cluster on one line so horizontal table scrolling never
+   crops a button into an inaccessible fragment. */
+.student-directory-table td:last-child {
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Student Import Modal — three-step workflow (Upload -> Review -> Results)
+   ========================================================================== */
+
+ .import-dialog {
+   width: min(1120px, 94vw);
+   max-height: 92vh;
+   padding: 0;
+   overflow: hidden;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-modal {
+   display: flex;
+   flex-direction: column;
+   max-height: 92vh;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-modal-header {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   padding: 20px 24px 0;
+   border-bottom: 1px solid var(--card-border);
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-modal-header h2 {
+   margin: 0;
+   font-size: 19px;
+   font-weight: 700;
+   color: var(--ink);
+   letter-spacing: -0.01em;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-dialog .field-error {
+   margin: 0 0 12px 0;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+/* ------------------------------------------------------------------------
+    Upload state
+    ------------------------------------------------------------------------ */
+
+ .import-upload-card {
+   border: 1px solid var(--card-border);
+   border-radius: 12px;
+   background: var(--surface);
+   padding: 16px;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-drop-zone {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   gap: 10px;
+   padding: 32px 20px;
+   border: 2px dashed var(--line-subtle);
+   border-radius: 10px;
+   background: var(--bg-app);
+   color: var(--muted);
+   font-size: 14px;
+   font-weight: 600;
+   text-align: center;
+   cursor: pointer;
+   transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-drop-zone.drag-over {
+   border-color: var(--blue);
+   background: var(--blue-light);
+   color: var(--blue);
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-drop-zone:focus-visible {
+   outline: 3px solid var(--blue);
+   outline-offset: 2px;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-drop-hint {
+   font-weight: 500;
+   font-size: 12.5px;
+   color: var(--muted-light);
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-file-feedback[hidden] {
+  display: none;
+}
+
+.import-file-feedback {
+  display: flex;
+  align-items: center;
+   gap: 12px;
+   margin-top: 12px;
+   padding: 10px 14px;
+   border: 1px solid var(--blue-border);
+   border-radius: 8px;
+   background: var(--blue-light);
+   color: var(--blue);
+   font-size: 12.5px;
+   font-weight: 600;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-file-feedback strong {
+   color: var(--ink);
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-template-row {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   margin-top: 16px;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-template-row .cell-subtext {
+   margin: 0;
+   font-size: 12.5px;
+   color: var(--muted);
+ }
+ .import-steps-indicator {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   padding: 14px 24px;
+   border-bottom: 1px solid var(--line-subtle);
+   font-size: 12.5px;
+   font-weight: 600;
+   color: var(--muted);
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-step-pill {
+   padding: 5px 12px;
+   border-radius: var(--r-pill);
+   background: var(--surface);
+   border: 1px solid var(--line);
+   color: var(--muted);
+   font-weight: 600;
+   font-size: 12.5px;
+   transition: all 0.15s ease;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-step-pill.current {
+   background: var(--blue);
+   border-color: var(--blue);
+   color: #ffffff;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-step-arrow {
+   color: var(--muted-light);
+   font-size: 12px;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-modal-body {
+   flex: 1 1 auto;
+   overflow-y: auto;
+   padding: 20px 24px 24px;
+   min-height: 0;
+   display: flex;
+   flex-direction: column;
+   gap: 20px;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+/* Only one step panel is ever visible. The `hidden` attribute stays in sync
+    for assistive technology, but layout never depends on the UA stylesheet's
+    handling of it - an explicit author rule owns `display`. */
+ .import-step {
+   display: none;
+ }
+ .import-step.current {
+   display: block;
+ }
+ /* ------------------------------------------------------------------------
+    Review & Results states
+    ------------------------------------------------------------------------ */
+
+ .import-summary {
+   display: flex;
+   gap: 12px;
+   flex-wrap: wrap;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-summary-chip {
+   display: flex;
+   align-items: center;
+   gap: 6px;
+   padding: 6px 12px;
+   border-radius: 8px;
+   border: 1px solid var(--line);
+   background: var(--surface);
+   font-size: 12.5px;
+   font-weight: 600;
+   color: var(--ink-soft);
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-summary-chip-valid {
+   border-color: var(--emerald-light);
+   background: var(--emerald-light);
+   color: var(--success-ink);
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-summary-chip-rejected {
+   border-color: var(--rose-light);
+   background: var(--rose-light);
+   color: var(--danger-ink);
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-table-wrap {
+   position: relative;
+   width: 100%;
+   overflow-x: auto;
+   overflow-y: auto;
+   max-height: 420px;
+   border: 1px solid var(--card-border);
+   border-radius: 10px;
+   background: var(--surface);
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-table-wrap table {
+   width: 100%;
+   min-width: 760px;
+   border-collapse: collapse;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-table-wrap th {
+   position: sticky;
+   top: 0;
+   z-index: 2;
+   background: var(--surface);
+   border-bottom: 1px solid var(--line);
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-cell-errors {
+   max-width: 300px;
+   white-space: normal;
+   word-break: break-word;
+   font-size: 12.5px;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-table-actions {
+   display: flex;
+   gap: 10px;
+   margin-top: 8px;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+/* ------------------------------------------------------------------------
+    Footer - one clear exit action per state; Back/Continue/Confirm/Done
+    stay consistently positioned on the right.
+    ------------------------------------------------------------------------ */
+
+ .import-modal-footer {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   padding: 14px 24px;
+   border-top: 1px solid var(--card-border);
+   background: var(--bg-app);
+   gap: 12px;
+   margin-top: auto;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+.import-footer-left,
+ .import-footer-right {
+   display: flex;
+   gap: 10px;
+   align-items: center;
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+/* ------------------------------------------------------------------------
+    Mobile: near-full-screen dialog with a scrollable body and stable footer.
+    ------------------------------------------------------------------------ */
+
+ @media (max-width: 768px) {
+   .import-dialog {
+     width: 96vw;
+     max-height: 96vh;
+   }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+  .import-modal-header {
+     padding: 16px 16px 0;
+   }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+  .import-steps-indicator {
+     padding: 12px 16px;
+     font-size: 11.5px;
+   }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+  .import-modal-body {
+     padding: 16px;
+     gap: 16px;
+   }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+  .import-modal-footer {
+     padding: 12px 16px;
+     flex-direction: column;
+     align-items: stretch;
+     gap: 8px;
+   }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+  .import-footer-left,
+   .import-footer-right {
+     width: 100%;
+     justify-content: flex-start;
+   }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+  .import-footer-left > button,
+   .import-footer-right > button {
+     width: 100%;
+   }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+  .import-table-wrap {
+     max-height: 340px;
+   }
+ }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+@media (max-width: 560px) {
+   .import-dialog {
+     width: calc(100vw - 16px);
+     max-height: calc(100vh - 16px);
+     max-width: none;
+   }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+  .import-table-wrap table {
+     min-width: 640px;
+   }
+
+   .import-step-pill + .import-step-pill {
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+    margin-left: 8px;
+  }
+
+  .import-step-connector {
+    flex-shrink: 0;
+    color: var(--line);
+    font-size: 10px;
+  }
+
+  /* Footer action groups */
+  .import-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-subtle);
+    margin-top: 12px;
+  }
+
+  .import-footer-actions .btn {
+    flex: 1;
+  }
+
+  .import-footer-actions.upload-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.review-footer.hidden {
+    display: none;
+  }
+  .import-footer-actions.results-footer {
+    justify-content: center;
+  }
+
+  /* Step pill states */
+  .import-step-pill {
+    --pill-state: upcoming;
+  }
+  .import-step-pill[current="upload"] {
+    --pill-state: active;
+  }
+  .import-step-pill[current="preview"] {
+    --pill-state: completed;
+  }
+  .import-step-pill[current="results"] {
+    --pill-state: completed;
+  }
+
+  /* Adjust pill appearance based on state */
+  .import-step-pill[current="upload"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="preview"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .import-step-pill[current="results"] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+  .import-drop-zone {
+     padding: 24px 16px;
+     font-size: 13.5px;
+   }
+ }
+
+/* Faculty Directory Table - consistent with Student Directory layout. */
+.faculty-directory-table th:first-child,
+.faculty-directory-table td:first-child {
+  box-shadow: inset 3px 0 0 var(--blue-border);
+}
+
+.faculty-directory-table td:first-child {
+  background: linear-gradient(90deg, var(--blue-light), rgba(37, 99, 235, 0) 88%);
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.faculty-directory-table tbody tr:hover td:first-child {
+  background: var(--blue-light);
+}
+
+.faculty-directory-table td:last-child {
+  white-space: nowrap;
+}
+
+.student-roll-code {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* Seven registry columns stop being readable before the viewport itself does.
+   Keep a comfortable table width at every breakpoint and let .table-responsive
+   own the horizontal scroll; the page never gains a sideways scrollbar. */
+.student-directory-table {
+  min-width: 860px;
 }
 
 .cell-title {
@@ -1393,6 +4580,7 @@ select:focus-visible {
 
 .filter-tab {
   padding: 7px 16px;
+  font-family: inherit;
   font-size: 13px;
   font-weight: 700;
   border-radius: var(--r-pill);
@@ -1670,6 +4858,472 @@ select:disabled {
   line-height: 1.5;
 }
 
+/* API-backed create/edit dialogs share the dashboard form vocabulary.  The
+   max-height keeps long enrollment lists and validation messages usable on a
+   laptop or a small screen rather than letting the native dialog overflow. */
+.api-dialog {
+  width: min(620px, calc(100vw - 32px));
+  max-height: min(760px, calc(100vh - 32px));
+  overflow: auto;
+  border: 0;
+  border-radius: 16px;
+  padding: 0;
+  color: var(--ink);
+  background: var(--surface, #fff);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+}
+
+.api-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.api-dialog form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+  padding: 24px;
+}
+
+/* The heading, the validation message, a wide field and the button row
+   span the full width of the dialog. */
+.api-dialog form > h2,
+.api-dialog form > .field-error,
+.api-dialog form > .row-tight-lg,
+.api-dialog .form-group.wide {
+  grid-column: 1 / -1;
+}
+
+.api-dialog .form-group {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.api-dialog .form-group small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.api-dialog .field-error {
+  margin: 0;
+  color: var(--danger-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.api-dialog .field-error[hidden] {
+  display: none;
+}
+
+/* Accessible duplicate-field state: a red border, a soft ring, and the
+   associated role="alert" message below the control. Colour is never the only
+   signal - aria-invalid and the text both carry the state. */
+.api-dialog .form-group.has-error > input,
+.api-dialog .form-group.has-error > select,
+.api-dialog .form-group.has-error > textarea,
+.api-dialog [aria-invalid="true"] {
+  border-color: var(--danger-ink);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.api-dialog [aria-invalid="true"]:focus {
+  border-color: var(--danger-ink);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18);
+}
+
+@media (max-width: 560px) {
+  .api-dialog form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.api-dialog h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.api-dialog label {
+  display: grid;
+  gap: 6px;
+  font-weight: 650;
+}
+
+.api-dialog input,
+.api-dialog select,
+.api-dialog textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--line, #d7deea);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+}
+
+.api-dialog textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+/* Read-only Student Details dialog. It reuses .api-dialog's surface but owns
+   its internal scroll region: the header and footer stay put while only the
+   data column scrolls on a short laptop or phone screen. */
+.api-dialog.student-details-dialog {
+  width: min(680px, calc(100vw - 24px));
+  max-width: 680px;
+  max-height: calc(100dvh - 24px);
+  overflow: hidden;
+}
+
+.student-details-shell {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 24px);
+  min-height: 0;
+}
+
+.student-details-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid var(--line-subtle);
+  flex-shrink: 0;
+}
+
+.student-details-heading {
+  min-width: 0;
+}
+
+.student-details-header h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.student-details-eyebrow {
+  margin: 0 0 3px;
+  color: var(--blue);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.student-details-subtitle {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+  overflow-wrap: break-word;
+}
+
+.student-details-close {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.student-details-close:hover {
+  color: var(--ink);
+  background: var(--bg-app);
+}
+
+.student-details-close .icon {
+  width: 17px;
+  height: 17px;
+}
+
+.student-details-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 22px 18px;
+}
+
+.student-details-loading {
+  margin: 0;
+  padding: 6px 0;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.student-details-identifiers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--line);
+}
+
+.student-details-identifier {
+  min-width: 0;
+  padding: 11px 14px;
+  background: var(--bg-app);
+}
+
+.student-details-label {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.student-details-identifier strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+.student-id-value,
+.student-roll-code {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.student-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 16px;
+  margin: 0;
+}
+
+.student-detail {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.student-detail dt {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.student-detail dd {
+  margin: 3px 0 0;
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.student-detail.wide {
+  grid-column: 1 / -1;
+}
+
+/* Email gets its own full-width line so it is never squeezed into a narrow
+   card. `break-word` only splits when the address genuinely cannot fit; normal
+   addresses stay on one line. */
+.student-detail.email dd {
+  font-size: 14px;
+  letter-spacing: 0.005em;
+}
+
+.student-details-courses {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-subtle);
+}
+
+.student-details-courses-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 7px;
+}
+
+.student-details-courses-head h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.student-details-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: var(--r-pill);
+  background: var(--blue-light);
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.student-courses-empty {
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: var(--bg-app);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.student-course-list {
+  display: grid;
+  gap: 5px;
+  max-height: 176px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.student-course-list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-subtle);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.student-course-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.student-details-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 22px;
+  border-top: 1px solid var(--line-subtle);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.student-details-readonly {
+  color: var(--muted-light);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+/* Keep the page behind the modal still; the dialog's own body is the only
+   scroll container while it is open. */
+html.dialog-open {
+  overflow: hidden;
+}
+
+@media (max-width: 560px) {
+  .api-dialog.student-details-dialog {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+
+  .student-details-shell {
+    max-height: calc(100dvh - 16px);
+  }
+
+  .student-details-header {
+    padding: 16px 16px 13px;
+  }
+
+  .student-details-body {
+    padding: 14px 16px 16px;
+  }
+
+  .student-details-identifiers {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .student-details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-detail.wide {
+    grid-column: 1 / -1;
+  }
+
+  .student-details-footer {
+    padding: 10px 16px;
+  }
+}
+
+.table-state {
+  padding: 28px !important;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* Page-level messages raised by js/portal.js: an API error, or a note that a
+   metric has no honest source. The kind attribute picks the colour so an
+   informational note never looks like a failure. */
+.api-message {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--blue-border);
+  border-radius: var(--r-sm);
+  background: var(--blue-light);
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.api-message[data-kind="error"] {
+  border-color: rgba(220, 38, 38, 0.25);
+  background: var(--rose-light);
+  color: var(--danger-ink);
+}
+
+.api-message[data-kind="success"] {
+  border-color: rgba(5, 150, 105, 0.25);
+  background: var(--emerald-light);
+  color: var(--success-ink);
+}
+
+.api-pagination {
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
 /* ==========================================================================
    13. RESPONSIVE DESIGN
    --------------------------------------------------------------------------
@@ -1677,11 +5331,13 @@ select:disabled {
    with the marketing site:
 
      1024px  tablet - narrower rail, tighter content padding
-      768px  mobile - the rail becomes a horizontal scrolling nav strip
+      768px  mobile - the rail leaves the flow and becomes an off-canvas
+                      drawer behind an overlay, with the page made inert
+      540px  phone  - the topbar wraps its actions and spacing tightens
       420px  phone  - the last tight spots (buttons, titles, tables)
 
-   The rail keeps its full structure - it does not get replaced by a
-   different navigation system, it simply changes axis.
+   The rail keeps its full navigation structure in the drawer; it is never
+   replaced by a different navigation system or a horizontal nav strip.
    ========================================================================== */
 
 @media (max-width: 1024px) {
@@ -1716,61 +5372,91 @@ select:disabled {
     flex-direction: column;
   }
 
+  /* Drawer mode: the sidebar leaves the flow entirely, so the content uses
+     the full width and no permanent icon rail or top strip crowds the page. */
   .app-sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
-    border-right: none;
-    border-bottom: 1px solid var(--card-border);
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(320px, 86vw);
+    height: 100dvh;
+    z-index: 70;
+    border-right: 1px solid var(--card-border);
+    border-bottom: none;
+    box-shadow: var(--shadow-lift);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 0.22s ease, visibility 0.22s ease;
   }
 
-  /* The rail becomes a horizontal strip here, so the brand block is centred
-     and the role badge drops away - at this width the topbar already states
-     the workspace. The lockup itself is untouched: same 38px mark and 18px
-     wordmark as every other app page. */
+  html.sidebar-drawer-open,
+  html.sidebar-drawer-open body {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  html.sidebar-drawer-open .app-sidebar {
+    transform: translateX(0);
+    visibility: visible;
+  }
+
+  html.sidebar-drawer-open .sidebar-overlay {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .sidebar-drawer-close {
+    display: flex;
+    position: absolute;
+    top: 16px;
+    right: 12px;
+    z-index: 2;
+  }
+
+  /* Keep the brand's own full lockup and role badge in the drawer. The right
+     padding clears the close control instead of letting it overlap the badge. */
   .sidebar-brand {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0 58px 0 16px;
   }
 
   .sidebar-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    padding: 10px 14px;
-    gap: 8px;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 12px;
+    gap: 3px;
     -webkit-overflow-scrolling: touch;
   }
 
   .nav-section-title {
-    display: none;
+    display: block;
   }
 
   .nav-link {
-    padding: 8px 12px;
-    font-size: 12px;
-    white-space: nowrap;
+    gap: 12px;
+    padding: 10px 14px;
+    font-size: 14.5px;
+    white-space: normal;
   }
 
-  /* Keep the profile + Sign Out reachable on small screens: the footer
-     collapses from a stacked column into one compact row under the nav. */
   .sidebar-footer {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
     gap: 10px;
-    padding: 10px 14px;
-    border-top: none;
+    padding: 16px 12px;
+    border-top: 1px solid var(--card-border);
   }
 
   .user-snippet {
-    flex: 1;
     min-width: 0;
   }
 
   .user-profile-link {
-    display: none; /* the profile link lives in the nav already on mobile */
+    display: block;
   }
 
   .logout-link {
@@ -1780,6 +5466,12 @@ select:disabled {
   .app-topbar {
     padding: 0 16px;
     height: 64px;
+  }
+
+  /* The drawer toggle keeps the same leading position, with a smaller inset
+     because the mobile header is already tight. */
+  .sidebar-toggle {
+    margin-left: -8px;
   }
 
   .search-box {
@@ -1849,17 +5541,31 @@ select:disabled {
    still scroll inside .table-responsive rather than stretching the page.
    -------------------------------------------------------------------------- */
 @media (max-width: 540px) {
-  .topbar-title {
-    font-size: 19px;
+  /* Action rows that cannot fit under the title wrap onto their own line
+     rather than shrinking the controls to unreadable sizes. Pages without
+     actions keep the normal 64px bar. */
+  .app-topbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 64px;
+    padding: 10px 16px;
+    gap: 8px;
   }
 
   .topbar-actions {
     gap: 8px;
+    max-width: 100%;
+    overflow-x: auto;
   }
 
-  .app-topbar {
-    padding: 0 16px;
-    height: 64px;
+  /* The title keeps a readable minimum; a wide action row (the announcement
+     filter) wraps beneath it instead of squeezing the page name. */
+  .topbar-left {
+    flex: 1 1 200px;
+  }
+
+  .topbar-title {
+    font-size: 19px;
   }
 
   .welcome-text h2 {
@@ -1916,5 +5622,104 @@ select:disabled {
   .btn-xs {
     padding: 4px 8px;
     font-size: 11.5px;
+  }
+}
+
+/* ==========================================================================
+   APPLICATION CHROME - skip link and corner feedback
+   --------------------------------------------------------------------------
+   Shared affordances used by all three roles. Their class names are unique to
+   the shell, so they cannot collide with the page vocabulary above.
+   ========================================================================== */
+
+/* Keyboard-only "skip to content" link: parked above the viewport until it
+   receives focus, then pinned into the top-left corner of the window. */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  padding: 10px 16px;
+  border-radius: var(--r-sm);
+  background: var(--blue);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--shadow-brand);
+  transform: translateY(-160%);
+  transition: transform 0.15s ease;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Corner feedback stack. Newest message sits at the bottom; the width is
+   capped so a phone layout never overflows. */
+.app-toast-host {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1100;
+  display: grid;
+  gap: 8px;
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.app-toast {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: var(--r-sm);
+  border-left: 3px solid var(--blue);
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  box-shadow: var(--shadow-lift);
+  animation: toast-in 0.18s ease-out;
+}
+
+.app-toast[data-kind="success"] {
+  border-left-color: var(--emerald);
+}
+
+.app-toast[data-kind="error"] {
+  border-left-color: var(--rose);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link,
+  .app-toast,
+  .app-sidebar,
+  .sidebar-overlay,
+  .sidebar-toggle {
+    transition: none;
+    animation: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-toast-host {
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
+    width: auto;
   }
 }

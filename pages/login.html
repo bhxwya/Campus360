@@ -40,7 +40,7 @@
        homepage so users are never trapped inside the authentication flow.
   =========================================================== -->
   <header class="auth-nav">
-    <a href="../index.html" class="auth-back-link">
+    <a href="../" class="auth-back-link">
       <span class="auth-back-arrow" aria-hidden="true">←</span>
       <span>Back to Homepage</span>
     </a>
@@ -58,7 +58,7 @@
          and product tagline to establish immediate platform trust.
     ========================================================== -->
     <header class="auth-brand">
-      <a href="../index.html" class="logo" aria-label="Campus360 Home">
+      <a href="../" class="logo" aria-label="Campus360 Home">
         <span class="logo-mark">
           <img src="../assets/campus360-orbit.png" alt="" />
         </span>
@@ -83,6 +83,11 @@
         <h1 id="login-title">Sign in to your account</h1>
         <p>Select your campus role and enter your credentials to continue.</p>
       </div>
+
+      <!-- Sign-in notice: session expiry / access notices arrive as a query
+           parameter from the API client and dashboards, and js/auth.js fills
+           this live region on load. -->
+      <p class="auth-notice" id="auth-notice" role="status" hidden></p>
 
 
       <!-- Role Context Selector:
@@ -130,22 +135,23 @@
            and primary action trigger. -->
       <form id="login-form" class="auth-form" action="#" method="POST" novalidate>
 
-        <!-- Institutional ID or Email Field -->
+        <!-- Institutional email field (the API signs in by email only) -->
         <div class="form-group">
-          <label for="campus-id" class="form-label">Campus ID or Institutional Email</label>
+          <label for="campus-id" class="form-label">Institutional Email</label>
           <div class="input-wrapper">
             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
             <input
-              type="text"
+              type="email"
               id="campus-id"
               name="campus-id"
               class="form-input"
-              placeholder="e.g. ST-2026-8941 or user@campus.edu"
+              placeholder="e.g. user@campus.edu"
               required
               autocomplete="username"
+              inputmode="email"
               aria-describedby="campus-id-error"
             />
           </div>
@@ -178,23 +184,7 @@
           <!-- Inline validation message: filled in by js/auth.js on submit,
                cleared again as soon as the user types. -->
           <p class="field-error" id="password-error" aria-live="polite" hidden></p>
-        </div>
-
-        <!-- Auxiliary Actions: Remember Me checkbox & Forgot Password recovery link -->
-        <div class="form-extras">
-          <label class="checkbox-container">
-            <input type="checkbox" name="remember-me" id="remember-me" />
-            <span class="custom-checkbox" aria-hidden="true">
-              <svg viewBox="0 0 12 10" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="1.5 6 4.5 9 10.5 1" />
-              </svg>
-            </span>
-            <span class="checkbox-label">Remember my login</span>
-          </label>
-
-          <!-- Visual placeholder for now: a real recovery flow needs the
-               backend, so this link does not navigate anywhere yet. -->
-          <a href="#" class="forgot-link">Forgot password?</a>
+          <p class="field-error" id="login-error" aria-live="polite" hidden></p>
         </div>
 
         <!-- Submit Button: matches the hero & navbar primary gradient styles -->
@@ -207,7 +197,7 @@
 
       <!-- Card Footer: help desk and account assistance link -->
       <footer class="auth-card-footer">
-        <p>Need access or having trouble signing in? <a href="../index.html#contact" class="auth-help-link">Contact Campus Support</a></p>
+        <p>Need access or having trouble signing in? <a href="../#contact" class="auth-help-link">Contact Campus Support</a></p>
       </footer>
 
     </section>

@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -73,7 +71,7 @@
         <a href="assignments.html" class="nav-link">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
           <span>Assignments</span>
-          <span class="nav-counter">18</span>
+          <span class="nav-counter">—</span>
         </a>
 
         <a href="marks.html" class="nav-link">
@@ -92,8 +90,8 @@
         <div class="user-snippet">
           <div class="user-avatar faculty">F</div>
           <div class="user-info">
-            <span class="user-name">Dr. Alan Turing</span>
-            <span class="user-role-label">Dept. of Computer Science</span>
+            <span class="user-name">—</span>
+            <span class="user-role-label">—</span>
             <a href="dashboard.html" class="user-profile-link">View profile</a>
           </div>
         </div>
@@ -133,20 +131,9 @@
         </div>
 
         <div class="topbar-actions">
-          <div class="search-box">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="M16.8 16.8 21 21"/></svg>
-            <input type="text" placeholder="Search students, classes..." aria-label="Search students or classes" />
-          </div>
-
-          <a href="announcements.html" class="action-icon-btn" title="Faculty Notices">
+          <a href="announcements.html" class="action-icon-btn" title="Faculty notices">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8.5a6 6 0 0 0-12 0c0 6-2.5 8-2.5 8h17S18 14.5 18 8.5z"/><path d="M13.7 20.5a2 2 0 0 1-3.4 0"/></svg>
-            <span class="badge-dot"></span>
           </a>
-
-          <div class="topbar-context-pill">
-            <span class="pulse-indicator"></span>
-            <span>Fall Semester 2026</span>
-          </div>
         </div>
       </header>
 
@@ -155,8 +142,8 @@
         <!-- Welcome Banner -->
         <section class="welcome-banner">
           <div class="welcome-text">
-            <h2>Welcome back, Dr. Turing!</h2>
-            <p>You have 2 lectures scheduled today and 18 student submissions awaiting evaluation in Data Structures.</p>
+            <h2>Welcome</h2>
+            <p>Loading your teaching overview…</p>
           </div>
           <div class="welcome-actions">
             <a href="attendance.html" class="btn btn-outline btn-sm">Mark Attendance</a>
@@ -168,38 +155,38 @@
         <section class="stats-grid">
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Classes Scheduled Today</span>
+              <span class="stat-label">Classes scheduled today</span>
               <span class="stat-icon emerald"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="17" rx="2.5"/><path d="M8 3v3.5M16 3v3.5M3 10h18"/></svg></span>
             </div>
-            <div class="stat-value">02</div>
-            <div class="stat-meta"><span>Next: CS-301 at 09:30 AM</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Not exposed by the faculty API</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Enrolled Students</span>
+              <span class="stat-label">Enrolled students</span>
               <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
             </div>
-            <div class="stat-value">128</div>
-            <div class="stat-meta"><span>Across 2 active lecture sections</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Not exposed by the faculty API</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Pending Reviews</span>
+              <span class="stat-label">Pending reviews</span>
               <span class="stat-icon amber"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg></span>
             </div>
-            <div class="stat-value">18</div>
-            <div class="stat-meta"><span>Assignments awaiting scores</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">See the Assignments page for real counts</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Average Attendance</span>
+              <span class="stat-label">Average attendance</span>
               <span class="stat-icon violet">%</span>
             </div>
-            <div class="stat-value">88.2%</div>
-            <div class="stat-meta"><span class="stat-trend-up">&uarr; High engagement rate</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Not exposed by the faculty API</div>
           </div>
         </section>
 
@@ -217,49 +204,12 @@
               <span class="card-subtitle">Teaching Load</span>
               <h2 class="card-title">My Assigned Courses</h2>
             </div>
-            <span class="badge badge-primary">Fall 2026</span>
+            <span class="badge badge-secondary">Unavailable with the current API</span>
           </div>
 
           <div class="assigned-course-list">
 
-            <div class="assigned-course-card">
-              <span class="course-code-chip">CS-301</span>
-              <div class="fill">
-                <span class="assigned-course-name">Advanced Data Structures</span>
-                <span class="assigned-course-meta">Section A &bull; Semester 5 &bull; Mon / Wed, 09:30 - 11:00 AM</span>
-              </div>
-              <div class="assigned-course-stat">
-                <strong>64</strong>
-                <span>Enrolled</span>
-              </div>
-              <a href="attendance.html" class="btn btn-outline btn-sm">Open</a>
-            </div>
-
-            <div class="assigned-course-card">
-              <span class="course-code-chip violet">CS-504</span>
-              <div class="fill">
-                <span class="assigned-course-name">Algorithms &amp; Problem Solving</span>
-                <span class="assigned-course-meta">Section B &bull; Semester 7 &bull; Tue / Thu, 11:15 AM - 12:45 PM</span>
-              </div>
-              <div class="assigned-course-stat">
-                <strong>42</strong>
-                <span>Enrolled</span>
-              </div>
-              <a href="marks.html" class="btn btn-outline btn-sm">Open</a>
-            </div>
-
-            <div class="assigned-course-card">
-              <span class="course-code-chip cyan">CS-412</span>
-              <div class="fill">
-                <span class="assigned-course-name">Database Management Systems</span>
-                <span class="assigned-course-meta">Lab Section &bull; Semester 5 &bull; Fri, 02:00 - 04:00 PM</span>
-              </div>
-              <div class="assigned-course-stat">
-                <strong>30</strong>
-                <span>Enrolled</span>
-              </div>
-              <a href="assignments.html" class="btn btn-outline btn-sm">Open</a>
-            </div>
+            <p class="empty-state">Loading your assigned courses…</p>
 
           </div>
         </section>
@@ -281,21 +231,9 @@
               <div class="activity-list">
 
                 <div class="activity-item">
-                  <div class="activity-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5h6a4 4 0 0 1 4 4V21a3 3 0 0 0-3-3H2z"/><path d="M22 3.5h-6a4 4 0 0 0-4 4V21a3 3 0 0 1 3-3h7z"/></svg></div>
                   <div class="activity-details">
-                    <span class="activity-title">CS-301: Advanced Data Structures</span>
-                    <span class="activity-meta">09:30 - 11:00 AM &bull; Lecture Hall 302 &bull; 64 Students</span>
+                    <span class="activity-title">Loading today's classes…</span>
                   </div>
-                  <a href="attendance.html" class="btn btn-primary btn-sm">Mark Register</a>
-                </div>
-
-                <div class="activity-item">
-                  <div class="activity-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="19" height="12.5" rx="2.2"/><path d="M9 20.5h6M12 16.5v4"/></svg></div>
-                  <div class="activity-details">
-                    <span class="activity-title">CS-504: Algorithms Problem Solving</span>
-                    <span class="activity-meta">02:00 - 03:30 PM &bull; Computing Room 105 &bull; 32 Students</span>
-                  </div>
-                  <a href="attendance.html" class="btn btn-outline btn-sm">Mark Register</a>
                 </div>
 
               </div>
@@ -316,18 +254,8 @@
               <div class="activity-list">
 
                 <div class="activity-item">
-                  <div class="activity-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5L11 19z"/><path d="M16 8.5a4.5 4.5 0 0 1 0 7"/><path d="M18.8 6a8 8 0 0 1 0 12"/></svg></div>
                   <div class="activity-details">
-                    <span class="activity-title">Mid-term Marks Entry Deadline</span>
-                    <span class="activity-meta">Office of Registrar &bull; Due Oct 12</span>
-                  </div>
-                </div>
-
-                <div class="activity-item">
-                  <div class="activity-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.2"/><path d="m3 6.5 9 6.5 9-6.5"/></svg></div>
-                  <div class="activity-details">
-                    <span class="activity-title">Curriculum Review Meeting</span>
-                    <span class="activity-meta">Dept of CS &bull; Tomorrow at 4 PM</span>
+                    <span class="activity-title">Loading recent activity…</span>
                   </div>
                 </div>
 
@@ -361,21 +289,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>CS-301</strong></td>
-                  <td>B-Tree Indexing Implementation in C++</td>
-                  <td>60 / 64</td>
-                  <td>42 / 60</td>
-                  <td><span class="badge badge-warning">18 Pending</span></td>
-                  <td><a href="assignments.html" class="btn btn-primary btn-sm">Grade Now</a></td>
-                </tr>
-
-                <tr>
-                  <td><strong>CS-504</strong></td>
-                  <td>Dynamic Programming Knapsack Formulation</td>
-                  <td>32 / 32</td>
-                  <td>32 / 32</td>
-                  <td><span class="badge badge-success">Completed</span></td>
-                  <td><a href="marks.html" class="btn btn-outline btn-sm">View Grades</a></td>
+                  <td colspan="6" class="table-state">Loading your evaluation queue…</td>
                 </tr>
               </tbody>
             </table>

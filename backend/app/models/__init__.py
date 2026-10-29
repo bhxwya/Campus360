@@ -17,6 +17,7 @@ Layout (one file per aggregate, enums shared):
     announcement.py  Announcement
 """
 
+from app.models.activation_token import ActivationToken
 from app.models.announcement import Announcement
 from app.models.assignment import Assignment, AssignmentSubmission
 from app.models.attendance import AttendanceRecord
@@ -38,6 +39,7 @@ from app.models.timetable import TimetableEntry
 from app.models.user import FacultyProfile, StudentProfile, User
 
 __all__ = [
+    "ActivationToken",
     "Announcement",
     "AnnouncementAudience",
     "AnnouncementCategory",

@@ -191,7 +191,7 @@ def test_list_faculty_filters_by_department(admin_client, db_cleaner) -> None:
         email="cs@campus360.example.com",
         faculty_code="FAC-CS",
         full_name="Computer Scientist",
-        department="Computer Science",
+        department="Computer Science & Engineering",
     )
 
     response = admin_client.client.get("/api/v1/admin/faculty", params={"department": "Physics"})

@@ -34,8 +34,10 @@ from app.models import (
 from sqlalchemy import CheckConstraint, DateTime, Numeric, Text, UniqueConstraint
 from sqlalchemy.dialects import postgresql
 
-#: The 11 application tables the initial migration must create.
+#: The 12 application tables the migrations must create (11 original +
+#: activation_tokens for secure account activation).
 EXPECTED_TABLES = {
+    "activation_tokens",
     "announcements",
     "assignment_submissions",
     "assignments",

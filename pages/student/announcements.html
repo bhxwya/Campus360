@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -78,7 +76,7 @@
         <a href="assignments.html" class="nav-link">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
           <span>Assignments</span>
-          <span class="nav-counter">4</span>
+          <span class="nav-counter">—</span>
         </a>
 
         <a href="marks-results.html" class="nav-link">
@@ -102,8 +100,8 @@
         <div class="user-snippet">
           <div class="user-avatar">S</div>
           <div class="user-info">
-            <span class="user-name">Alex Johnson</span>
-            <span class="user-role-label">B.Tech CS &bull; Sem 5</span>
+            <span class="user-name">—</span>
+            <span class="user-role-label">—</span>
             <a href="academic-records.html" class="user-profile-link">View profile</a>
           </div>
         </div>
@@ -134,80 +132,15 @@
         </div>
 
         <div class="topbar-actions">
-          <div class="filter-bar">
-            <span class="filter-tab active">All Notices</span>
-            <span class="filter-tab">Academic</span>
-            <span class="filter-tab">Examinations</span>
-            <span class="filter-tab">Events</span>
-          </div>
+          <div class="filter-bar" data-announcement-filter role="group" aria-label="Filter announcements by category"></div>
         </div>
       </header>
 
       <div class="content-wrapper">
 
-        <!-- Pinned Announcement Card -->
-        <article class="announcement-card pinned">
-          <div class="announcement-meta">
-            <div class="row-center-sm">
-              <span class="badge badge-warning"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-4.8L5 21V5.5A2 2 0 0 1 7 3.5h10a2 2 0 0 1 2 2z"/></svg> Pinned Notice</span>
-              <span class="badge badge-primary">Examinations Cell</span>
-            </div>
-            <span class="meta-muted">Published: Sep 25, 2026</span>
-          </div>
-
-          <h2 class="announcement-title">End-Semester Final Examination Schedule &amp; Hall Ticket Guidelines</h2>
-          
-          <p class="announcement-desc">
-            The tentative timetable for the Fall 2026 end-semester examinations has been published on the official portal. Students must resolve any attendance discrepancies and settle pending library clearances prior to October 15, 2026. Hall tickets will be downloadable directly from your Campus360 dashboard starting October 18.
-          </p>
-
-          <div class="announcement-footer">
-            <span>Audience: All Undergraduate &amp; Postgraduate Students</span>
-            <button type="button" class="btn btn-outline btn-sm" disabled>Download Timetable PDF</button>
-          </div>
-        </article>
-
-        <!-- ============================================================
-             ANNOUNCEMENT FEED
-             Notices from the administration in reverse-chronological order,
-             newest first. Pinned and unread states carry the accent treatment.
-             ============================================================ -->
-        <article class="announcement-card">
-          <div class="announcement-meta">
-            <span class="badge badge-purple">Department of CS</span>
-            <span class="meta-muted">Published: Sep 23, 2026</span>
-          </div>
-
-          <h2 class="announcement-title">Annual Hackathon 2026 &bull; Project Registrations Now Open</h2>
-          
-          <p class="announcement-desc">
-            Registration is officially open for Campus360 HackFest 2026! Teams of 3-4 members are invited to submit solution briefs focusing on AI in Education, Campus Sustainability, and Smart City Infrastructure. Mentorship sessions by industry engineers commence next week.
-          </p>
-
-          <div class="announcement-footer">
-            <span>Audience: Engineering &amp; Computing Students</span>
-            <button type="button" class="btn btn-primary btn-sm" disabled>Register Team</button>
-          </div>
-        </article>
-
-        <article class="announcement-card">
-          <div class="announcement-meta">
-            <span class="badge badge-secondary">Campus Facilities</span>
-            <span class="meta-muted">Published: Sep 20, 2026</span>
-          </div>
-
-          <h2 class="announcement-title">Central Library Weekend Timings &amp; Extended Reading Rooms</h2>
-          
-          <p class="announcement-desc">
-            In preparation for mid-term tests and group assignments, the Central Library reading rooms will remain open until 02:00 AM every Friday through Sunday until the conclusion of examinations. High-speed WiFi and silent discussion cubicles will be accessible upon student ID verification.
-          </p>
-
-          <div class="announcement-footer">
-            <span>Audience: Entire Campus Community</span>
-            <button type="button" class="btn btn-outline btn-sm" disabled>View Facility Guidelines</button>
-          </div>
-        </article>
-
+        <section class="announcement-list">
+          <p class="empty-state">Loading announcements…</p>
+        </section>
       </div>
     </main>
 

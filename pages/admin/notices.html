@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -170,70 +168,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td>
-                    <span class="cell-title">End-Semester Final Examination Schedule</span>
-                    <span class="cell-subtext">Tentative timetable and registration guidelines published</span>
-                  </td>
-                  <td>All Students</td>
-                  <td><span class="badge badge-warning">Examinations</span></td>
-                  <td>Sep 25, 2026</td>
-                  <td><span class="badge badge-success"><span class="badge-dot-indicator"></span> Published</span></td>
-                  <td>
-                    <div class="row-tight">
-                      <button type="button" class="btn btn-outline btn-sm" disabled>Edit</button>
-                      <button type="button" class="btn btn-outline btn-sm" disabled>Archive</button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">Annual Hackathon 2026 Registrations</span>
-                    <span class="cell-subtext">Student innovation project submission timeline</span>
-                  </td>
-                  <td>Engineering &amp; CS</td>
-                  <td><span class="badge badge-purple">Event</span></td>
-                  <td>Sep 23, 2026</td>
-                  <td><span class="badge badge-success"><span class="badge-dot-indicator"></span> Published</span></td>
-                  <td>
-                    <div class="row-tight">
-                      <button type="button" class="btn btn-outline btn-sm" disabled>Edit</button>
-                      <button type="button" class="btn btn-outline btn-sm" disabled>Archive</button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">Mid-term Marks Upload Portal Window</span>
-                    <span class="cell-subtext">Internal mark submission reminder for instructors</span>
-                  </td>
-                  <td>Faculty Members</td>
-                  <td><span class="badge badge-primary">Administrative</span></td>
-                  <td>Sep 20, 2026</td>
-                  <td><span class="badge badge-success"><span class="badge-dot-indicator"></span> Published</span></td>
-                  <td>
-                    <div class="row-tight">
-                      <button type="button" class="btn btn-outline btn-sm" disabled>Edit</button>
-                      <button type="button" class="btn btn-outline btn-sm" disabled>Archive</button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">Campus WiFi Infrastructure Maintenance</span>
-                    <span class="cell-subtext">Scheduled network maintenance window across host blocks</span>
-                  </td>
-                  <td>All Campus</td>
-                  <td><span class="badge badge-secondary">IT Services</span></td>
-                  <td>Sep 18, 2026</td>
-                  <td><span class="badge badge-secondary">Archived</span></td>
-                  <td>
-                    <div class="row-tight">
-                      <button type="button" class="btn btn-text btn-sm" disabled>View Log</button>
-                    </div>
-                  </td>
+                  <td colspan="6" class="table-state">Loading notices…</td>
                 </tr>
               </tbody>
             </table>

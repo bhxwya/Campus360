@@ -106,9 +106,7 @@ def test_faculty_cannot_access_another_facultys_course(
     course_id = _create_course_in_db(faculty_a_profile_id)
 
     # Faculty B lists assignments for faculty A's course -> 403
-    response = faculty_client2.client.get(
-        f"/api/v1/faculty/assignments?course_id={course_id}"
-    )
+    response = faculty_client2.client.get(f"/api/v1/faculty/assignments?course_id={course_id}")
     assert response.status_code == 403, response.text
 
     # Faculty B creates an assignment on faculty A's course -> 403
@@ -137,9 +135,7 @@ def test_faculty_cannot_access_another_facultys_course(
     assignment_id = a_resp.json()["id"]
 
     # Faculty B reads faculty A's assignment -> 403
-    response = faculty_client2.client.get(
-        f"/api/v1/faculty/assignments/{assignment_id}"
-    )
+    response = faculty_client2.client.get(f"/api/v1/faculty/assignments/{assignment_id}")
     assert response.status_code == 403, response.text
 
     # Faculty B updates faculty A's assignment -> 403
@@ -158,9 +154,7 @@ def test_faculty_cannot_access_another_facultys_course(
     assert response.status_code == 403, response.text
 
 
-def test_faculty_can_crud_own_course_assignments(
-    faculty_client, db_cleaner
-) -> None:
+def test_faculty_can_crud_own_course_assignments(faculty_client, db_cleaner) -> None:
     """Faculty A can full CRUD assignments on courses they lead."""
     faculty_profile_id = _faculty_profile_id_from_user(faculty_client.user["id"])
     course_id = _create_course_in_db(faculty_profile_id)
@@ -182,16 +176,12 @@ def test_faculty_can_crud_own_course_assignments(
     assert assignment["course_id"] == course_id
 
     # List
-    response = faculty_client.client.get(
-        f"/api/v1/faculty/assignments?course_id={course_id}"
-    )
+    response = faculty_client.client.get(f"/api/v1/faculty/assignments?course_id={course_id}")
     assert response.status_code == 200, response.text
     assert len(response.json()) == 1
 
     # Get one
-    response = faculty_client.client.get(
-        f"/api/v1/faculty/assignments/{assignment['id']}"
-    )
+    response = faculty_client.client.get(f"/api/v1/faculty/assignments/{assignment['id']}")
     assert response.status_code == 200, response.text
     assert response.json()["id"] == assignment["id"]
 

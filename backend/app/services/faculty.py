@@ -22,16 +22,16 @@ router converts it into a response. The service layer stays free of
 ``HTTPException`` so it can be called from a CLI or a task runner.
 """
 
-from importlib import import_module
-
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.assignment import Assignment, AssignmentSubmission
 from app.models.attendance import AttendanceRecord
-from app.models.course import Course
+from app.models.course import Course, Enrollment
+from app.models.enums import EnrollmentStatus, UserRole
 from app.models.mark import Mark
+from app.models.timetable import TimetableEntry
 from app.models.user import StudentProfile, User
 from app.schemas.faculty import (
     AssignmentCreate,
@@ -89,12 +89,46 @@ def _faculty_profile_id(db: Session, user_id: int) -> int:
     user = db.get(User, user_id)
     if user is None:
         raise FacultyError(f"User {user_id} not found", 404)
-    if user.role.value != "faculty":
+    if user.role != UserRole.FACULTY:
         raise FacultyError(f"User {user_id} is not a faculty member", 403)
     profile = user.faculty_profile
     if profile is None:
         raise FacultyError(f"Faculty profile not found for user {user_id}", 404)
     return profile.id
+
+
+def _require_enrolled(
+    db: Session,
+    course_id: int,
+    student_ids: list[int],
+    allowed: tuple[EnrollmentStatus, ...],
+) -> None:
+    """Raise 422 unless every student has an enrollment in ``allowed`` states.
+
+    Course ownership alone is not enough: without this check a faculty member
+    could attach marks or attendance to ANY student in the institution.
+    """
+    enrolled = set(
+        db.scalars(
+            select(Enrollment.student_id).where(
+                Enrollment.course_id == course_id,
+                Enrollment.student_id.in_(student_ids),
+                Enrollment.status.in_(allowed),
+            )
+        )
+    )
+    missing = sorted(set(student_ids) - enrolled)
+    if missing:
+        raise FacultyError(
+            f"Student(s) {missing} are not enrolled in course {course_id}",
+            422,
+        )
+
+
+#: Marks may still be recorded once a course is completed; attendance only
+#: for students currently taking it. A dropped enrollment never qualifies.
+_MARKABLE_ENROLLMENTS = (EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED)
+_ATTENDING_ENROLLMENTS = (EnrollmentStatus.ACTIVE,)
 
 
 #: AssignmentUpdate fields backed by NOT NULL columns: an explicit JSON null
@@ -135,14 +169,8 @@ def _submission_response(submission: AssignmentSubmission) -> AssignmentSubmissi
         submitted_at=submission.submitted_at,
         content=submission.content,
         status=submission.status,
-        score=(
-            float(submission.score) if submission.score is not None else None
-        ),
-        max_score=(
-            float(submission.max_score)
-            if submission.max_score is not None
-            else None
-        ),
+        score=(float(submission.score) if submission.score is not None else None),
+        max_score=(float(submission.max_score) if submission.max_score is not None else None),
         feedback=submission.feedback,
         graded_by=submission.graded_by,
         graded_at=submission.graded_at,
@@ -409,8 +437,10 @@ def list_marks(
     if course_id is not None:
         _require_course_ownership(db, faculty_id, course_id)
 
-    base = db.query(Mark).join(Course, Mark.course_id == Course.id).where(
-        Course.lead_faculty_id == faculty_id
+    base = (
+        db.query(Mark)
+        .join(Course, Mark.course_id == Course.id)
+        .where(Course.lead_faculty_id == faculty_id)
     )
     if course_id is not None:
         base = base.where(Mark.course_id == course_id)
@@ -446,6 +476,7 @@ def create_mark(
     student = db.get(StudentProfile, payload.student_id)
     if student is None:
         raise FacultyError(f"Student {payload.student_id} not found", 404)
+    _require_enrolled(db, payload.course_id, [student.id], _MARKABLE_ENROLLMENTS)
 
     # Validate the score range BEFORE inserting: the schema bounds alone
     # cannot see score <= max_score, and the database CHECK must not be the
@@ -572,8 +603,6 @@ def create_attendance_batch(
     """
     faculty_id = _faculty_profile_id(db, faculty_user_id)
 
-    TimetableEntry = import_module("app.models.timetable").TimetableEntry
-
     # Verify the timetable entry exists and its course is led by this faculty.
     timetable_entry = db.get(TimetableEntry, payload.timetable_entry_id)
     if timetable_entry is None:
@@ -586,10 +615,7 @@ def create_attendance_batch(
     # Verify every student exists.
     student_ids = [r.student_id for r in payload.records]
     students = {
-        s.id: s
-        for s in db.query(StudentProfile).filter(
-            StudentProfile.id.in_(student_ids)
-        ).all()
+        s.id: s for s in db.query(StudentProfile).filter(StudentProfile.id.in_(student_ids)).all()
     }
     missing = set(student_ids) - set(students.keys())
     if missing:
@@ -597,6 +623,7 @@ def create_attendance_batch(
             f"Student(s) not found: {sorted(missing)}",
             404,
         )
+    _require_enrolled(db, timetable_entry.course_id, student_ids, _ATTENDING_ENROLLMENTS)
 
     # Pre-check for existing attendance records on this timetable entry + date.
     existing = (

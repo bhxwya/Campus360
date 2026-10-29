@@ -122,16 +122,73 @@ def test_report_summary_counts_students_and_courses(admin_client, db_cleaner) ->
 
 
 def test_report_summary_counts_deactivated_students_as_inactive(admin_client, db_cleaner) -> None:
-    """A deactivated student is still counted, but not as active."""
+    """A deactivated student is still counted, but not as active.
+
+    Deactivation flips ``users.is_active`` and keeps the profile row, so the
+    dashboard's active-student count drops by one while the total is
+    unchanged - matching the Student Directory's ``is_active`` definition.
+    """
+    before = admin_client.client.get("/api/v1/admin/reports/summary").json()
     student = _student(admin_client)
+    with_student = admin_client.client.get("/api/v1/admin/reports/summary").json()
+
     admin_client.client.delete(
         f"/api/v1/admin/students/{student['id']}", headers=admin_client.headers
     )
 
-    response = admin_client.client.get("/api/v1/admin/reports/summary")
-    assert response.status_code == 200, response.text
-    body = response.json()
-    assert body["total_students"] >= body["active_students"]
+    after = admin_client.client.get("/api/v1/admin/reports/summary").json()
+    assert with_student["active_students"] == before["active_students"] + 1
+    assert with_student["total_students"] == before["total_students"] + 1
+    assert after["active_students"] == before["active_students"]
+    assert after["total_students"] == before["total_students"]
+
+
+def test_report_summary_active_students_match_directory_active_filter(
+    admin_client, db_cleaner
+) -> None:
+    """The dashboard active-student count must equal the directory's active count.
+
+    Both endpoints define an active student as a profile whose account
+    (``users.is_active``) is true - one definition, one number - and both
+    count every row (the directory ``total`` is not truncated by pagination).
+    """
+    before = admin_client.client.get("/api/v1/admin/reports/summary").json()
+    total_before, active_before = before["total_students"], before["active_students"]
+
+    created = [
+        _student(
+            admin_client,
+            student_code="ST-REP-001",
+            email="rep001@campus360.example.com",
+        ),
+        _student(
+            admin_client,
+            student_code="ST-REP-002",
+            email="rep002@campus360.example.com",
+        ),
+        _student(
+            admin_client,
+            student_code="ST-REP-003",
+            email="rep003@campus360.example.com",
+        ),
+    ]
+    admin_client.client.delete(
+        f"/api/v1/admin/students/{created[2]['id']}", headers=admin_client.headers
+    )
+
+    after = admin_client.client.get("/api/v1/admin/reports/summary").json()
+    active_dir = admin_client.client.get(
+        "/api/v1/admin/students?is_active=true", headers=admin_client.headers
+    ).json()
+    inactive_dir = admin_client.client.get(
+        "/api/v1/admin/students?is_active=false", headers=admin_client.headers
+    ).json()
+
+    assert after["total_students"] == total_before + 3
+    assert after["active_students"] == active_before + 2
+    assert active_dir["total"] == after["active_students"]
+    assert inactive_dir["total"] == after["total_students"] - after["active_students"]
+    assert after["total_students"] == after["active_students"] + inactive_dir["total"]
 
 
 def test_report_summary_returns_null_for_unsupported_metrics(admin_client, db_cleaner) -> None:

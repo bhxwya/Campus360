@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -78,7 +76,7 @@
         <a href="assignments.html" class="nav-link">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
           <span>Assignments</span>
-          <span class="nav-counter">4</span>
+          <span class="nav-counter">—</span>
         </a>
 
         <a href="marks-results.html" class="nav-link">
@@ -102,8 +100,8 @@
         <div class="user-snippet">
           <div class="user-avatar">S</div>
           <div class="user-info">
-            <span class="user-name">Alex Johnson</span>
-            <span class="user-role-label">B.Tech CS &bull; Sem 5</span>
+            <span class="user-name">—</span>
+            <span class="user-role-label">—</span>
             <a href="academic-records.html" class="user-profile-link">View profile</a>
           </div>
         </div>
@@ -136,7 +134,7 @@
         <div class="topbar-actions">
           <div class="topbar-context-pill">
             <span class="pulse-indicator"></span>
-            <span>Semester 5 &bull; 85.4% Aggregate</span>
+            <span data-attendance-context>Attendance summary</span>
           </div>
         </div>
       </header>
@@ -150,21 +148,17 @@
              ============================================================ -->
         <section class="card">
           <div class="attendance-meter-card">
-            <div class="radial-percentage" aria-label="85% Attendance">
+            <div class="radial-percentage" aria-label="Attendance percentage">
               <div class="radial-percentage-inner">
-                <strong>85.4%</strong>
+                <strong>—</strong>
                 <small>Average</small>
               </div>
             </div>
 
             <div class="fill">
-              <span class="badge badge-success attendance-eligibility">
-                <span class="badge-dot-indicator"></span> Eligible for Final Examinations
-              </span>
-              <h2 class="attendance-status-title">Attendance Status: Good Standing</h2>
-              <p class="attendance-status-note">
-                You have attended <strong>182</strong> out of <strong>213</strong> conducted lectures. You must maintain at least <strong>75%</strong> attendance in every enrolled course to be clear for mid-term and semester examinations.
-              </p>
+              <span class="badge badge-secondary attendance-eligibility">Attendance summary</span>
+              <h2 class="attendance-status-title">Attendance status</h2>
+              <p class="attendance-status-note">Loading your attendance record…</p>
             </div>
           </div>
         </section>
@@ -177,38 +171,38 @@
         <section class="stats-grid">
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Total Conducted</span>
+              <span class="stat-label">Total sessions</span>
               <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="17" rx="2.5"/><path d="M8 3v3.5M16 3v3.5M3 10h18"/></svg></span>
             </div>
-            <div class="stat-value">213</div>
-            <div class="stat-meta"><span>Current semester total</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Recorded across enrolled courses</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Present Classes</span>
+              <span class="stat-label">Present</span>
               <span class="stat-icon emerald"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>
             </div>
-            <div class="stat-value">182</div>
-            <div class="stat-meta"><span class="stat-trend-up">85.4% Present</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Marked present</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Absent Classes</span>
+              <span class="stat-label">Late</span>
               <span class="stat-icon amber"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></span>
             </div>
-            <div class="stat-value">31</div>
-            <div class="stat-meta"><span>14.6% Missed</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Marked late</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Allowed Leaves Left</span>
+              <span class="stat-label">Overall attendance</span>
               <span class="stat-icon violet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5.5l-8-3-8 3V12c0 6 8 10 8 10z"/></svg></span>
             </div>
-            <div class="stat-value">12</div>
-            <div class="stat-meta"><span>Before falling below 75%</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Based on recorded sessions</div>
           </div>
         </section>
 
@@ -224,7 +218,7 @@
               <span class="card-subtitle">Course Analysis</span>
               <h2 class="card-title">Subject-Wise Attendance Breakdown</h2>
             </div>
-            <span class="badge badge-secondary">Fall 2026</span>
+            <span class="badge badge-secondary">Live from the API</span>
           </div>
 
           <div class="table-responsive">
@@ -240,83 +234,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td>
-                    <span class="cell-title">Advanced Data Structures</span>
-                    <span class="cell-subtext">CS-301 &bull; 4 Credits</span>
-                  </td>
-                  <td>Prof. Alan Turing</td>
-                  <td><strong>38</strong> / 42</td>
-                  <td>
-                    <div class="row-center w-meter">
-                      <div class="progress-track"><div class="progress-fill" style="width: 90.4%;"></div></div>
-                      <span class="meter-value">90.4%</span>
-                    </div>
-                  </td>
-                  <td><span class="badge badge-success">Good</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">Database Management Systems</span>
-                    <span class="cell-subtext">CS-302 &bull; 4 Credits</span>
-                  </td>
-                  <td>Dr. Grace Hopper</td>
-                  <td><strong>35</strong> / 40</td>
-                  <td>
-                    <div class="row-center w-meter">
-                      <div class="progress-track"><div class="progress-fill" style="width: 87.5%;"></div></div>
-                      <span class="meter-value">87.5%</span>
-                    </div>
-                  </td>
-                  <td><span class="badge badge-success">Good</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">Computer Networks</span>
-                    <span class="cell-subtext">CS-303 &bull; 3 Credits</span>
-                  </td>
-                  <td>Prof. Vint Cerf</td>
-                  <td><strong>30</strong> / 38</td>
-                  <td>
-                    <div class="row-center w-meter">
-                      <div class="progress-track"><div class="progress-fill amber" style="width: 78.9%;"></div></div>
-                      <span class="meter-value">78.9%</span>
-                    </div>
-                  </td>
-                  <td><span class="badge badge-warning">Watch</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">Theory of Computation</span>
-                    <span class="cell-subtext">CS-304 &bull; 3 Credits</span>
-                  </td>
-                  <td>Dr. Claude Shannon</td>
-                  <td><strong>36</strong> / 41</td>
-                  <td>
-                    <div class="row-center w-meter">
-                      <div class="progress-track"><div class="progress-fill" style="width: 87.8%;"></div></div>
-                      <span class="meter-value">87.8%</span>
-                    </div>
-                  </td>
-                  <td><span class="badge badge-success">Good</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">Software Engineering</span>
-                    <span class="cell-subtext">CS-305 &bull; 3 Credits</span>
-                  </td>
-                  <td>Prof. Margaret Hamilton</td>
-                  <td><strong>43</strong> / 52</td>
-                  <td>
-                    <div class="row-center w-meter">
-                      <div class="progress-track"><div class="progress-fill" style="width: 82.6%;"></div></div>
-                      <span class="meter-value">82.6%</span>
-                    </div>
-                  </td>
-                  <td><span class="badge badge-success">Good</span></td>
+                  <td colspan="5" class="table-state">Loading your attendance data</td>
                 </tr>
               </tbody>
             </table>

@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -73,7 +71,7 @@
         <a href="assignments.html" class="nav-link">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
           <span>Assignments</span>
-          <span class="nav-counter">18</span>
+          <span class="nav-counter">—</span>
         </a>
 
         <a href="marks.html" class="nav-link active">
@@ -92,8 +90,8 @@
         <div class="user-snippet">
           <div class="user-avatar faculty">F</div>
           <div class="user-info">
-            <span class="user-name">Dr. Alan Turing</span>
-            <span class="user-role-label">Dept. of Computer Science</span>
+            <span class="user-name">—</span>
+            <span class="user-role-label">—</span>
             <a href="dashboard.html" class="user-profile-link">View profile</a>
           </div>
         </div>
@@ -145,54 +143,46 @@
         <!-- Course Selector Bar -->
         <section class="course-selector-bar">
           <div class="selector-controls">
-            <div class="form-group">
-              <label class="form-label">Subject</label>
-              <select class="form-control" aria-label="Select subject" disabled>
-                <option>CS-301: Advanced Data Structures</option>
-                <option>CS-504: Algorithms Problem Solving</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Assessment Type</label>
-              <select class="form-control" aria-label="Select assessment" disabled>
-                <option>Internal Assessment 1 (Max: 30)</option>
-                <option>Mid-Term Exam (Max: 50)</option>
-                <option>Lab Evaluation (Max: 20)</option>
-              </select>
-            </div>
+            <p class="empty-state">Loading the marks recorded for the courses you lead…</p>
           </div>
-
-          <button type="button" class="btn btn-outline btn-sm" disabled>Download Spreadsheet</button>
         </section>
 
         <!-- Evaluation Overview Stats -->
         <section class="stats-grid">
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Class Average</span>
+              <span class="stat-label">Recorded marks</span>
               <span class="stat-icon emerald"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span>
             </div>
-            <div class="stat-value">25.6 / 30</div>
-            <div class="stat-meta"><span class="stat-trend-up">85.3% Mean Score</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Marks recorded for your courses</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Highest Score</span>
+              <span class="stat-label">Average percentage</span>
               <span class="stat-icon violet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.6 14.3 7 22l5-2.6L17 22l-1.6-7.7"/></svg></span>
             </div>
-            <div class="stat-value">30 / 30</div>
-            <div class="stat-meta"><span>3 students scored perfect</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Across the recorded marks</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Pass Percentage</span>
+              <span class="stat-label">Highest percentage</span>
+              <span class="stat-icon violet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.6 14.3 7 22l5-2.6L17 22l-1.6-7.7"/></svg></span>
+            </div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Best recorded mark</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Passing marks</span>
               <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.6"/><circle cx="17" cy="17" r="2.6"/></svg></span>
             </div>
-            <div class="stat-value">96.8%</div>
-            <div class="stat-meta"><span>Threshold: 12 / 30</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">At least 40%</div>
           </div>
         </section>
 
@@ -201,9 +191,9 @@
           <div class="card-header">
             <div class="card-header-titles">
               <span class="card-subtitle">Grade Registry</span>
-              <h2 class="card-title">Internal Assessment 1 Marks Matrix</h2>
+              <h2 class="card-title">Marks Matrix</h2>
             </div>
-            <span class="badge badge-success"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> 64 / 64 Entered</span>
+            <span class="badge badge-secondary">Live from the faculty API</span>
           </div>
 
           <div class="table-responsive">
@@ -221,55 +211,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>2024-CS-0492</strong></td>
-                  <td>
-                    <span class="cell-title">Alex Johnson</span>
-                    <span class="cell-subtext">Sec A &bull; CS-301</span>
-                  </td>
-                  <td><strong>19</strong> / 20</td>
-                  <td><strong>09</strong> / 10</td>
-                  <td><strong>28</strong> / 30 (93%)</td>
-                  <td><span class="badge badge-success">A+</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Edit</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>2024-CS-0493</strong></td>
-                  <td>
-                    <span class="cell-title">Maya Patel</span>
-                    <span class="cell-subtext">Sec A &bull; CS-301</span>
-                  </td>
-                  <td><strong>20</strong> / 20</td>
-                  <td><strong>10</strong> / 10</td>
-                  <td><strong>30</strong> / 30 (100%)</td>
-                  <td><span class="badge badge-success">O</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Edit</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>2024-CS-0494</strong></td>
-                  <td>
-                    <span class="cell-title">Liam O'Connor</span>
-                    <span class="cell-subtext">Sec A &bull; CS-301</span>
-                  </td>
-                  <td><strong>14</strong> / 20</td>
-                  <td><strong>07</strong> / 10</td>
-                  <td><strong>21</strong> / 30 (70%)</td>
-                  <td><span class="badge badge-primary">B</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Edit</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>2024-CS-0495</strong></td>
-                  <td>
-                    <span class="cell-title">Sophia Zhang</span>
-                    <span class="cell-subtext">Sec A &bull; CS-301</span>
-                  </td>
-                  <td><strong>18</strong> / 20</td>
-                  <td><strong>09</strong> / 10</td>
-                  <td><strong>27</strong> / 30 (90%)</td>
-                  <td><span class="badge badge-success">A+</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Edit</button></td>
+                  <td colspan="7" class="table-state">Loading recorded marks…</td>
                 </tr>
               </tbody>
             </table>

@@ -181,5 +181,3 @@ def require_roles(*roles: UserRole):
 require_admin = require_roles(UserRole.ADMIN)
 require_faculty = require_roles(UserRole.FACULTY)
 require_student = require_roles(UserRole.STUDENT)
-#: Admin OR faculty (any staff role that teaches/manages).
-require_staff = require_roles(UserRole.ADMIN, UserRole.FACULTY)

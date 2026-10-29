@@ -53,6 +53,7 @@ def compute_grade(percentage: float) -> tuple[str, float]:
 
 # --- Assignments --------------------------------------------------------------
 
+
 class AssignmentCreate(BaseModel):
     """Body of ``POST /api/v1/faculty/assignments``."""
 
@@ -101,6 +102,7 @@ class AssignmentResponse(BaseModel):
 
 
 # --- Submissions --------------------------------------------------------------
+
 
 class AssignmentSubmissionResponse(BaseModel):
     """One submission with student details and (optional) grading fields."""
@@ -151,6 +153,7 @@ class SubmissionGrade(BaseModel):
 
 # --- Marks --------------------------------------------------------------------
 
+
 class MarkCreate(BaseModel):
     """Body of ``POST /api/v1/faculty/marks``."""
 
@@ -194,6 +197,7 @@ class MarkResponse(BaseModel):
 
 # --- Attendance (atomic batch) ------------------------------------------------
 
+
 class AttendanceBatchItem(BaseModel):
     """One student's attendance status within a batch."""
 
@@ -214,24 +218,18 @@ class AttendanceBatchRequest(BaseModel):
     attendance_date: date
     records: list[AttendanceBatchItem] = Field(min_length=1, max_length=200)
 
+    @field_validator("records")
+    @classmethod
+    def _one_record_per_student(cls, records: list[AttendanceBatchItem]):
+        """A student appears at most once per batch (one status per session)."""
+        ids = [record.student_id for record in records]
+        if len(ids) != len(set(ids)):
+            raise ValueError("each student may appear only once in an attendance batch")
+        return records
+
 
 class AttendanceBatchResponse(BaseModel):
     """Result of an atomic attendance batch write."""
 
     marked_count: int
     skipped_duplicate_student_ids: list[int] = Field(default_factory=list)
-
-
-class AttendanceRecordResponse(BaseModel):
-    """One attendance record as returned to the faculty UI."""
-
-    id: int
-    student_id: int
-    student_code: str
-    student_name: str
-    status: AttendanceStatus
-    attendance_date: date
-    marked_by: int | None
-    created_at: datetime
-
-    model_config = {"from_attributes": True}

@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -73,7 +71,7 @@
         <a href="assignments.html" class="nav-link">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
           <span>Assignments</span>
-          <span class="nav-counter">18</span>
+          <span class="nav-counter">—</span>
         </a>
 
         <a href="marks.html" class="nav-link">
@@ -92,8 +90,8 @@
         <div class="user-snippet">
           <div class="user-avatar faculty">F</div>
           <div class="user-info">
-            <span class="user-name">Dr. Alan Turing</span>
-            <span class="user-role-label">Dept. of Computer Science</span>
+            <span class="user-name">—</span>
+            <span class="user-role-label">—</span>
             <a href="dashboard.html" class="user-profile-link">View profile</a>
           </div>
         </div>
@@ -133,7 +131,7 @@
         </div>
 
         <div class="topbar-actions">
-          <button type="button" class="btn btn-primary btn-sm" disabled>
+          <button type="button" class="btn btn-primary btn-sm" disabled title="The faculty API exposes no announcement endpoint.">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             <span>Post Class Announcement</span>
           </button>
@@ -151,13 +149,11 @@
              exist yet. Static sample data until the FastAPI endpoint lands.
              ============================================================ -->
         <section class="course-context-strip">
-          <span class="course-code-chip violet">CS-504</span>
           <div class="course-context-body fill">
-            <span class="course-context-label">Assigned Course</span>
-            <span class="course-context-title">Algorithms &amp; Problem Solving</span>
-            <span class="course-context-meta">Section B &bull; Semester 7 &bull; 42 students enrolled</span>
+            <span class="course-context-label">Notice board</span>
+            <span class="course-context-title">Announcements for faculty</span>
+            <span class="course-context-meta">The faculty API does not expose announcements, so no memo is listed here.</span>
           </div>
-          <span class="badge badge-secondary">Fall 2026</span>
         </section>
 
         <!-- Staff Bulletin Table & Feed -->
@@ -167,7 +163,7 @@
               <span class="card-subtitle">Active Broadcasts</span>
               <h2 class="card-title">Announcements &amp; Department Memos</h2>
             </div>
-            <span class="badge badge-primary">Department of CS</span>
+            <span class="badge badge-secondary">Unavailable with the current API</span>
           </div>
 
           <div class="table-responsive">
@@ -184,39 +180,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td>
-                    <span class="cell-title">Mid-term Marks Entry Deadline</span>
-                    <span class="cell-subtext">All faculty must upload continuous evaluation marks before Oct 12</span>
-                  </td>
-                  <td>Faculty Members</td>
-                  <td><span class="badge badge-warning">Examination</span></td>
-                  <td>Sep 24, 2026</td>
-                  <td><span class="badge badge-success">Active</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>View Memo</button></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">CS-301: Extra Lab Session on B-Trees</span>
-                    <span class="cell-subtext">Optional weekend support workshop in Computing Lab 4</span>
-                  </td>
-                  <td>CS-301 Students</td>
-                  <td><span class="badge badge-primary">Course Notice</span></td>
-                  <td>Sep 23, 2026</td>
-                  <td><span class="badge badge-success">Active</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Edit</button></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <span class="cell-title">Annual Faculty Research Grants Submission</span>
-                    <span class="cell-subtext">Proposals for interdisciplinary computing projects due next month</span>
-                  </td>
-                  <td>All Faculty</td>
-                  <td><span class="badge badge-purple">Research</span></td>
-                  <td>Sep 15, 2026</td>
-                  <td><span class="badge badge-secondary">Archived</span></td>
-                  <td><button type="button" class="btn btn-text btn-sm" disabled>Details</button></td>
+                  <td colspan="6" class="table-state">Announcements are unavailable with the current faculty API.</td>
                 </tr>
               </tbody>
             </table>

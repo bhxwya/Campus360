@@ -9,10 +9,11 @@
 
       1. Navbar scroll state        -> landing page header compaction
       2. Same-page anchor scrolling  -> landing page in-page navigation
-      3. Table search filtering     -> opt-in via [data-table-search]
-      4. Filter tab switching       -> opt-in via a .filter-bar container
+      3. Application shell polish    -> skip link, aria-current, notifier
 
-   Authentication / role routing lives in js/auth.js.
+   Authentication / role routing lives in js/auth.js. Data binding lives in
+   js/portal.js, which owns the server-side table search and every page's
+   real content (so this file does NOT filter table rows a second time).
 
    EVERYTHING in this file is safe to load on any page: each behaviour first
    looks for its own elements and returns silently when they are absent, so
@@ -47,6 +48,22 @@ function prefersReducedMotion() {
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 }
+
+/* Sidebar preference. The value is read in the <head> (below) so the desktop
+   rail is already at its saved width on first paint, rather than expanding
+   after the DOM is ready and shifting the page. */
+const CAMPUS360_SIDEBAR_STORAGE_KEY = "campus360.sidebarCollapsed";
+
+(function restoreSidebarPreference() {
+  try {
+    if (window.localStorage.getItem(CAMPUS360_SIDEBAR_STORAGE_KEY) === "true") {
+      document.documentElement.classList.add("sidebar-collapsed");
+    }
+  } catch (error) {
+    /* Storage can be unavailable (private mode / blocked cookies). The
+       expanded rail is a safe default and everything still works. */
+  }
+})();
 
 
 /* ==========================================================================
@@ -135,79 +152,349 @@ onReady(() => {
 
 
 /* ==========================================================================
-   3. CLIENT-SIDE TABLE SEARCH FILTERING
+   3. APPLICATION SHELL POLISH
    --------------------------------------------------------------------------
-   Opt-in: mark a text input with data-table-search and typing hides the rows
-   whose text does not match (case-insensitive substring match). Used today on
-   Admin > Students.
+   The dashboard shell is repeated in every page's markup, so the details that
+   make it accessible are applied here once rather than edited into eighteen
+   files:
 
-   SCOPING - the important detail
-   The search box and the table it controls are NOT always siblings. On
-   pages/admin/students.html the input sits in its own "Filter and Search Bar"
-   <section class="card"> while the table lives in a *separate* card below.
-   Scoping to input.closest(".card") therefore finds no rows and the filter
-   silently does nothing.
+     - a "Skip to main content" link that appears on keyboard focus,
+     - id + tabindex on <main>, so the skip link can move focus there,
+     - aria-current="page" on the active sidebar link (the visual .active
+       class already exists; screen readers need the semantic equivalent),
+     - a label on the primary <nav> and the sidebar landmark.
 
-   So the scope is resolved by asking the DOM, not by assuming structure:
-     1. start at the input's card,
-     2. if that card has no rows, widen to the surrounding .content-wrapper
-        (or the document as a last resort),
-     3. only bind the listener once rows are actually found.
+   Each step checks for its element first, so the landing and login pages
+   (which have no app shell) are untouched.
    ========================================================================== */
 
 onReady(() => {
-  document.querySelectorAll("[data-table-search]").forEach((input) => {
-    const card = input.closest(".card");
-    const scope = card && card.querySelector("tbody tr")
-      ? card
-      : input.closest(".content-wrapper") || document;
+  const main = document.querySelector("main.app-main");
+  const layout = document.querySelector(".app-layout");
 
-    const rows = scope.querySelectorAll("tbody tr");
+  if (main && layout) {
+    if (!main.id) main.id = "main-content";
+    /* tabindex="-1" lets the skip link focus the region without adding it to
+       the tab order. */
+    if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
 
-    /* Nothing to filter on this page - stay quiet. */
-    if (!rows.length) return;
-
-    input.addEventListener("input", () => {
-      const query = input.value.trim().toLowerCase();
-
-      rows.forEach((row) => {
-        const matches = row.textContent.toLowerCase().includes(query);
-        row.hidden = !matches;
+    if (!document.querySelector(".skip-link")) {
+      const skipLink = document.createElement("a");
+      skipLink.className = "skip-link";
+      skipLink.href = "#main-content";
+      skipLink.textContent = "Skip to main content";
+      /* Fragment navigation scrolls to <main>; focusing it as well moves the
+         keyboard cursor, which some browsers do not do for the target of a
+         fragment link. preventScroll keeps the browser's own scroll. */
+      skipLink.addEventListener("click", () => {
+        main.focus({ preventScroll: true });
       });
-    });
+      document.body.insertBefore(skipLink, document.body.firstChild);
+    }
+  }
+
+  const sidebar = document.querySelector(".app-sidebar");
+  if (sidebar && !sidebar.hasAttribute("aria-label")) {
+    sidebar.setAttribute("aria-label", "Campus360 workspace");
+  }
+
+  const nav = document.querySelector(".sidebar-nav");
+  if (nav && !nav.hasAttribute("aria-label")) {
+    nav.setAttribute("aria-label", "Primary navigation");
+  }
+
+  document.querySelectorAll(".nav-link.active").forEach((link) => {
+    link.setAttribute("aria-current", "page");
   });
 });
 
 
 /* ==========================================================================
-   4. FILTER TAB SWITCHING
+   4. COLLAPSIBLE SIDEBAR + MOBILE DRAWER
    --------------------------------------------------------------------------
-   The dashboard topbars already ship segmented controls such as
-   <span class="filter-tab active">All Notices</span>. They are plain <span>s
-   (no buttons, no links), so without a little JavaScript the "active" pill can
-   never move.
+   All three portals render the same .app-layout / .app-sidebar shell, so the
+   controls and state live here once rather than in eighteen page files.
 
-   This is a visual-only demo control: it moves the .active highlight inside
-   its own .filter-bar. It does NOT filter, re-render, or fetch anything -
-   the real filtering arrives with the backend. An event listener is attached
-   only when a .filter-bar with at least two tabs is present.
+     Desktop (> 768px)
+       - the topbar toggle collapses the rail to an icon strip
+       - the preference is stored in localStorage and re-applied in <head>
+       - the main column stays in normal flow, so it reflows instead of being
+         covered by the rail
+
+     Mobile (<= 768px)
+       - the same toggle opens a drawer; a close button sits inside it
+       - an overlay blocks the obscured page, and the main region is inert
+       - Escape, the overlay, the close button and following a link all close
+         it; focus returns to the toggle unless the visitor is navigating
+
+   Every lookup is guarded, so pages without an application shell are still a
+   clean no-op.
    ========================================================================== */
 
 onReady(() => {
-  document.querySelectorAll(".filter-bar").forEach((bar) => {
-    const tabs = bar.querySelectorAll(".filter-tab");
+  const layout = document.querySelector(".app-layout");
+  const sidebar = document.querySelector(".app-sidebar");
+  const main = document.querySelector("main.app-main");
+  const topbar = main && main.querySelector(".app-topbar");
 
-    if (tabs.length < 2) return;
+  if (!layout || !sidebar || !main || !topbar) return;
 
-    /* A single click on the bar (not on a nested icon/span) picks the tab. */
-    bar.addEventListener("click", (event) => {
-      const clicked = event.target.closest(".filter-tab");
+  const root = document.documentElement;
+  const mobileQuery = window.matchMedia("(max-width: 768px)");
+  let drawerOpen = false;
+  let focusBeforeDrawer = null;
 
-      /* Clicked outside a tab, or on the tab that is already active. */
-      if (!clicked || !bar.contains(clicked)) return;
+  if (!sidebar.id) sidebar.id = "app-sidebar";
 
-      tabs.forEach((tab) => tab.classList.remove("active"));
-      clicked.classList.add("active");
-    });
+  /* --- Controls --------------------------------------------------------- */
+
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "sidebar-toggle";
+  toggle.setAttribute("aria-controls", sidebar.id);
+  toggle.dataset.sidebarToggle = "";
+  toggle.innerHTML =
+    '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 4v16"/><path d="m15.5 9-3 3 3 3"/></svg>';
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "sidebar-drawer-close";
+  closeButton.setAttribute("aria-label", "Close navigation menu");
+  closeButton.innerHTML =
+    '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
+
+  const overlay = document.createElement("div");
+  overlay.className = "sidebar-overlay";
+  overlay.setAttribute("aria-hidden", "true");
+
+  topbar.insertBefore(toggle, topbar.firstElementChild);
+  sidebar.insertBefore(closeButton, sidebar.firstChild);
+  document.body.append(overlay);
+
+  /* --- Labels ----------------------------------------------------------- */
+
+  /* CSS visually removes these labels in the collapsed rail. Copying them to
+     title/aria-label keeps every icon identifiable by pointer and screen
+     reader while the text is no longer visible. */
+  sidebar.querySelectorAll(".nav-link").forEach((link) => {
+    const label = Array.from(link.children).find(
+      (child) => child.matches("span:not(.nav-icon):not(.nav-counter)")
+    );
+    const name = label ? label.textContent.trim() : "";
+    if (!name) return;
+    link.dataset.sidebarLabel = name;
+    link.setAttribute("title", name);
+    link.setAttribute("aria-label", name);
   });
+
+  const profileLink = sidebar.querySelector(".user-profile-link");
+  if (profileLink) {
+    profileLink.setAttribute("title", "View profile");
+    profileLink.setAttribute("aria-label", "View profile");
+  }
+
+  const logoutLink = sidebar.querySelector(".logout-link");
+  if (logoutLink) {
+    logoutLink.setAttribute("title", "Sign Out");
+    logoutLink.setAttribute("aria-label", "Sign Out");
+  }
+
+  /* --- State ------------------------------------------------------------ */
+
+  const isCollapsed = () => root.classList.contains("sidebar-collapsed");
+
+  const setInert = (element, value) => {
+    if ("inert" in element) {
+      element.inert = value;
+    } else if (value) {
+      element.setAttribute("aria-hidden", "true");
+    } else {
+      element.removeAttribute("aria-hidden");
+    }
+  };
+
+  const updateToggle = () => {
+    const mobile = mobileQuery.matches;
+    const expanded = mobile ? drawerOpen : !isCollapsed();
+    const label = mobile
+      ? drawerOpen
+        ? "Close navigation menu"
+        : "Open navigation menu"
+      : isCollapsed()
+        ? "Expand sidebar"
+        : "Collapse sidebar";
+
+    toggle.setAttribute("aria-expanded", String(expanded));
+    toggle.setAttribute("aria-label", label);
+    toggle.setAttribute("title", label);
+  };
+
+  const persistCollapsed = (collapsed) => {
+    try {
+      window.localStorage.setItem(CAMPUS360_SIDEBAR_STORAGE_KEY, String(collapsed));
+    } catch (error) {
+      /* A failed write must not stop the in-page toggle from working. */
+    }
+  };
+
+  const setCollapsed = (collapsed) => {
+    root.classList.toggle("sidebar-collapsed", collapsed);
+    persistCollapsed(collapsed);
+    updateToggle();
+  };
+
+  const openDrawer = () => {
+    if (!mobileQuery.matches || drawerOpen) return;
+
+    focusBeforeDrawer =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    drawerOpen = true;
+    root.classList.add("sidebar-drawer-open");
+    setInert(sidebar, false);
+    setInert(main, true);
+    updateToggle();
+
+    /* Move the keyboard cursor into the drawer after the open state has been
+       applied, so the close button is visible before it receives focus. */
+    window.requestAnimationFrame(() => closeButton.focus());
+  };
+
+  const closeDrawer = ({ restoreFocus = true } = {}) => {
+    if (!drawerOpen) return;
+
+    drawerOpen = false;
+    root.classList.remove("sidebar-drawer-open");
+    setInert(sidebar, true);
+    setInert(main, false);
+    updateToggle();
+
+    if (restoreFocus) {
+      const target = focusBeforeDrawer && document.contains(focusBeforeDrawer)
+        ? focusBeforeDrawer
+        : toggle;
+      target.focus();
+    }
+    focusBeforeDrawer = null;
+  };
+
+  const applyViewportState = () => {
+    if (mobileQuery.matches) {
+      drawerOpen = false;
+      root.classList.remove("sidebar-drawer-open");
+      if (sidebar.contains(document.activeElement)) toggle.focus();
+      setInert(sidebar, true);
+      setInert(main, false);
+    } else {
+      drawerOpen = false;
+      root.classList.remove("sidebar-drawer-open");
+      setInert(sidebar, false);
+      setInert(main, false);
+      focusBeforeDrawer = null;
+    }
+    updateToggle();
+  };
+
+  /* --- Events ----------------------------------------------------------- */
+
+  toggle.addEventListener("click", () => {
+    if (mobileQuery.matches) {
+      if (drawerOpen) {
+        closeDrawer();
+      } else {
+        openDrawer();
+      }
+      return;
+    }
+    setCollapsed(!isCollapsed());
+  });
+
+  closeButton.addEventListener("click", () => closeDrawer());
+  overlay.addEventListener("click", () => closeDrawer());
+
+  sidebar.addEventListener("click", (event) => {
+    if (!drawerOpen) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (event.target.closest("a")) closeDrawer({ restoreFocus: false });
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !drawerOpen) return;
+    event.preventDefault();
+    closeDrawer();
+  });
+
+  /* Keep Tab inside the open drawer. The main region is inert too, but the
+     skip link and other body-level controls should not receive focus while
+     the drawer is acting as a modal surface. */
+  sidebar.addEventListener("keydown", (event) => {
+    if (event.key !== "Tab" || !drawerOpen) return;
+
+    const focusable = Array.from(
+      sidebar.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')
+    ).filter((element) => element.getClientRects().length > 0);
+    if (!focusable.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+
+  const handleViewportChange = () => applyViewportState();
+  if (typeof mobileQuery.addEventListener === "function") {
+    mobileQuery.addEventListener("change", handleViewportChange);
+  } else {
+    mobileQuery.addListener(handleViewportChange);
+  }
+
+  applyViewportState();
 });
+
+
+/* ==========================================================================
+   5. NOTIFIER (corner toast)
+   --------------------------------------------------------------------------
+   Small, non-blocking feedback for actions whose result appears away from the
+   control that started them (a saved grade, a revoked session). It replaces
+   window.alert(), which blocked the page and could not be styled.
+
+   Exposed as window.Campus360Notify so js/auth.js and js/portal.js can use it;
+   each toast removes itself after a few seconds and the host is aria-live, so
+   assistive technology announces the message once.
+   ========================================================================== */
+
+(function () {
+  let host = null;
+
+  function notify(message, kind) {
+    if (!message) return;
+
+    if (!host) {
+      host = document.createElement("div");
+      host.className = "app-toast-host";
+      host.setAttribute("aria-live", "polite");
+      host.setAttribute("aria-atomic", "false");
+      document.body.appendChild(host);
+    }
+
+    const toast = document.createElement("p");
+    toast.className = "app-toast";
+    toast.dataset.kind = kind === "error" ? "error" : kind === "success" ? "success" : "info";
+    /* Errors are assertive; everything else is polite. */
+    toast.setAttribute("role", toast.dataset.kind === "error" ? "alert" : "status");
+    toast.textContent = message;
+    host.appendChild(toast);
+
+    window.setTimeout(() => {
+      toast.remove();
+    }, 6000);
+  }
+
+  window.Campus360Notify = notify;
+})();

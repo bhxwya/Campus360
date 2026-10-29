@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -78,7 +76,7 @@
         <a href="assignments.html" class="nav-link">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
           <span>Assignments</span>
-          <span class="nav-counter">4</span>
+          <span class="nav-counter">—</span>
         </a>
 
         <a href="marks-results.html" class="nav-link">
@@ -102,8 +100,8 @@
         <div class="user-snippet">
           <div class="user-avatar">S</div>
           <div class="user-info">
-            <span class="user-name">Alex Johnson</span>
-            <span class="user-role-label">B.Tech CS &bull; Sem 5</span>
+            <span class="user-name">—</span>
+            <span class="user-role-label">—</span>
             <a href="academic-records.html" class="user-profile-link">View profile</a>
           </div>
         </div>
@@ -133,17 +131,6 @@
           <h1 class="topbar-title">Weekly Schedule</h1>
         </div>
 
-        <div class="topbar-actions">
-          <div class="filter-bar">
-            <span class="filter-tab active">Week View</span>
-            <span class="filter-tab">Day View</span>
-          </div>
-
-          <div class="topbar-context-pill">
-            <span class="pulse-indicator"></span>
-            <span>Room Allocation: Building B</span>
-          </div>
-        </div>
       </header>
 
       <div class="content-wrapper">
@@ -153,13 +140,11 @@
           <div class="card-header card-header-wrap">
             <div class="card-header-titles">
               <span class="card-subtitle">Active Schedule</span>
-              <h2 class="card-title">Computer Science &bull; Semester 5 (Section A)</h2>
+              <h2 class="card-title">Your weekly timetable</h2>
             </div>
             
             <div class="row-center-sm">
-              <span class="badge badge-primary">Lectures: 18 hrs/wk</span>
-              <span class="badge badge-purple">Practicals: 8 hrs/wk</span>
-              <span class="badge badge-secondary">Tutorials: 4 hrs/wk</span>
+              <span class="badge badge-secondary">Loading sessions…</span>
             </div>
           </div>
         </section>
@@ -171,218 +156,7 @@
              reads as a week rather than as one highlighted day.
              ============================================================ -->
         <section class="timetable-grid">
-
-          <!-- Monday -->
-          <div class="day-column">
-            <div class="day-header">
-              <span class="day-title">Monday</span>
-              <span class="day-count">3 Sessions</span>
-            </div>
-
-            <div class="class-card lecture">
-              <div class="class-time">
-                <span>09:30 - 11:00 AM</span>
-                <span class="badge badge-primary">Lecture</span>
-              </div>
-              <span class="class-subject">Advanced Data Structures</span>
-              <div class="class-meta">
-                <span>Room 302</span>
-                <span>&bull;</span>
-                <span>Prof. Turing</span>
-              </div>
-            </div>
-
-            <div class="class-card lab">
-              <div class="class-time">
-                <span>11:30 AM - 01:00 PM</span>
-                <span class="badge badge-purple">Lab</span>
-              </div>
-              <span class="class-subject">DBMS Practicals</span>
-              <div class="class-meta">
-                <span>Computing Lab 4</span>
-                <span>&bull;</span>
-                <span>Dr. Hopper</span>
-              </div>
-            </div>
-
-            <div class="class-card lecture">
-              <div class="class-time">
-                <span>02:00 - 03:30 PM</span>
-                <span class="badge badge-primary">Lecture</span>
-              </div>
-              <span class="class-subject">Computer Networks</span>
-              <div class="class-meta">
-                <span>Room 108</span>
-                <span>&bull;</span>
-                <span>Prof. Cerf</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tuesday -->
-          <div class="day-column">
-            <div class="day-header">
-              <span class="day-title">Tuesday</span>
-              <span class="day-count">3 Sessions</span>
-            </div>
-
-            <div class="class-card lecture">
-              <div class="class-time">
-                <span>10:00 - 11:30 AM</span>
-                <span class="badge badge-primary">Lecture</span>
-              </div>
-              <span class="class-subject">Software Engineering</span>
-              <div class="class-meta">
-                <span>Hall 201</span>
-                <span>&bull;</span>
-                <span>Prof. Hamilton</span>
-              </div>
-            </div>
-
-            <div class="class-card tutorial">
-              <div class="class-time">
-                <span>11:45 AM - 01:15 PM</span>
-                <span class="badge badge-secondary">Tutorial</span>
-              </div>
-              <span class="class-subject">Theory of Computation</span>
-              <div class="class-meta">
-                <span>Room 104</span>
-                <span>&bull;</span>
-                <span>Dr. Shannon</span>
-              </div>
-            </div>
-
-            <div class="class-card lecture">
-              <div class="class-time">
-                <span>02:30 - 04:00 PM</span>
-                <span class="badge badge-primary">Lecture</span>
-              </div>
-              <span class="class-subject">Database Systems</span>
-              <div class="class-meta">
-                <span>Room 302</span>
-                <span>&bull;</span>
-                <span>Dr. Hopper</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Wednesday -->
-          <div class="day-column">
-            <div class="day-header">
-              <span class="day-title">Wednesday</span>
-              <span class="day-count">2 Sessions</span>
-            </div>
-
-            <div class="class-card lab">
-              <div class="class-time">
-                <span>09:30 AM - 12:30 PM</span>
-                <span class="badge badge-purple">Lab</span>
-              </div>
-              <span class="class-subject">Networks Protocol Lab</span>
-              <div class="class-meta">
-                <span>Hardware Lab 2</span>
-                <span>&bull;</span>
-                <span>Prof. Cerf</span>
-              </div>
-            </div>
-
-            <div class="class-card lecture">
-              <div class="class-time">
-                <span>02:00 - 03:30 PM</span>
-                <span class="badge badge-primary">Lecture</span>
-              </div>
-              <span class="class-subject">Theory of Computation</span>
-              <div class="class-meta">
-                <span>Hall 201</span>
-                <span>&bull;</span>
-                <span>Dr. Shannon</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Thursday -->
-          <div class="day-column">
-            <div class="day-header">
-              <span class="day-title">Thursday</span>
-              <span class="day-count">3 Sessions</span>
-            </div>
-
-            <div class="class-card lecture">
-              <div class="class-time">
-                <span>09:30 - 11:00 AM</span>
-                <span class="badge badge-primary">Lecture</span>
-              </div>
-              <span class="class-subject">Advanced Data Structures</span>
-              <div class="class-meta">
-                <span>Room 302</span>
-                <span>&bull;</span>
-                <span>Prof. Turing</span>
-              </div>
-            </div>
-
-            <div class="class-card lecture">
-              <div class="class-time">
-                <span>11:30 AM - 01:00 PM</span>
-                <span class="badge badge-primary">Lecture</span>
-              </div>
-              <span class="class-subject">Software Engineering</span>
-              <div class="class-meta">
-                <span>Hall 201</span>
-                <span>&bull;</span>
-                <span>Prof. Hamilton</span>
-              </div>
-            </div>
-
-            <div class="class-card tutorial">
-              <div class="class-time">
-                <span>02:00 - 03:30 PM</span>
-                <span class="badge badge-secondary">Tutorial</span>
-              </div>
-              <span class="class-subject">Algorithms Problem Solving</span>
-              <div class="class-meta">
-                <span>Room 105</span>
-                <span>&bull;</span>
-                <span>Prof. Turing</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Friday is the current day of the demo session (the notices on
-               the Announcements page are dated Sep 25, 2026, a Friday), so this
-               column carries the `is-today` treatment from css/student.css. -->
-          <div class="day-column is-today">
-            <div class="day-header">
-              <span class="day-title">Friday<span class="day-today-tag">Today</span></span>
-              <span class="day-count">2 Sessions</span>
-            </div>
-
-            <div class="class-card lecture">
-              <div class="class-time">
-                <span>10:00 - 11:30 AM</span>
-                <span class="badge badge-primary">Lecture</span>
-              </div>
-              <span class="class-subject">Computer Networks</span>
-              <div class="class-meta">
-                <span>Room 108</span>
-                <span>&bull;</span>
-                <span>Prof. Cerf</span>
-              </div>
-            </div>
-
-            <div class="class-card lab">
-              <div class="class-time">
-                <span>01:30 - 03:30 PM</span>
-                <span class="badge badge-purple">Lab</span>
-              </div>
-              <span class="class-subject">Project Design Studio</span>
-              <div class="class-meta">
-                <span>Innovation Lab</span>
-                <span>&bull;</span>
-                <span>Faculty Panel</span>
-              </div>
-            </div>
-          </div>
-
+          <p class="empty-state">Loading your weekly timetable…</p>
         </section>
 
       </div>

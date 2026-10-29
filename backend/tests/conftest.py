@@ -29,6 +29,7 @@ import dataclasses  # noqa: E402  (import after env setup on purpose)
 
 import pytest  # noqa: E402
 from alembic.config import Config  # noqa: E402
+from app.api import auth as auth_api  # noqa: E402
 from app.core.config import PROJECT_ROOT, get_settings  # noqa: E402
 from app.db.session import SessionLocal  # noqa: E402
 from app.main import app  # noqa: E402
@@ -50,6 +51,14 @@ from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy import func, select  # noqa: E402
 
 from alembic import command  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _reset_auth_throttles():
+    """Failed-login/activation counters are process-wide; isolate every test."""
+    auth_api.reset_login_throttle()
+    yield
+    auth_api.reset_login_throttle()
 
 
 @pytest.fixture()

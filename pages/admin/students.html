@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -141,6 +139,10 @@
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             <span>Enroll New Student</span>
           </button>
+          <button type="button" class="btn btn-outline btn-sm" disabled data-import-students>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+            <span>Import Students</span>
+          </button>
         </div>
       </header>
 
@@ -156,25 +158,14 @@
                     data-table-search />
               </div>
 
-              <select class="form-control w-select-md" aria-label="Department filter" disabled>
-                <option>All Departments</option>
-                <option>Computer Science</option>
-                <option>Electronics</option>
-                <option>Mechanical</option>
-              </select>
-
-              <select class="form-control w-select-sm" aria-label="Semester filter" disabled>
-                <option>All Semesters</option>
-                <option>Semester 1</option>
-                <option>Semester 3</option>
-                <option>Semester 5</option>
-                <option>Semester 7</option>
+              <select class="form-control w-select-md" aria-label="Degree program filter" disabled data-department-filter>
+                <option value="">All degree programs</option>
               </select>
             </div>
 
             <div class="row-tight-lg">
-              <button type="button" class="btn btn-outline btn-sm" disabled>Export CSV</button>
-              <button type="button" class="btn btn-outline btn-sm" disabled>Bulk Actions</button>
+              <button type="button" class="btn btn-outline btn-sm" disabled data-export-csv>Export CSV</button>
+
             </div>
           </div>
         </section>
@@ -184,16 +175,25 @@
           <div class="card-header">
             <div class="card-header-titles">
               <span class="card-subtitle">Active Directory</span>
-              <h2 class="card-title">Enrolled Students Roster (Showing 3,842 total)</h2>
+              <h2 class="card-title">Student Roster</h2>
             </div>
-            <span class="badge badge-success"><span class="badge-dot-indicator"></span> Database Synced</span>
+            <span class="badge badge-secondary"><span class="badge-dot-indicator"></span> Live from the API</span>
           </div>
 
           <div class="table-responsive">
-            <table class="data-table">
+            <table class="data-table student-directory-table">
+              <colgroup>
+                <col style="width: 16%" />
+                <col style="width: 24%" />
+                <col style="width: 20%" />
+                <col style="width: 10%" />
+                <col style="width: 10%" />
+                <col style="width: 10%" />
+                <col style="width: 10%" />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Roll / Scholar ID</th>
+                  <th>Roll Number</th>
                   <th>Student Name &amp; Contact</th>
                   <th>Degree Program</th>
                   <th>Semester</th>
@@ -204,68 +204,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>2024-CS-0492</strong></td>
-                  <td>
-                    <span class="cell-title">Alex Johnson</span>
-                    <span class="cell-subtext">alex.j@campus360.edu</span>
-                  </td>
-                  <td>B.Tech Computer Science</td>
-                  <td>Semester 5</td>
-                  <td><span class="badge badge-success">85.4%</span></td>
-                  <td><span class="badge badge-primary">Good (CGPA: 8.64)</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>2024-CS-0493</strong></td>
-                  <td>
-                    <span class="cell-title">Maya Patel</span>
-                    <span class="cell-subtext">maya.p@campus360.edu</span>
-                  </td>
-                  <td>B.Tech Computer Science</td>
-                  <td>Semester 5</td>
-                  <td><span class="badge badge-success">95.2%</span></td>
-                  <td><span class="badge badge-success">Honor Roll (CGPA: 9.42)</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>2024-EC-0210</strong></td>
-                  <td>
-                    <span class="cell-title">Liam O'Connor</span>
-                    <span class="cell-subtext">liam.oc@campus360.edu</span>
-                  </td>
-                  <td>B.Tech Electronics</td>
-                  <td>Semester 5</td>
-                  <td><span class="badge badge-warning">73.8%</span></td>
-                  <td><span class="badge badge-secondary">Satisfactory (CGPA: 7.20)</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>2023-ME-0118</strong></td>
-                  <td>
-                    <span class="cell-title">Marcus Chen</span>
-                    <span class="cell-subtext">marcus.c@campus360.edu</span>
-                  </td>
-                  <td>B.Tech Mechanical</td>
-                  <td>Semester 7</td>
-                  <td><span class="badge badge-success">89.0%</span></td>
-                  <td><span class="badge badge-primary">Good (CGPA: 8.15)</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
-                </tr>
-
-                <tr>
-                  <td><strong>2025-CS-0841</strong></td>
-                  <td>
-                    <span class="cell-title">Zoe Washington</span>
-                    <span class="cell-subtext">zoe.w@campus360.edu</span>
-                  </td>
-                  <td>B.Tech Computer Science</td>
-                  <td>Semester 3</td>
-                  <td><span class="badge badge-success">92.6%</span></td>
-                  <td><span class="badge badge-success">Honor Roll (CGPA: 9.10)</span></td>
-                  <td><button type="button" class="btn btn-outline btn-sm" disabled>Manage</button></td>
+                  <td colspan="7" class="table-state">Loading students…</td>
                 </tr>
               </tbody>
             </table>

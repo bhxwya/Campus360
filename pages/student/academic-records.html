@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -78,7 +76,7 @@
         <a href="assignments.html" class="nav-link">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
           <span>Assignments</span>
-          <span class="nav-counter">4</span>
+          <span class="nav-counter">—</span>
         </a>
 
         <a href="marks-results.html" class="nav-link">
@@ -102,8 +100,8 @@
         <div class="user-snippet">
           <div class="user-avatar">S</div>
           <div class="user-info">
-            <span class="user-name">Alex Johnson</span>
-            <span class="user-role-label">B.Tech CS &bull; Sem 5</span>
+            <span class="user-name">—</span>
+            <span class="user-role-label">—</span>
             <a href="academic-records.html" class="user-profile-link">View profile</a>
           </div>
         </div>
@@ -134,7 +132,7 @@
         </div>
 
         <div class="topbar-actions">
-          <button type="button" class="btn btn-primary btn-sm" disabled>
+          <button type="button" class="btn btn-primary btn-sm" disabled title="The current API does not expose an official transcript, so no dossier can be produced.">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>
             <span>Official Dossier</span>
           </button>
@@ -150,34 +148,34 @@
               <span class="card-subtitle">Identification Dossier</span>
               <h2 class="card-title">Enrolled Scholar Information</h2>
             </div>
-            <span class="badge badge-success"><span class="badge-dot-indicator"></span> Active Full-Time</span>
+            <span class="badge badge-secondary" data-account-status>Account status</span>
           </div>
 
           <div class="card-body">
             <div class="student-info-grid">
               <div class="info-item">
                 <label>Full Legal Name</label>
-                <span>Alex Christopher Johnson</span>
+                <span>—</span>
               </div>
               <div class="info-item">
                 <label>Enrollment Number</label>
-                <span>2024-CS-0492</span>
+                <span>—</span>
               </div>
               <div class="info-item">
                 <label>Academic Program</label>
-                <span>Bachelor of Technology (Computer Science)</span>
+                <span>—</span>
               </div>
               <div class="info-item">
                 <label>Current Status</label>
-                <span>Year 3 &bull; Semester 5 (Class of 2027)</span>
+                <span>—</span>
               </div>
               <div class="info-item">
                 <label>Academic Advisor</label>
-                <span>Dr. Alan Turing, Professor of Computing</span>
+                <span>—</span>
               </div>
               <div class="info-item">
                 <label>Total Earned Credits</label>
-                <span>92 Credits (Cumulative GPA: 8.64)</span>
+                <span>—</span>
               </div>
             </div>
           </div>
@@ -185,14 +183,15 @@
 
         <!-- ============================================================
              SEMESTER PROGRESSION
-             One row per completed semester: credits, SGPA and CGPA to date.
-             Historical records, so the table stays read-only.
+             One row per enrolled course: the components the API has recorded for it.
+             The API keeps no historical transcript, so this table is the
+             current result set rather than a semester-by-semester history.
              ============================================================ -->
         <section class="card">
           <div class="card-header">
             <div class="card-header-titles">
-              <span class="card-subtitle">Historical Performance</span>
-              <h2 class="card-title">Semester-Wise Progression Records</h2>
+              <span class="card-subtitle">Current Results</span>
+              <h2 class="card-title">Course Result Summary</h2>
             </div>
           </div>
 
@@ -200,60 +199,16 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Semester</th>
-                  <th>Session</th>
-                  <th>Credits Registered</th>
-                  <th>Credits Earned</th>
-                  <th>SGPA</th>
-                  <th>CGPA</th>
-                  <th>Result Status</th>
+                  <th>Course</th>
+                  <th>Credits</th>
+                  <th>Recorded components</th>
+                  <th>Overall result</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>Semester 1</strong></td>
-                  <td>Fall 2024</td>
-                  <td>22</td>
-                  <td>22</td>
-                  <td>8.45</td>
-                  <td>8.45</td>
-                  <td><span class="badge badge-success">Passed (First Class)</span></td>
-                </tr>
-                <tr>
-                  <td><strong>Semester 2</strong></td>
-                  <td>Spring 2025</td>
-                  <td>24</td>
-                  <td>24</td>
-                  <td>8.60</td>
-                  <td>8.53</td>
-                  <td><span class="badge badge-success">Passed (First Class with Dist.)</span></td>
-                </tr>
-                <tr>
-                  <td><strong>Semester 3</strong></td>
-                  <td>Fall 2025</td>
-                  <td>23</td>
-                  <td>23</td>
-                  <td>8.75</td>
-                  <td>8.60</td>
-                  <td><span class="badge badge-success">Passed (First Class with Dist.)</span></td>
-                </tr>
-                <tr>
-                  <td><strong>Semester 4</strong></td>
-                  <td>Spring 2026</td>
-                  <td>23</td>
-                  <td>23</td>
-                  <td>8.80</td>
-                  <td>8.64</td>
-                  <td><span class="badge badge-success">Passed (First Class with Dist.)</span></td>
-                </tr>
-                <tr>
-                  <td><strong>Semester 5</strong></td>
-                  <td>Fall 2026 (Current)</td>
-                  <td>22</td>
-                  <td>In Progress</td>
-                  <td>&mdash;</td>
-                  <td>&mdash;</td>
-                  <td><span class="badge badge-primary">Currently Enrolled</span></td>
+                  <td colspan="7" class="table-state">Loading your academic record</td>
                 </tr>
               </tbody>
             </table>

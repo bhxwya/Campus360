@@ -237,6 +237,7 @@ def test_duplicate_enrollment_returns_409(admin_client, db_cleaner) -> None:
     )
 
     assert second.status_code == 409, second.text
+    assert "already has an enrollment" in second.json()["detail"].lower()
 
 
 def test_enrollment_with_unknown_student_returns_404(admin_client, db_cleaner) -> None:
@@ -371,3 +372,50 @@ def test_dropping_an_unknown_enrollment_returns_404(admin_client, db_cleaner) ->
     )
 
     assert response.status_code == 404, response.text
+
+
+# ---------------------------------------------------------------------------
+# Enrollment validation added for the admin dropdown flow
+# ---------------------------------------------------------------------------
+def test_enrollment_rejects_an_inactive_course(admin_client, db_cleaner) -> None:
+    """The dropdown fetches active courses only; the API enforces the same."""
+    course = _course(admin_client)
+    student = _student(admin_client)
+    deactivated = admin_client.client.delete(
+        f"/api/v1/admin/courses/{course['id']}", headers=admin_client.headers
+    )
+    assert deactivated.status_code == 200, deactivated.text
+
+    response = admin_client.client.post(
+        "/api/v1/admin/enrollments",
+        json={"student_id": student["id"], "course_id": course["id"]},
+        headers=admin_client.headers,
+    )
+
+    assert response.status_code == 422, response.text
+    assert "inactive" in response.json()["detail"].lower()
+
+
+def test_reenrolling_a_dropped_pair_explains_reactivation(admin_client, db_cleaner) -> None:
+    """A dropped row still owns the UNIQUE pair, so the 409 says what to do."""
+    course = _course(admin_client)
+    student = _student(admin_client)
+    payload = {"student_id": student["id"], "course_id": course["id"]}
+    created = admin_client.client.post(
+        "/api/v1/admin/enrollments", json=payload, headers=admin_client.headers
+    )
+    assert created.status_code == 201, created.text
+
+    dropped = admin_client.client.patch(
+        f"/api/v1/admin/enrollments/{created.json()['id']}/status?status=dropped",
+        headers=admin_client.headers,
+    )
+    assert dropped.status_code == 200, dropped.text
+
+    response = admin_client.client.post(
+        "/api/v1/admin/enrollments", json=payload, headers=admin_client.headers
+    )
+
+    assert response.status_code == 409, response.text
+    detail = response.json()["detail"].lower()
+    assert "dropped" in detail and "reactivate" in detail

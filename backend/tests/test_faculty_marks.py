@@ -101,9 +101,7 @@ def test_create_mark_returns_computed_percentage_and_grade(
     assert body["grade_points"] == 9.0
 
 
-def test_create_mark_duplicate_returns_409(
-    faculty_client, admin_client, db_cleaner
-) -> None:
+def test_create_mark_duplicate_returns_409(faculty_client, admin_client, db_cleaner) -> None:
     """Same (student, course, component) twice -> 409, not 500."""
     course, student = _setup_course_and_student(admin_client, faculty_client)
 
@@ -153,9 +151,7 @@ def test_create_mark_cross_faculty_returns_403(
     assert response.status_code == 403, response.text
 
 
-def test_create_mark_score_bounds_422(
-    faculty_client, admin_client, db_cleaner
-) -> None:
+def test_create_mark_score_bounds_422(faculty_client, admin_client, db_cleaner) -> None:
     """Score outside 0-100 or max_score outside 0-100 -> 422."""
     course, student = _setup_course_and_student(admin_client, faculty_client)
 
@@ -265,9 +261,7 @@ def test_create_mark_score_above_max_returns_422_not_409(
     assert response.status_code == 422, response.text
 
     # Nothing was recorded, so the same tuple is still free...
-    listed = faculty_client.client.get(
-        "/api/v1/faculty/marks", params={"course_id": course["id"]}
-    )
+    listed = faculty_client.client.get("/api/v1/faculty/marks", params={"course_id": course["id"]})
     assert listed.status_code == 200, listed.text
     assert listed.json() == []
 
@@ -308,9 +302,7 @@ def _create_mark(faculty_client, course_id: int, student_id: int, **overrides) -
     return response.json()
 
 
-def _get_mark(
-    faculty_client, course_id: int, student_id: int, component: str = "internal"
-) -> dict:
+def _get_mark(faculty_client, course_id: int, student_id: int, component: str = "internal") -> dict:
     """Fetch the one stored mark via the list endpoint (no GET-by-id route)."""
     response = faculty_client.client.get(
         "/api/v1/faculty/marks",

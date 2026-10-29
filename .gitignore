@@ -39,3 +39,7 @@ coverage/
 .ruff_cache/
 htmlcov/
 
+
+# Playwright output
+test-results/
+playwright-report/

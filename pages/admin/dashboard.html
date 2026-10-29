@@ -20,19 +20,17 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
-
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       PAGE SCRIPTS
+       script.js owns the shared shell behaviour (skip link, active-navigation
+       state, corner notifications); api.js attaches the CSRF token and signs
+       the visitor out when the session has expired; portal.js fills this page
+       from the authenticated API; auth.js guards the route.
+       Controls the current API cannot support stay disabled and say so - no
+       handler is attached and no behaviour is pretended.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -137,19 +135,13 @@
         </div>
 
         <div class="topbar-actions">
-          <div class="search-box">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="M16.8 16.8 21 21"/></svg>
-            <input type="text" placeholder="Global system search..." aria-label="Global search" />
-          </div>
-
           <a href="notices.html" class="action-icon-btn" title="Notices">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8.5a6 6 0 0 0-12 0c0 6-2.5 8-2.5 8h17S18 14.5 18 8.5z"/><path d="M13.7 20.5a2 2 0 0 1-3.4 0"/></svg>
-            <span class="badge-dot"></span>
           </a>
 
           <div class="topbar-context-pill">
             <span class="pulse-indicator"></span>
-            <span>Academic Year 2026-27</span>
+            <span>All academic records</span>
           </div>
         </div>
       </header>
@@ -160,7 +152,7 @@
         <section class="welcome-banner">
           <div class="welcome-text">
             <h2>Campus Operations Central</h2>
-            <p>System status is healthy. 3,840 active scholars enrolled across 12 academic departments.</p>
+            <p>Loading campus statistics…</p>
           </div>
           <div class="welcome-actions">
             <a href="students.html" class="btn btn-outline btn-sm">Manage Students</a>
@@ -172,38 +164,38 @@
         <section class="stats-grid">
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Total Enrolled Scholars</span>
+              <span class="stat-label">Active students</span>
               <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
             </div>
-            <div class="stat-value">3,842</div>
-            <div class="stat-meta"><span class="stat-trend-up">&uarr; 4.8% enrollment growth</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Active student accounts</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Faculty Members</span>
+              <span class="stat-label">Active faculty</span>
               <span class="stat-icon violet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V6.5L12 3l7 3.5V21"/><path d="M9 21v-4h6v4"/><path d="M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></svg></span>
             </div>
-            <div class="stat-value">218</div>
-            <div class="stat-meta"><span>1:18 faculty-student ratio</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Active faculty accounts</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Active Academic Courses</span>
+              <span class="stat-label">Active courses</span>
               <span class="stat-icon emerald"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5h6a4 4 0 0 1 4 4V21a3 3 0 0 0-3-3H2z"/><path d="M22 3.5h-6a4 4 0 0 0-4 4V21a3 3 0 0 1 3-3h7z"/></svg></span>
             </div>
-            <div class="stat-value">146</div>
-            <div class="stat-meta"><span>Across 6 degree programs</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Live catalogue entries</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Platform Active Sessions</span>
+              <span class="stat-label">Open sessions</span>
               <span class="stat-icon amber"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12z"/></svg></span>
             </div>
-            <div class="stat-value">1,420</div>
-            <div class="stat-meta"><span>99.98% uptime SLA</span></div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Server-side login sessions</div>
           </div>
         </section>
 
@@ -221,26 +213,7 @@
             </div>
 
             <div class="card-body">
-              <div class="kpi-row">
-                <span class="kpi-title">Computer Science &amp; Engineering</span>
-                <span class="kpi-value">1,120 Students &bull; 42 Faculty</span>
-              </div>
-              <div class="kpi-row">
-                <span class="kpi-title">Electronics &amp; Communication</span>
-                <span class="kpi-value">840 Students &bull; 34 Faculty</span>
-              </div>
-              <div class="kpi-row">
-                <span class="kpi-title">Mechanical &amp; Aerospace</span>
-                <span class="kpi-value">720 Students &bull; 31 Faculty</span>
-              </div>
-              <div class="kpi-row">
-                <span class="kpi-title">Civil &amp; Environmental Sciences</span>
-                <span class="kpi-value">510 Students &bull; 24 Faculty</span>
-              </div>
-              <div class="kpi-row">
-                <span class="kpi-title">School of Business &amp; Analytics</span>
-                <span class="kpi-value">652 Students &bull; 28 Faculty</span>
-              </div>
+              <p class="empty-state">Loading enrollment distribution…</p>
             </div>
           </section>
 
@@ -258,26 +231,8 @@
               <div class="activity-list">
 
                 <div class="activity-item">
-                  <div class="activity-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 7.7-7.7 2.5 2.5-2 2 2 2-2.5 2.5-2-2-1.7 1.7"/></svg></div>
                   <div class="activity-details">
-                    <span class="activity-title">New Faculty Roster Provisioned</span>
-                    <span class="activity-meta">HR Office &bull; 35 mins ago</span>
-                  </div>
-                </div>
-
-                <div class="activity-item">
-                  <div class="activity-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5L11 19z"/><path d="M16 8.5a4.5 4.5 0 0 1 0 7"/><path d="M18.8 6a8 8 0 0 1 0 12"/></svg></div>
-                  <div class="activity-details">
-                    <span class="activity-title">Campus Notice Broadcasted</span>
-                    <span class="activity-meta">Registrar Desk &bull; 2 hours ago</span>
-                  </div>
-                </div>
-
-                <div class="activity-item">
-                  <div class="activity-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-                  <div class="activity-details">
-                    <span class="activity-title">Database Index Routine Completed</span>
-                    <span class="activity-meta">Automated Cron &bull; 4:00 AM</span>
+                    <span class="activity-title">Checking for system audit records…</span>
                   </div>
                 </div>
 

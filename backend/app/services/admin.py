@@ -26,13 +26,28 @@ router converts it into a response. The service layer stays free of
 ``HTTPException`` so it can be called from a CLI or a task runner.
 """
 
+import re
 from datetime import UTC, datetime
 
 from fastapi import status
-from sqlalchemy import func, select
+from sqlalchemy import Numeric, case, cast, delete, func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
+from app.core.departments import (
+    canonical_name as canonical_department_name,
+)
+from app.core.departments import (
+    find_department,
+)
+from app.core.programmes import (
+    canonical_name,
+    find_programme,
+    match_values,
+)
+from app.core.programmes import (
+    programme_code as resolve_programme_code,
+)
 from app.core.security import hash_password
 from app.models.announcement import Announcement
 from app.models.attendance import AttendanceRecord
@@ -82,18 +97,34 @@ PASS_MARK_PERCENT = 40.0
 #: shows late as a separate badge rather than an absence.
 ATTENDED_STATUSES = (AttendanceStatus.PRESENT, AttendanceStatus.LATE)
 
+#: Field-specific duplicate messages for the student create/edit form. The
+#: keys used in ``AdminError.field_errors`` are the request field names, so the
+#: browser can highlight the exact input instead of parsing a generic sentence.
+EMAIL_DUPLICATE_MESSAGE = "This email address is already registered."
+ROLL_NUMBER_DUPLICATE_MESSAGE = "This roll number is already assigned to another student."
+FACULTY_CODE_DUPLICATE_MESSAGE = "This faculty code is already assigned to another faculty member."
+
 
 class AdminError(Exception):
     """Raised when an admin operation cannot proceed.
 
     Carries the HTTP status the router should answer with, mirroring the
-    ``AuthError`` pattern in ``services/auth.py``.
+    ``AuthError`` pattern in ``services/auth.py``. ``field_errors`` is optional
+    and only populated when the client can map the failure to a specific form
+    control (currently duplicate student email/roll number).
     """
 
-    def __init__(self, message: str, status_code: int) -> None:
+    def __init__(
+        self,
+        message: str,
+        status_code: int,
+        *,
+        field_errors: dict[str, str] | None = None,
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.status_code = status_code
+        self.field_errors = dict(field_errors or {})
 
 
 def _not_found(what: str) -> AdminError:
@@ -101,9 +132,18 @@ def _not_found(what: str) -> AdminError:
     return AdminError(f"{what} not found", status.HTTP_404_NOT_FOUND)
 
 
-def _conflict(message: str) -> AdminError:
+def _conflict(message: str, *, field_errors: dict[str, str] | None = None) -> AdminError:
     """409 for a duplicate or otherwise conflicting write."""
-    return AdminError(message, status.HTTP_409_CONFLICT)
+    return AdminError(
+        message,
+        status.HTTP_409_CONFLICT,
+        field_errors=field_errors,
+    )
+
+
+def _conflict_fields(field_errors: dict[str, str]) -> AdminError:
+    """409 whose response identifies each duplicated form field independently."""
+    return _conflict(" ".join(field_errors.values()), field_errors=field_errors)
 
 
 def _normalised_email(email: str) -> str:
@@ -116,51 +156,243 @@ def _normalised_email(email: str) -> str:
     return email.strip().lower()
 
 
+def normalize_person_name(value: str | None) -> str | None:
+    """Normalize a person's name for storage.
+
+    Trims, collapses repeated internal whitespace, and applies consistent
+    title-casing to ordinary (all-lowercase or first-letter) names. Names
+    that already carry internal capitalization (``McDonald``, ``O'Neil``,
+    hyphenated or initialled forms) are preserved verbatim so a blind
+    ``.title()`` cannot mangle them.
+    """
+    if value is None:
+        return None
+    text = " ".join(str(value).split())
+    if not text:
+        return text
+    already_formatted = any(
+        len(token) > 1 and any(ch.isupper() for ch in token[1:]) for token in text.split(" ")
+    )
+    if already_formatted:
+        return text
+    return text.title()
+
+
+def _natural_sort_key(value: str | None) -> list[tuple[int, object]]:
+    """Natural-sort key for a faculty code (or similar string).
+
+    Splits the value into alternating non-numeric and numeric chunks so that
+    ``FAC-TEST-002`` sorts before ``FAC-TEST-010``. A stable secondary key
+    (the profile id) is applied by the caller.
+    """
+
+    def _convert(chunk: str) -> tuple[int, object]:
+        if chunk.isdigit():
+            return (0, int(chunk))
+        return (1, chunk.casefold())
+
+    return [_convert(chunk) for chunk in re.split(r"(\d+)", value or "")]
+
+
+def _student_field_conflicts(
+    db: Session,
+    *,
+    email: str | None = None,
+    student_code: str | None = None,
+    exclude_user_id: int | None = None,
+    exclude_profile_id: int | None = None,
+) -> dict[str, str]:
+    """Return field-specific duplicate errors for a student write.
+
+    The database remains authoritative. This check gives an ordinary request a
+    precise field map in one round trip; the commit handlers call the same
+    helper after an ``IntegrityError`` so a concurrent request that slipped
+    past the pre-check is still reported against the field that actually lost
+    the unique race.
+
+    ``exclude_*`` is what makes editing a student's own email or roll number
+    safe: the row being edited cannot conflict with itself.
+    """
+    conflicts: dict[str, str] = {}
+
+    if email is not None:
+        email_query = select(User.id).where(User.email_normalized == _normalised_email(email))
+        if exclude_user_id is not None:
+            email_query = email_query.where(User.id != exclude_user_id)
+        if db.scalar(email_query) is not None:
+            conflicts["email"] = EMAIL_DUPLICATE_MESSAGE
+
+    if student_code is not None:
+        code = student_code.strip()
+        if code:
+            code_query = select(StudentProfile.id).where(StudentProfile.student_code == code)
+            if exclude_profile_id is not None:
+                code_query = code_query.where(StudentProfile.id != exclude_profile_id)
+            if db.scalar(code_query) is not None:
+                conflicts["student_code"] = ROLL_NUMBER_DUPLICATE_MESSAGE
+
+    return conflicts
+
+
+def _programme_for_storage(value: str | None, *, current: str | None = None) -> str | None:
+    """Resolve a programme code/name/alias to the canonical display name.
+
+    ``degree_program`` is a free-text column from the original schema. New
+    writes are restricted to the catalogue so display text stays consistent;
+    ``current`` (the stored value on a PATCH) grandfathers an existing
+    uncatalogued legacy value ONLY when the client sends it back unchanged.
+    No row is ever rewritten merely by reading it.
+    """
+    if value is None:
+        return None
+    text = value.strip()
+    if not text:
+        return None
+    resolved = canonical_name(text)
+    if resolved is not None:
+        return resolved
+    if current is not None and text.casefold() == current.strip().casefold():
+        return current
+    raise AdminError(
+        f"Unknown programme {text!r}. Choose a programme from the admin programme catalogue.",
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    )
+
+
+def _faculty_field_conflicts(
+    db: Session,
+    *,
+    email: str | None = None,
+    faculty_code: str | None = None,
+    exclude_user_id: int | None = None,
+    exclude_profile_id: int | None = None,
+) -> dict[str, str]:
+    """Return field-specific duplicate errors for a faculty write."""
+    conflicts: dict[str, str] = {}
+
+    if email is not None:
+        email_query = select(User.id).where(User.email_normalized == _normalised_email(email))
+        if exclude_user_id is not None:
+            email_query = email_query.where(User.id != exclude_user_id)
+        if db.scalar(email_query) is not None:
+            conflicts["email"] = EMAIL_DUPLICATE_MESSAGE
+
+    if faculty_code is not None:
+        code = faculty_code.strip()
+        if code:
+            code_query = select(FacultyProfile.id).where(FacultyProfile.faculty_code == code)
+            if exclude_profile_id is not None:
+                code_query = code_query.where(FacultyProfile.id != exclude_profile_id)
+            if db.scalar(code_query) is not None:
+                conflicts["faculty_code"] = FACULTY_CODE_DUPLICATE_MESSAGE
+
+    return conflicts
+
+
+def _department_for_storage(value: str | None, *, current: str | None = None) -> str | None:
+    """Resolve a department code/name to the canonical display name.
+
+    ``department`` is a free-text column from the original schema. New
+    writes are restricted to the catalogue so display text stays consistent;
+    ``current`` (the stored value on a PATCH) grandfathers an existing
+    uncatalogued legacy value ONLY when the client sends it back unchanged.
+    No row is ever rewritten merely by reading it.
+    """
+    if value is None:
+        return None
+    text = value.strip()
+    if not text:
+        return None
+    resolved = canonical_department_name(text)
+    if resolved is not None:
+        return resolved
+    if current is not None and text.casefold() == current.strip().casefold():
+        return current
+    raise AdminError(
+        f"Unknown department {text!r}. Choose a department from the admin department catalogue.",
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Students
 # ---------------------------------------------------------------------------
-def _attendance_percentage(db: Session, student_id: int) -> float | None:
-    """Attendance rate of ONE student, or ``None`` when they have no records.
+def _attendance_percentages(db: Session, student_ids: list[int]) -> dict[int, float | None]:
+    """Attendance rate per student (``None`` when a student has no records).
 
     Computed from ``attendance_records`` at read time (never stored), exactly
     as the model's docstring requires. PRESENT and LATE both count as
-    attended.
+    attended. One grouped query serves a whole page of students.
     """
-    total = db.scalar(
-        select(func.count())
-        .select_from(AttendanceRecord)
-        .where(AttendanceRecord.student_id == student_id)
-    )
-    if not total:
-        return None
-    attended = db.scalar(
-        select(func.count())
-        .select_from(AttendanceRecord)
-        .where(
-            AttendanceRecord.student_id == student_id,
-            AttendanceRecord.status.in_(ATTENDED_STATUSES),
+    rates: dict[int, float | None] = dict.fromkeys(student_ids)
+    if not student_ids:
+        return rates
+    rows = db.execute(
+        select(
+            AttendanceRecord.student_id,
+            func.count(),
+            func.count().filter(AttendanceRecord.status.in_(ATTENDED_STATUSES)),
         )
-    )
-    return round((attended or 0) * 100.0 / total, 2)
+        .where(AttendanceRecord.student_id.in_(student_ids))
+        .group_by(AttendanceRecord.student_id)
+    ).all()
+    for student_id, total, attended in rows:
+        rates[student_id] = round(attended * 100.0 / total, 2) if total else None
+    return rates
 
 
-def _enrolled_course_count(db: Session, student_id: int) -> int:
-    """How many ACTIVE courses a student is enrolled in."""
+def _active_enrollment_counts(db: Session, column, ids: list[int]) -> dict[int, int]:
+    """ACTIVE enrollment counts grouped by ``column`` (student or course id)."""
+    counts = dict.fromkeys(ids, 0)
+    if not ids:
+        return counts
+    rows = db.execute(
+        select(column, func.count())
+        .where(column.in_(ids), Enrollment.status == EnrollmentStatus.ACTIVE)
+        .group_by(column)
+    ).all()
+    counts.update({key: count for key, count in rows})
+    return counts
+
+
+def _student_directory_order():
+    """Deterministic roll-number ordering for directory pages and exports.
+
+    Numeric-only codes come first and are compared as NUMERIC, so 2026001
+    precedes 2026002. Alphanumeric codes follow in case-insensitive (``C``
+    collation) lexicographic order. Numeric ties caused by leading zeros are
+    broken by the text form, so ``0001`` precedes ``1``; codes that differ
+    only by case have the same normalized key and fall back to the profile id.
+    """
+    trimmed = func.trim(StudentProfile.student_code)
+    numeric = trimmed.op("~")(r"^[0-9]+$")
     return (
-        db.scalar(
-            select(func.count())
-            .select_from(Enrollment)
-            .where(
-                Enrollment.student_id == student_id,
-                Enrollment.status == EnrollmentStatus.ACTIVE,
-            )
-        )
-        or 0
+        case((numeric, 0), else_=1),
+        case((numeric, cast(trimmed, Numeric)), else_=None),
+        func.lower(trimmed).collate("C"),
+        StudentProfile.id,
     )
+
+
+def _student_responses(db: Session, profiles: list[StudentProfile]) -> list[StudentResponse]:
+    """Build safe student projections for a page with a fixed number of queries."""
+    ids = [profile.id for profile in profiles]
+    attendance = _attendance_percentages(db, ids)
+    enrolled = _active_enrollment_counts(db, Enrollment.student_id, ids)
+    return [
+        _student_projection(profile, attendance[profile.id], enrolled[profile.id])
+        for profile in profiles
+    ]
 
 
 def _student_response(db: Session, profile: StudentProfile) -> StudentResponse:
     """Build the safe student projection (no password hash, ever)."""
+    return _student_responses(db, [profile])[0]
+
+
+def _student_projection(
+    profile: StudentProfile, attendance_percentage: float | None, enrolled_courses: int
+) -> StudentResponse:
     user = profile.user
     return StudentResponse(
         id=profile.id,
@@ -171,10 +403,11 @@ def _student_response(db: Session, profile: StudentProfile) -> StudentResponse:
         student_code=profile.student_code,
         full_name=profile.full_name,
         degree_program=profile.degree_program,
+        programme_code=resolve_programme_code(profile.degree_program),
         current_semester=profile.current_semester,
         phone=profile.phone,
-        attendance_percentage=_attendance_percentage(db, profile.id),
-        enrolled_courses=_enrolled_course_count(db, profile.id),
+        attendance_percentage=attendance_percentage,
+        enrolled_courses=enrolled_courses,
         created_at=profile.created_at,
         updated_at=profile.updated_at,
     )
@@ -188,8 +421,21 @@ def create_student(db: Session, payload: StudentCreate) -> StudentResponse:
     is rolled back completely - leaving no half-created student behind.
 
     A duplicate email or student code becomes a 409, not a 500: both are
-    ordinary "that already exists" situations, not server faults.
+    ordinary "that already exists" situations, not server faults. The result
+    names the duplicated field(s) independently so the form can mark each
+    input.
     """
+    # Serve a precise field map for ordinary requests. A concurrent writer can
+    # still win after this check; the IntegrityError branch below repeats the
+    # same lookup after rollback and reports the field that actually conflicted.
+    conflicts = _student_field_conflicts(
+        db,
+        email=payload.email,
+        student_code=payload.student_code,
+    )
+    if conflicts:
+        raise _conflict_fields(conflicts)
+
     user = User(
         email=payload.email.strip(),
         email_normalized=_normalised_email(payload.email),
@@ -200,8 +446,8 @@ def create_student(db: Session, payload: StudentCreate) -> StudentResponse:
     profile = StudentProfile(
         user=user,
         student_code=payload.student_code.strip(),
-        full_name=payload.full_name.strip(),
-        degree_program=payload.degree_program,
+        full_name=normalize_person_name(payload.full_name),
+        degree_program=_programme_for_storage(payload.degree_program),
         current_semester=payload.current_semester,
         phone=payload.phone,
     )
@@ -211,9 +457,16 @@ def create_student(db: Session, payload: StudentCreate) -> StudentResponse:
         db.commit()
     except IntegrityError as exc:
         db.rollback()
-        raise _conflict(
-            "A user with that email or a student with that code already exists"
-        ) from exc
+        conflicts = _student_field_conflicts(
+            db,
+            email=payload.email,
+            student_code=payload.student_code,
+        )
+        if conflicts:
+            raise _conflict_fields(conflicts) from exc
+        # An integrity failure that is NOT a duplicate email/roll number must
+        # keep its original 500 behaviour rather than being mislabelled.
+        raise
     db.refresh(profile)
     return _student_response(db, profile)
 
@@ -242,14 +495,27 @@ def list_students(
             | func.lower(User.email).like(pattern)
         )
     if department:
-        filters.append(func.lower(StudentProfile.degree_program) == department.strip().lower())
+        # Accept the canonical name, the stable code or a legacy alias (e.g.
+        # "B.Tech CSE") and match every stored spelling of that programme, so
+        # filtering does not depend on exact display text.
+        programme = find_programme(department)
+        if programme is not None:
+            spellings = {value.strip().lower() for value in match_values(programme)}
+            filters.append(func.lower(StudentProfile.degree_program).in_(spellings))
+        else:
+            filters.append(func.lower(StudentProfile.degree_program) == department.strip().lower())
     if is_active is not None:
         filters.append(User.is_active == is_active)
 
     base = select(StudentProfile).join(User, StudentProfile.user_id == User.id).where(*filters)
     total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    rows = db.scalars(base.order_by(StudentProfile.full_name).limit(limit).offset(offset)).all()
-    return [_student_response(db, row) for row in rows], total
+    rows = db.scalars(
+        base.options(joinedload(StudentProfile.user))
+        .order_by(*_student_directory_order())
+        .limit(limit)
+        .offset(offset)
+    ).all()
+    return _student_responses(db, list(rows)), total
 
 
 def get_student(db: Session, student_id: int) -> StudentResponse:
@@ -267,19 +533,98 @@ def update_student(db: Session, student_id: int, payload: StudentUpdate) -> Stud
     not mention is left untouched, instead of being overwritten with None.
     ``is_active`` lives on the ACCOUNT, not the profile, so deactivating a
     student deactivates the login too - one flag, one meaning.
+
+    ``email`` also lives on the ACCOUNT: it IS the login identifier, so the
+    profile and the login can never drift apart - there is only one column to
+    update. Changing it revokes that student's live sessions (the same
+    re-authenticate-after-an-identity-change rule a password change uses), and
+    the old address can no longer log in. The profile row (and therefore its
+    id, enrollments, attendance and marks) is never replaced.
     """
     profile = db.get(StudentProfile, student_id)
     if profile is None:
         raise _not_found("Student")
 
+    profile_id = profile.id
+    user_id = profile.user_id
     data = payload.model_dump(exclude_unset=True)
+
+    email_supplied = "email" in data
+    email = data.pop("email", None)
+    normalized_email = ""
+    if email_supplied:
+        if not email:
+            # EmailStr rejects malformed input at the edge; this covers an
+            # explicit JSON null, which would violate users.email NOT NULL.
+            raise AdminError("Email cannot be empty", status.HTTP_422_UNPROCESSABLE_CONTENT)
+        normalized_email = _normalised_email(email)
+
+    student_code_supplied = "student_code" in data
+    student_code = None
+    if student_code_supplied:
+        # The column is NOT NULL + UNIQUE; trim to match create_student and
+        # reject whitespace-only input with a validation error, not a 500.
+        student_code = (data["student_code"] or "").strip()
+        if not student_code:
+            raise AdminError("Roll number cannot be empty", status.HTTP_422_UNPROCESSABLE_CONTENT)
+        data["student_code"] = student_code
+
+    # Check BOTH fields before mutating anything, excluding this very student.
+    # Editing your own email/roll number is therefore never a self-conflict,
+    # and a PATCH that duplicates both fields reports both independently.
+    conflicts = _student_field_conflicts(
+        db,
+        email=email if email_supplied else None,
+        student_code=student_code,
+        exclude_user_id=user_id,
+        exclude_profile_id=profile_id,
+    )
+    if conflicts:
+        raise _conflict_fields(conflicts)
+
+    if "degree_program" in data:
+        # Codes and aliases are canonicalized; an uncatalogued legacy value is
+        # preserved only when sent back unchanged (see _programme_for_storage).
+        data["degree_program"] = _programme_for_storage(
+            data["degree_program"], current=profile.degree_program
+        )
+
+    if "full_name" in data:
+        data["full_name"] = normalize_person_name(data["full_name"])
+
     is_active = data.pop("is_active", None)
     for field, value in data.items():
         setattr(profile, field, value)
     if is_active is not None:
         profile.user.is_active = is_active
 
-    db.commit()
+    email_changed = email_supplied and normalized_email != profile.user.email_normalized
+    if email_supplied:
+        profile.user.email = email.strip()
+        profile.user.email_normalized = normalized_email
+    if email_changed:
+        # An address change is an identity change: revoke every server-side
+        # session for THIS student, so a cookie issued under the old login
+        # cannot outlive it. The acting admin's own session is untouched.
+        db.execute(delete(UserSession).where(UserSession.user_id == profile.user_id))
+
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        # A concurrent writer can win after the pre-check. Re-read the unique
+        # fields (excluding this student) and report the field(s) that actually
+        # conflicted. Other integrity failures keep their original 500 path.
+        conflicts = _student_field_conflicts(
+            db,
+            email=email if email_supplied else None,
+            student_code=student_code,
+            exclude_user_id=user_id,
+            exclude_profile_id=profile_id,
+        )
+        if conflicts:
+            raise _conflict_fields(conflicts) from exc
+        raise
     db.refresh(profile)
     return _student_response(db, profile)
 
@@ -298,19 +643,28 @@ def deactivate_student(db: Session, student_id: int) -> StudentResponse:
 # ---------------------------------------------------------------------------
 # Faculty
 # ---------------------------------------------------------------------------
-def _assigned_course_count(db: Session, faculty_id: int) -> int:
-    """How many courses a faculty member leads."""
-    return (
-        db.scalar(
-            select(func.count()).select_from(Course).where(Course.lead_faculty_id == faculty_id)
-        )
-        or 0
-    )
+def _faculty_responses(db: Session, profiles: list[FacultyProfile]) -> list[FacultyResponse]:
+    """Build safe faculty projections; one grouped query counts led courses."""
+    ids = [profile.id for profile in profiles]
+    led: dict[int, int] = dict.fromkeys(ids, 0)
+    if ids:
+        rows = db.execute(
+            select(Course.lead_faculty_id, func.count())
+            .where(Course.lead_faculty_id.in_(ids))
+            .group_by(Course.lead_faculty_id)
+        ).all()
+        led.update({faculty_id: count for faculty_id, count in rows})
+    return [_faculty_projection(profile, led[profile.id]) for profile in profiles]
 
 
 def _faculty_response(db: Session, profile: FacultyProfile) -> FacultyResponse:
     """Build the safe faculty projection (no password hash, ever)."""
+    return _faculty_responses(db, [profile])[0]
+
+
+def _faculty_projection(profile: FacultyProfile, assigned_courses: int) -> FacultyResponse:
     user = profile.user
+    department = find_department(profile.department)
     return FacultyResponse(
         id=profile.id,
         user_id=user.id,
@@ -320,8 +674,9 @@ def _faculty_response(db: Session, profile: FacultyProfile) -> FacultyResponse:
         faculty_code=profile.faculty_code,
         full_name=profile.full_name,
         department=profile.department,
+        department_code=department.code if department else None,
         designation=profile.designation,
-        assigned_courses=_assigned_course_count(db, profile.id),
+        assigned_courses=assigned_courses,
         created_at=profile.created_at,
         updated_at=profile.updated_at,
     )
@@ -331,8 +686,13 @@ def create_faculty(db: Session, payload: FacultyCreate) -> FacultyResponse:
     """Create a faculty member: login account + profile, ATOMICALLY.
 
     Same contract as ``create_student``: one transaction, full rollback on
-    ``IntegrityError``, 409 for a duplicate email or faculty code.
+    ``IntegrityError``, and a 409 whose ``field_errors`` name the duplicated
+    field(s) (email and/or faculty code).
     """
+    conflicts = _faculty_field_conflicts(db, email=payload.email, faculty_code=payload.faculty_code)
+    if conflicts:
+        raise _conflict_fields(conflicts)
+
     user = User(
         email=payload.email.strip(),
         email_normalized=_normalised_email(payload.email),
@@ -343,8 +703,8 @@ def create_faculty(db: Session, payload: FacultyCreate) -> FacultyResponse:
     profile = FacultyProfile(
         user=user,
         faculty_code=payload.faculty_code.strip(),
-        full_name=payload.full_name.strip(),
-        department=payload.department,
+        full_name=normalize_person_name(payload.full_name),
+        department=_department_for_storage(payload.department),
         designation=payload.designation,
     )
     db.add(user)
@@ -353,9 +713,12 @@ def create_faculty(db: Session, payload: FacultyCreate) -> FacultyResponse:
         db.commit()
     except IntegrityError as exc:
         db.rollback()
-        raise _conflict(
-            "A user with that email or a faculty member with that code already exists"
-        ) from exc
+        conflicts = _faculty_field_conflicts(
+            db, email=payload.email, faculty_code=payload.faculty_code
+        )
+        if conflicts:
+            raise _conflict_fields(conflicts) from exc
+        raise
     db.refresh(profile)
     return _faculty_response(db, profile)
 
@@ -365,6 +728,7 @@ def list_faculty(
     *,
     search: str | None = None,
     department: str | None = None,
+    designation: str | None = None,
     is_active: bool | None = None,
     limit: int = 20,
     offset: int = 0,
@@ -380,13 +744,29 @@ def list_faculty(
         )
     if department:
         filters.append(func.lower(FacultyProfile.department) == department.strip().lower())
+    if designation:
+        filters.append(func.lower(FacultyProfile.designation) == designation.strip().lower())
     if is_active is not None:
         filters.append(User.is_active == is_active)
 
-    base = select(FacultyProfile).join(User, FacultyProfile.user_id == User.id).where(*filters)
-    total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    rows = db.scalars(base.order_by(FacultyProfile.full_name).limit(limit).offset(offset)).all()
-    return [_faculty_response(db, row) for row in rows], total
+    # Natural code order (FAC-2 before FAC-10) is computed in Python, so only
+    # the (id, code) pairs are sorted; full rows are loaded for one page only.
+    keys = db.execute(
+        select(FacultyProfile.id, FacultyProfile.faculty_code)
+        .join(User, FacultyProfile.user_id == User.id)
+        .where(*filters)
+    ).all()
+    keys.sort(key=lambda row: (_natural_sort_key(row.faculty_code), row.id))
+    page_ids = [row.id for row in keys[offset : offset + limit]]
+    profiles = {
+        profile.id: profile
+        for profile in db.scalars(
+            select(FacultyProfile)
+            .options(joinedload(FacultyProfile.user))
+            .where(FacultyProfile.id.in_(page_ids))
+        )
+    }
+    return _faculty_responses(db, [profiles[i] for i in page_ids]), len(keys)
 
 
 def get_faculty(db: Session, faculty_id: int) -> FacultyResponse:
@@ -405,6 +785,10 @@ def update_faculty(db: Session, faculty_id: int, payload: FacultyUpdate) -> Facu
 
     data = payload.model_dump(exclude_unset=True)
     is_active = data.pop("is_active", None)
+    if "department" in data:
+        data["department"] = _department_for_storage(data["department"], current=profile.department)
+    if "full_name" in data:
+        data["full_name"] = normalize_person_name(data["full_name"])
     for field, value in data.items():
         setattr(profile, field, value)
     if is_active is not None:
@@ -429,23 +813,18 @@ def deactivate_faculty(db: Session, faculty_id: int) -> FacultyResponse:
 # ---------------------------------------------------------------------------
 # Courses
 # ---------------------------------------------------------------------------
-def _enrolled_student_count(db: Session, course_id: int) -> int:
-    """How many students are actively enrolled in a course."""
-    return (
-        db.scalar(
-            select(func.count())
-            .select_from(Enrollment)
-            .where(
-                Enrollment.course_id == course_id,
-                Enrollment.status == EnrollmentStatus.ACTIVE,
-            )
-        )
-        or 0
-    )
+def _course_responses(db: Session, courses: list[Course]) -> list[CourseResponse]:
+    """Build course projections; one grouped query counts active enrollments."""
+    enrolled = _active_enrollment_counts(db, Enrollment.course_id, [c.id for c in courses])
+    return [_course_projection(course, enrolled[course.id]) for course in courses]
 
 
 def _course_response(db: Session, course: Course) -> CourseResponse:
     """Build the safe course projection."""
+    return _course_responses(db, [course])[0]
+
+
+def _course_projection(course: Course, enrolled_students: int) -> CourseResponse:
     lead = course.lead_faculty
     return CourseResponse(
         id=course.id,
@@ -457,7 +836,7 @@ def _course_response(db: Session, course: Course) -> CourseResponse:
         is_active=course.is_active,
         lead_faculty_id=course.lead_faculty_id,
         lead_faculty_name=lead.full_name if lead else None,
-        enrolled_students=_enrolled_student_count(db, course.id),
+        enrolled_students=enrolled_students,
         created_at=course.created_at,
         updated_at=course.updated_at,
     )
@@ -524,8 +903,13 @@ def list_courses(
 
     base = select(Course).where(*filters)
     total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    rows = db.scalars(base.order_by(Course.code).limit(limit).offset(offset)).all()
-    return [_course_response(db, row) for row in rows], total
+    rows = db.scalars(
+        base.options(joinedload(Course.lead_faculty))
+        .order_by(Course.code)
+        .limit(limit)
+        .offset(offset)
+    ).all()
+    return _course_responses(db, list(rows)), total
 
 
 def get_course(db: Session, course_id: int) -> CourseResponse:
@@ -596,6 +980,30 @@ def create_enrollment(db: Session, payload: EnrollmentCreate) -> EnrollmentRespo
     course = db.get(Course, payload.course_id)
     if course is None:
         raise AdminError(f"Course {payload.course_id} not found", status.HTTP_404_NOT_FOUND)
+    if not course.is_active:
+        raise AdminError(
+            f"Course {course.code} is inactive and cannot accept new enrollments",
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+        )
+
+    # Pre-check for a clear, status-aware message. The UNIQUE constraint still
+    # arbitrates a concurrent duplicate below.
+    existing = db.scalar(
+        select(Enrollment).where(
+            Enrollment.student_id == student.id,
+            Enrollment.course_id == course.id,
+        )
+    )
+    if existing is not None:
+        if existing.status is EnrollmentStatus.DROPPED:
+            raise _conflict(
+                f"Student {student.student_code} has a dropped enrollment in "
+                f"{course.code}; reactivate that enrollment instead"
+            )
+        raise _conflict(
+            f"Student {student.student_code} already has an enrollment in "
+            f"{course.code} ({existing.status.value})"
+        )
 
     enrollment = Enrollment(
         student_id=student.id,
@@ -634,7 +1042,12 @@ def list_enrollments(
 
     base = select(Enrollment).where(*filters)
     total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    rows = db.scalars(base.order_by(Enrollment.id).limit(limit).offset(offset)).all()
+    rows = db.scalars(
+        base.options(joinedload(Enrollment.student), joinedload(Enrollment.course))
+        .order_by(Enrollment.id)
+        .limit(limit)
+        .offset(offset)
+    ).all()
     return [_enrollment_response(db, row) for row in rows], total
 
 
@@ -871,7 +1284,11 @@ def report_summary(db: Session) -> ReportSummary:
     active_courses = _count(
         db, select(func.count()).select_from(Course).where(Course.is_active.is_(True))
     )
-    active_sessions = _count(db, select(func.count()).select_from(UserSession))
+    # Expired rows linger until they are swept, so only live sessions count.
+    active_sessions = _count(
+        db,
+        select(func.count()).select_from(UserSession).where(UserSession.expires_at > func.now()),
+    )
     total_enrollments = _count(
         db,
         select(func.count())

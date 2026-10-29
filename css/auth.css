@@ -460,87 +460,27 @@
 
 
 /* ==========================================================================
-   REMEMBER ME & FORGOT PASSWORD
-   Balances the secondary form controls horizontally below the input fields.
+   AUXILIARY ACTIONS
+   The secondary line under the credential fields. It carries the recovery
+   note; the old "remember me" checkbox was removed because the session
+   lifetime is fixed by the server.
 ========================================================================== */
 
-.form-extras {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: -4px;
-}
-
-.checkbox-container {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.checkbox-container input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-}
-
-.custom-checkbox {
-  width: 17px;
-  height: 17px;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 4px;
-  background: var(--surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.custom-checkbox svg {
-  width: 11px;
-  height: 11px;
-  stroke: white;
-  opacity: 0;
-  transform: scale(0.6);
-  transition: all 0.2s ease;
-}
-
-.checkbox-container input:checked ~ .custom-checkbox {
-  background: var(--blue);
-  border-color: var(--blue);
-}
-
-.checkbox-container input:checked ~ .custom-checkbox svg {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.checkbox-container input:focus-visible ~ .custom-checkbox {
-  outline: 2px solid var(--violet);
-  outline-offset: 2px;
-}
-
-.checkbox-label {
-  font-size: 13px;
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.forgot-link {
+/* Sign-in notice: session ended / access refused. Informational, so it stays
+   amber rather than the red reserved for a credential error. */
+.auth-notice {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  border-left: 3px solid #d97706;
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.1);
+  color: #92400e;
   font-size: 13px;
   font-weight: 600;
-  color: var(--blue);
-  text-decoration: none;
-  transition: color 0.2s ease;
+  line-height: 1.5;
 }
 
-.forgot-link:hover {
-  color: var(--violet);
-  text-decoration: underline;
-}
 
 /* ==========================================================================
    LOGIN BUTTON

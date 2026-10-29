@@ -23,19 +23,20 @@
        wiring inside both files waits for DOMContentLoaded. -->
 
   <!-- ============================================================
-       BACKEND-BOUND CONTROLS
-       The action buttons and filter selects on this page are part of the
-       designed Campus360 UI, but their behaviour needs the FastAPI backend
-       (create / edit / delete / export / save / filter). Until those
-       endpoints exist they carry the `disabled` attribute, so the current
-       state is honest: a visitor sees the intended control, the muted
-       styling and the not-allowed cursor show it is not live yet, and
-       keyboard and screen-reader users correctly skip it.
+       DATA SOURCES
+       Every figure, row and list on this page is rendered by js/portal.js
+       from the authenticated student's own API responses: js/api.js sends
+       the session cookie and the server stays the authority for what the
+       student may see.
 
-       No JavaScript is attached to them and no fake behaviour is faked.
-       The handler arrives with the endpoint in the next phase.
+       The markup below therefore ships neutral placeholders only - no
+       sample academic records - so an empty, partial or failed response
+       can never leave invented marks, credits, deadlines or announcements
+       sitting on the page as if they were real.
        ============================================================ -->
   <script src="../../js/script.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/portal.js"></script>
   <script src="../../js/auth.js"></script>
 </head>
 
@@ -81,7 +82,7 @@
         <a href="assignments.html" class="nav-link">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg>
           <span>Assignments</span>
-          <span class="nav-counter">4</span>
+          <span class="nav-counter">—</span>
         </a>
 
         <a href="marks-results.html" class="nav-link">
@@ -103,10 +104,10 @@
       <!-- Sidebar User Profile & Sign Out Footer -->
       <div class="sidebar-footer">
         <div class="user-snippet">
-          <div class="user-avatar">S</div>
+          <div class="user-avatar">—</div>
           <div class="user-info">
-            <span class="user-name">Alex Johnson</span>
-            <span class="user-role-label">B.Tech CS &bull; Sem 5</span>
+            <span class="user-name">—</span>
+            <span class="user-role-label">—</span>
             <a href="academic-records.html" class="user-profile-link">View profile</a>
           </div>
         </div>
@@ -128,7 +129,8 @@
 
       <!-- ============================================================
            TOPBAR
-           Page heading, search, notifications and the semester context.
+           Page heading, the notices shortcut and the real semester context
+           (filled from the API by js/portal.js).
            ============================================================ -->
       <header class="app-topbar">
         <div class="topbar-left">
@@ -137,27 +139,22 @@
         </div>
 
         <div class="topbar-actions">
-          <div class="search-box">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="M16.8 16.8 21 21"/></svg>
-            <input type="text" placeholder="Search portal..." aria-label="Search portal" />
-          </div>
-
           <a href="announcements.html" class="action-icon-btn" title="Announcements">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8.5a6 6 0 0 0-12 0c0 6-2.5 8-2.5 8h17S18 14.5 18 8.5z"/><path d="M13.7 20.5a2 2 0 0 1-3.4 0"/></svg>
-            <span class="badge-dot"></span>
           </a>
 
           <div class="topbar-context-pill">
             <span class="pulse-indicator"></span>
-            <span>Fall 2026 Semester</span>
+            <span data-semester-context>Semester —</span>
           </div>
         </div>
       </header>
 
       <!-- ============================================================
            STUDENT DASHBOARD CONTENT
-           The scrollable page body. Every block below is demo data built from
-           the shared components in css/dashboard.css / css/student.css.
+           The scrollable page body. Every block below is filled from the
+           authenticated student's own API responses by js/portal.js, built
+           from the shared components in css/dashboard.css / css/student.css.
            ============================================================ -->
       <div class="content-wrapper">
 
@@ -168,8 +165,8 @@
              ============================================================ -->
         <section class="welcome-banner">
           <div class="welcome-text">
-            <h2>Good morning, Alex!</h2>
-            <p>You have 3 classes scheduled today and 2 assignments due this week. Keep up the momentum!</p>
+            <h2>Welcome</h2>
+            <p>Loading your academic summary…</p>
           </div>
           <div class="welcome-actions">
             <a href="timetable.html" class="btn btn-outline btn-sm">View Timetable</a>
@@ -179,55 +176,48 @@
 
         <!-- ============================================================
              ACADEMIC SNAPSHOT
-             Four headline numbers for the semester. Values are static demo
-             data and are kept in sync with the Attendance and Marks pages.
+             Four headline numbers for the semester, each one read from the
+             authenticated student's own API response. The markup holds
+             placeholders only; js/portal.js fills them in and replaces the
+             placeholder with an empty state when the API has nothing to
+             report.
              ============================================================ -->
         <section class="stats-grid">
           
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Overall Attendance</span>
+              <span class="stat-label">Overall attendance</span>
               <span class="stat-icon emerald">%</span>
             </div>
-            <div class="stat-value">85.4%</div>
-            <div class="stat-meta">
-              <span class="stat-trend-up">&uarr; 2.1%</span>
-              <span>Minimum required: 75%</span>
-            </div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Based on recorded sessions</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Pending Assignments</span>
+              <span class="stat-label">Pending assignments</span>
               <span class="stat-icon amber"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4H17a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.2"/></svg></span>
             </div>
-            <div class="stat-value">04</div>
-            <div class="stat-meta">
-              <span>2 submissions due in 48h</span>
-            </div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Of your active assignments</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Average Marks</span>
+              <span class="stat-label">Average marks</span>
               <span class="stat-icon violet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span>
             </div>
-            <div class="stat-value">82.8%</div>
-            <div class="stat-meta">
-              <span class="stat-trend-up">&uarr; 3.4%</span>
-              <span>Current GPA: 8.6 / 10</span>
-            </div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Across recorded components</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
-              <span class="stat-label">Completed Credits</span>
+              <span class="stat-label">Registered credits</span>
               <span class="stat-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
             </div>
-            <div class="stat-value">92 / 160</div>
-            <div class="stat-meta">
-              <span>57.5% degree completion</span>
-            </div>
+            <div class="stat-value">—</div>
+            <div class="stat-meta">Across your active enrollments</div>
           </div>
 
         </section>
@@ -252,43 +242,7 @@
 
             <div class="card-body">
               <div class="schedule-list">
-
-                <div class="schedule-row">
-                  <div class="schedule-time-badge">
-                    <strong>09:30</strong>
-                    <small>AM</small>
-                  </div>
-                  <div class="fill">
-                    <strong class="cell-title">Advanced Data Structures</strong>
-                    <span class="cell-subtext">Prof. Alan Turing &bull; Lecture Hall 302</span>
-                  </div>
-                  <span class="badge badge-primary">Lecture</span>
-                </div>
-
-                <div class="schedule-row">
-                  <div class="schedule-time-badge">
-                    <strong>11:30</strong>
-                    <small>AM</small>
-                  </div>
-                  <div class="fill">
-                    <strong class="cell-title">Database Engineering Lab</strong>
-                    <span class="cell-subtext">Dr. Grace Hopper &bull; Computing Lab 4</span>
-                  </div>
-                  <span class="badge badge-purple">Practical</span>
-                </div>
-
-                <div class="schedule-row">
-                  <div class="schedule-time-badge">
-                    <strong>02:00</strong>
-                    <small>PM</small>
-                  </div>
-                  <div class="fill">
-                    <strong class="cell-title">Computer Networks</strong>
-                    <span class="cell-subtext">Prof. Vint Cerf &bull; Room 108</span>
-                  </div>
-                  <span class="badge badge-primary">Lecture</span>
-                </div>
-
+                <p class="empty-state">Loading today's classes…</p>
               </div>
             </div>
           </section>
@@ -307,26 +261,8 @@
               <div class="activity-list">
 
                 <div class="activity-item">
-                  <div class="activity-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5L11 19z"/><path d="M16 8.5a4.5 4.5 0 0 1 0 7"/><path d="M18.8 6a8 8 0 0 1 0 12"/></svg></div>
                   <div class="activity-details">
-                    <span class="activity-title">Mid-term Exam Timetable Released</span>
-                    <span class="activity-meta">Examination Cell &bull; 2 hours ago</span>
-                  </div>
-                </div>
-
-                <div class="activity-item">
-                  <div class="activity-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div>
-                  <div class="activity-details">
-                    <span class="activity-title">OS Lab Assessment Graded</span>
-                    <span class="activity-meta">Scored 28/30 &bull; Yesterday</span>
-                  </div>
-                </div>
-
-                <div class="activity-item">
-                  <div class="activity-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
-                  <div class="activity-details">
-                    <span class="activity-title">Scheduled Maintenance for Portal</span>
-                    <span class="activity-meta">IT Services &bull; 1 day ago</span>
+                    <span class="activity-title">Loading recent updates…</span>
                   </div>
                 </div>
 
@@ -338,8 +274,10 @@
 
         <!-- ============================================================
              UPCOMING ASSIGNMENTS
-             Submission tracker for the current module. The status pill and
-             progress bar are the shared components, not per-page one-offs.
+             The deadlines the student API reports for the current module.
+             The student API is read-only, so this table reports status only -
+             it never offers a submit or upload control that the backend
+             cannot honour.
              ============================================================ -->
         <section class="card">
           <div class="card-header">
@@ -354,56 +292,23 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Subject</th>
-                  <th>Assignment Title</th>
-                  <th>Deadline</th>
-                  <th>Status</th>
-                  <th>Action</th>
+                  <th>Course</th>
+                  <th>Assignment</th>
+                  <th>Due date</th>
+                  <th>Submission</th>
+                  <th>Details</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>
-                    <span class="cell-title">Advanced Data Structures</span>
-                    <span class="cell-subtext">CS-301</span>
-                  </td>
-                  <td>B-Tree Indexing Implementation</td>
-                  <td>Tomorrow, 11:59 PM</td>
-                  <td><span class="badge badge-warning"><span class="badge-dot-indicator"></span> Due Soon</span></td>
-                  <td><a href="assignments.html" class="btn btn-primary btn-sm">Submit Work</a></td>
-                </tr>
-                <tr>
-                  <td>
-                    <span class="cell-title">Computer Networks</span>
-                    <span class="cell-subtext">CS-303</span>
-                  </td>
-                  <td>TCP/UDP Socket Programming Report</td>
-                  <td>Oct 02, 2026</td>
-                  <td><span class="badge badge-secondary">Pending</span></td>
-                  <td><a href="assignments.html" class="btn btn-outline btn-sm">Upload</a></td>
-                </tr>
-                <tr>
-                  <td>
-                    <span class="cell-title">Database Systems</span>
-                    <span class="cell-subtext">CS-302</span>
-                  </td>
-                  <td>Query Optimization Case Study</td>
-                  <td>Oct 06, 2026</td>
-                  <td><span class="badge badge-secondary">Pending</span></td>
-                  <td><a href="assignments.html" class="btn btn-outline btn-sm">Upload</a></td>
-                </tr>
-                <tr>
-                  <td>
-                    <span class="cell-title">Software Engineering</span>
-                    <span class="cell-subtext">CS-305</span>
-                  </td>
-                  <td>System Architecture Blueprint</td>
-                  <td>Sep 24, 2026</td>
-                  <td><span class="badge badge-success">Submitted</span></td>
-                  <td><span class="badge badge-secondary">Evaluation Pending</span></td>
+                  <td colspan="5" class="table-state">Loading your upcoming deadlines…</td>
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <div class="card-footer">
+            <span class="meta-muted" data-table-note>Loading upcoming deadlines…</span>
           </div>
         </section>
 

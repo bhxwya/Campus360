@@ -119,15 +119,11 @@ def get_attendance_summary(
 def list_attendance_records(
     _student: StudentUser,
     db: DbSession,
-    course_id: Annotated[
-        int | None, Query(description="Filter records by course ID")
-    ] = None,
+    course_id: Annotated[int | None, Query(description="Filter records by course ID")] = None,
 ) -> list[MyAttendanceRecordResponse]:
     """Return chronological attendance records, optionally filtered by enrolled course."""
     try:
-        return student_service.list_attendance_records(
-            db, _student.id, course_id=course_id
-        )
+        return student_service.list_attendance_records(db, _student.id, course_id=course_id)
     except student_service.StudentError as exc:
         raise _fail(exc) from exc
 

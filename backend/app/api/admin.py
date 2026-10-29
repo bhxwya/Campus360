@@ -30,13 +30,15 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.deps import DbSession, require_admin, require_csrf
+from app.core.departments import DEPARTMENTS
+from app.core.programmes import PROGRAMMES
 from app.models.enums import (
     AnnouncementAudience,
     AnnouncementCategory,
     AnnouncementStatus,
     EnrollmentStatus,
 )
-from app.models.user import User
+from app.models.user import StudentProfile, User
 from app.schemas.admin import (
     AnnouncementCreate,
     AnnouncementListResponse,
@@ -47,13 +49,27 @@ from app.schemas.admin import (
     CourseListResponse,
     CourseResponse,
     CourseUpdate,
+    DepartmentResponse,
     EnrollmentCreate,
     EnrollmentReport,
     EnrollmentResponse,
     FacultyCreate,
+    FacultyImportConfirmRequest,
+    FacultyImportConfirmResponse,
+    FacultyImportPreviewResponse,
+    FacultyImportRowPreview,
+    FacultyImportRowResult,
+    FacultyImportUploadRequest,
     FacultyListResponse,
     FacultyResponse,
     FacultyUpdate,
+    ImportConfirmRequest,
+    ImportConfirmResponse,
+    ImportPreviewResponse,
+    ImportRowPreview,
+    ImportRowResult,
+    ImportUploadRequest,
+    ProgrammeResponse,
     ReportSummary,
     StudentCreate,
     StudentListResponse,
@@ -61,6 +77,10 @@ from app.schemas.admin import (
     StudentUpdate,
 )
 from app.services import admin as admin_service
+from app.services import bulk_import as student_import
+from app.services import faculty_bulk_import as faculty_import
+from app.services.activation import queue_activation_email, resend_activation_token
+from app.services.import_common import BulkImportError, ensure_upload_size
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -76,8 +96,19 @@ OffsetQuery = Annotated[int, Query(ge=0, description="Rows to skip.")]
 
 
 def _fail(exc: admin_service.AdminError) -> HTTPException:
-    """Translate a service error into an HTTP error response."""
-    return HTTPException(status_code=exc.status_code, detail=exc.message)
+    """Translate a service error into an HTTP error response.
+
+    Most errors keep the existing string ``detail``. Duplicate student fields
+    add a structured ``field_errors`` map so the browser can mark the exact
+    inputs instead of matching sensitive text.
+    """
+    detail: str | dict[str, object] = exc.message
+    if exc.field_errors:
+        detail = {
+            "message": exc.message,
+            "field_errors": exc.field_errors,
+        }
+    return HTTPException(status_code=exc.status_code, detail=detail)
 
 
 # ---------------------------------------------------------------------------
@@ -186,6 +217,262 @@ def deactivate_student(
 
 
 # ---------------------------------------------------------------------------
+# Bulk student import + activation
+# ---------------------------------------------------------------------------
+@router.post(
+    "/students/import",
+    response_model=ImportPreviewResponse,
+    summary="Validate a student import CSV (preview only, no writes)",
+)
+def import_students_preview(
+    _admin: AdminUser,
+    _csrf: CsrfGuard,
+    db: DbSession,
+    payload: ImportUploadRequest,
+) -> ImportPreviewResponse:
+    """Parse and validate every row in the CSV without writing anything.
+
+    Returns per-row results so the admin can review errors before confirming.
+    Duplicates are checked both within the file and against existing records.
+    An upload above ``CAMPUS360_IMPORT_MAX_FILE_MB`` is refused with 413.
+    """
+    try:
+        content = ensure_upload_size(payload.csv_content)
+    except BulkImportError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    preview = student_import.validate_import_csv(db, content)
+    return ImportPreviewResponse(
+        total_rows=preview.total_rows,
+        valid_rows=preview.valid_rows,
+        invalid_rows=preview.invalid_rows,
+        rows=[
+            ImportRowPreview(
+                row_number=r.row_number,
+                email=r.email,
+                student_code=r.student_code,
+                full_name=r.full_name,
+                degree_program=r.degree_program,
+                current_semester=r.current_semester,
+                phone=r.phone,
+                status=r.status,
+                errors=r.errors,
+            )
+            for r in preview.rows
+        ],
+        file_error=preview.file_error,
+    )
+
+
+@router.post(
+    "/students/import/confirm",
+    response_model=ImportConfirmResponse,
+    summary="Create accounts for validated import rows and queue activation emails",
+)
+def import_students_confirm(
+    _admin: AdminUser,
+    _csrf: CsrfGuard,
+    db: DbSession,
+    payload: ImportConfirmRequest,
+) -> ImportConfirmResponse:
+    """Create inactive accounts + profiles for the confirmed rows and queue an
+    activation email for each. Email delivery failures are tracked separately
+    and never undo account creation.
+    """
+    rows = [
+        {
+            "row_number": r.row_number,
+            "email": r.email,
+            "student_code": r.student_code,
+            "full_name": r.full_name,
+            "degree_program": r.degree_program,
+            "current_semester": r.current_semester,
+            "phone": r.phone,
+        }
+        for r in payload.rows
+    ]
+    confirmation = student_import.confirm_import(db, rows, admin_email=_admin.email)
+    return ImportConfirmResponse(
+        created=confirmation.created,
+        skipped=confirmation.skipped,
+        failed=confirmation.failed,
+        email_sent=confirmation.email_sent,
+        email_failed=confirmation.email_failed,
+        rows=[
+            ImportRowResult(
+                row_number=r.row_number,
+                email=r.email,
+                student_code=r.student_code,
+                full_name=r.full_name,
+                status=r.status,
+                errors=r.errors,
+                user_id=r.user_id,
+                profile_id=r.profile_id,
+                email_sent=r.email_sent,
+                email_error=r.email_error,
+            )
+            for r in confirmation.rows
+        ],
+    )
+
+
+# ---------------------------------------------------------------------------
+# Bulk faculty import + activation
+# ---------------------------------------------------------------------------
+@router.post(
+    "/faculty/import",
+    response_model=FacultyImportPreviewResponse,
+    summary="Validate a faculty import CSV (preview only, no writes)",
+)
+def import_faculty_preview(
+    _admin: AdminUser,
+    _csrf: CsrfGuard,
+    db: DbSession,
+    payload: FacultyImportUploadRequest,
+) -> FacultyImportPreviewResponse:
+    """Faculty counterpart of the student import preview (no writes)."""
+    try:
+        content = ensure_upload_size(payload.csv_content)
+    except BulkImportError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    preview = faculty_import.validate_import_csv(db, content)
+    return FacultyImportPreviewResponse(
+        total_rows=preview.total_rows,
+        valid_rows=preview.valid_rows,
+        invalid_rows=preview.invalid_rows,
+        rows=[
+            FacultyImportRowPreview(
+                row_number=r.row_number,
+                email=r.email,
+                faculty_code=r.faculty_code,
+                full_name=r.full_name,
+                department=r.department,
+                designation=r.designation,
+                status=r.status,
+                errors=r.errors,
+            )
+            for r in preview.rows
+        ],
+        file_error=preview.file_error,
+    )
+
+
+@router.post(
+    "/faculty/import/confirm",
+    response_model=FacultyImportConfirmResponse,
+    summary="Create accounts for validated faculty import rows and queue activation emails",
+)
+def import_faculty_confirm(
+    _admin: AdminUser,
+    _csrf: CsrfGuard,
+    db: DbSession,
+    payload: FacultyImportConfirmRequest,
+) -> FacultyImportConfirmResponse:
+    """Re-validate and create inactive faculty accounts with activation links."""
+    rows = [
+        {
+            "row_number": r.row_number,
+            "email": r.email,
+            "faculty_code": r.faculty_code,
+            "full_name": r.full_name,
+            "department": r.department,
+            "designation": r.designation,
+        }
+        for r in payload.rows
+    ]
+    confirmation = faculty_import.confirm_import(db, rows, admin_email=_admin.email)
+    return FacultyImportConfirmResponse(
+        created=confirmation.created,
+        skipped=confirmation.skipped,
+        failed=confirmation.failed,
+        email_sent=confirmation.email_sent,
+        email_failed=confirmation.email_failed,
+        rows=[
+            FacultyImportRowResult(
+                row_number=r.row_number,
+                email=r.email,
+                faculty_code=r.faculty_code,
+                full_name=r.full_name,
+                status=r.status,
+                errors=r.errors,
+                user_id=r.user_id,
+                profile_id=r.profile_id,
+                email_sent=r.email_sent,
+                email_error=r.email_error,
+            )
+            for r in confirmation.rows
+        ],
+    )
+
+
+@router.post(
+    "/students/{student_id}/resend-activation",
+    response_model=dict[str, str],
+    summary="Revoke old activation tokens and resend the activation email",
+)
+def resend_student_activation(
+    student_id: int,
+    _admin: AdminUser,
+    _csrf: CsrfGuard,
+    db: DbSession,
+) -> dict[str, str]:
+    """Revoke any unconsumed activation tokens for the student, create a new
+    one, and queue a fresh activation email. No account data changes.
+    """
+    profile = db.get(StudentProfile, student_id)
+    if profile is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
+    if profile.user.is_active:
+        return {"detail": "Account is already active."}
+
+    user, raw_token = resend_activation_token(db, user_id=profile.user_id)
+    send_result = queue_activation_email(
+        db,
+        user=user,
+        raw_token=raw_token,
+        student_name=profile.full_name,
+    )
+    return {
+        "detail": "Activation email queued."
+        if send_result.sent
+        else f"Activation email could not be sent: {send_result.error}",
+    }
+
+
+@router.get(
+    "/programmes",
+    response_model=list[ProgrammeResponse],
+    summary="List the academic programme catalogue",
+)
+def list_programmes(_admin: AdminUser) -> list[ProgrammeResponse]:
+    """Return the canonical programme/branch list (NOT courses).
+
+    The catalogue is configuration, not user data, so it is served from the
+    code-level policy list and requires no database round-trip. Students store
+    a programme; subjects remain separate ``courses`` rows.
+    """
+    return [
+        ProgrammeResponse(code=programme.code, name=programme.name, group=programme.group)
+        for programme in PROGRAMMES
+    ]
+
+
+@router.get(
+    "/departments",
+    response_model=list[DepartmentResponse],
+    summary="List the department catalogue",
+)
+def list_departments(_admin: AdminUser) -> list[DepartmentResponse]:
+    """Return the canonical department list.
+
+    The catalogue is configuration, not user data, so it is served from the
+    code-level policy list and requires no database round-trip.
+    """
+    return [
+        DepartmentResponse(code=department.code, name=department.name) for department in DEPARTMENTS
+    ]
+
+
+# ---------------------------------------------------------------------------
 # Faculty
 # ---------------------------------------------------------------------------
 @router.get(
@@ -198,6 +485,7 @@ def list_faculty(
     db: DbSession,
     search: Annotated[str | None, Query(description="Match name, code or email.")] = None,
     department: Annotated[str | None, Query(description="Filter by department.")] = None,
+    designation: Annotated[str | None, Query(description="Filter by designation.")] = None,
     is_active: Annotated[bool | None, Query(description="Filter by account state.")] = None,
     limit: LimitQuery = 20,
     offset: OffsetQuery = 0,
@@ -207,6 +495,7 @@ def list_faculty(
         db,
         search=search,
         department=department,
+        designation=designation,
         is_active=is_active,
         limit=limit,
         offset=offset,

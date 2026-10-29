@@ -25,6 +25,7 @@ UNSAFE_ROUTE = "/api/v1/admin/students"
 #: Every admin route family - used to sweep the whole surface.
 ADMIN_ROUTES = [
     "/api/v1/admin/students",
+    "/api/v1/admin/programmes",
     "/api/v1/admin/faculty",
     "/api/v1/admin/courses",
     "/api/v1/admin/enrollments",

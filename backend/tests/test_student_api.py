@@ -266,9 +266,7 @@ def test_timetable_active_enrollments_only(
 # ---------------------------------------------------------------------------
 
 
-def test_attendance_zero_sessions_null_percentage(
-    student_client, admin_client, db_cleaner
-) -> None:
+def test_attendance_zero_sessions_null_percentage(student_client, admin_client, db_cleaner) -> None:
     """When a student has enrolled courses but zero attendance sessions, percent is null."""
     student_profile_id = _create_student_profile(student_client.user["id"])
 
@@ -718,9 +716,7 @@ def test_announcements_filtering(student_client, admin_client, db_cleaner) -> No
 # ---------------------------------------------------------------------------
 
 
-def test_dashboard_composite(
-    student_client, admin_client, faculty_client, db_cleaner
-) -> None:
+def test_dashboard_composite(student_client, admin_client, faculty_client, db_cleaner) -> None:
     """Dashboard combines courses count, credits, attendance %, assignments and announcements."""
     student_profile_id = _create_student_profile(student_client.user["id"])
     faculty_pid = _faculty_profile_id(faculty_client.user["id"])
